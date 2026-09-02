@@ -65,59 +65,99 @@ def get_json(url: str, timeout: int = 20) -> dict | list | None:
         return None
 
 
-def fetch_markets_for_event(event_ticker: str) -> list[dict]:
-    """One call returns every market under an event with its current prices.
-    Way more efficient than per-market orderbook fetches AND avoids the
-    burst-rate-limit that killed the previous approach."""
-    url = f"{KALSHI_BASE}/markets?event_ticker={urllib.parse.quote(event_ticker)}&limit=200"
+def fetch_market_detail(ticker: str) -> dict | None:
+    """Individual market fetch — this is the endpoint that carries live prices.
+    Bulk /markets?event_ticker=X returns definitions only (all prices null)."""
+    url = f"{KALSHI_BASE}/markets/{urllib.parse.quote(ticker)}"
     data = get_json(url)
     if not data or not isinstance(data, dict):
-        return []
+        return None
+    m = data.get("market") or {}
+    def cents(v):
+        return v / 100.0 if isinstance(v, (int, float)) else None
+    return {
+        "ticker": m.get("ticker"),
+        "title": m.get("title"),
+        "subtitle": m.get("subtitle") or m.get("yes_sub_title"),
+        "status": m.get("status"),
+        "yes_bid": cents(m.get("yes_bid")),
+        "yes_ask": cents(m.get("yes_ask")),
+        "last_price": cents(m.get("last_price")),
+        "volume": m.get("volume"),
+        "open_interest": m.get("open_interest"),
+        "close_time": m.get("close_time"),
+        "expiration_time": m.get("expiration_time"),
+    }
+
+
+def fetch_event_markets_with_prices(event_ticker: str, market_tickers: list[str]) -> list[dict]:
+    """For each market ticker under an event, fetch full detail (with prices)."""
     out = []
-    for m in data.get("markets") or []:
-        # Kalshi returns prices in cents (0-100). Convert to probability.
-        def cents(v):
-            return v / 100.0 if isinstance(v, (int, float)) else None
-        out.append({
-            "ticker": m.get("ticker"),
-            "title": m.get("title"),
-            "subtitle": m.get("subtitle") or m.get("yes_sub_title"),
-            "status": m.get("status"),
-            "yes_bid": cents(m.get("yes_bid")),
-            "yes_ask": cents(m.get("yes_ask")),
-            "last_price": cents(m.get("last_price")),
-            "volume": m.get("volume"),
-            "open_interest": m.get("open_interest"),
-            "close_time": m.get("close_time"),
-            "expiration_time": m.get("expiration_time"),
-        })
+    for t in market_tickers:
+        m = fetch_market_detail(t)
+        if m:
+            out.append(m)
+        time.sleep(0.1)  # pacing between per-market fetches
     return out
 
 
 def fetch_series_snapshot(series_ticker: str) -> dict | None:
-    """Pull the series' events + a per-event /markets call to get full prices."""
+    """Pull the series' events (with nested market list) + fetch per-market
+    prices for the SINGLE next-upcoming event. Older/further events kept as
+    structure-only (no prices) so we can still show them in listings without
+    hammering Kalshi with hundreds of per-market fetches."""
     events_url = (
-        f"{KALSHI_BASE}/events?series_ticker={urllib.parse.quote(series_ticker)}&limit=100"
+        f"{KALSHI_BASE}/events?series_ticker={urllib.parse.quote(series_ticker)}"
+        "&limit=100&with_nested_markets=true"
     )
     events_data = get_json(events_url)
     if not events_data or not isinstance(events_data, dict):
         return None
     events = events_data.get("events") or []
+
+    # Pick the nearest-future event as our "focus" — this is the one we
+    # care about for live prediction-market data. Kalshi events don't
+    # always have close_time populated (some show null), so we sort by
+    # event_ticker ascending as a fallback since Kalshi tickers embed
+    # the release date in YYMMM format (KXPAYROLLS-26SEP).
+    today = datetime.now(timezone.utc).date().isoformat()
+    def close_or_ticker(ev):
+        return ev.get("close_time") or ev.get("event_ticker") or ""
+    future_events = [ev for ev in events if (ev.get("close_time") or "9999") >= today]
+    future_events.sort(key=close_or_ticker)
+    focus_event = future_events[0] if future_events else None
+
     enriched = []
     for ev in events:
-        et = ev.get("event_ticker")
-        markets = fetch_markets_for_event(et) if et else []
-        time.sleep(0.15)  # gentle pacing to avoid a burst 429
+        markets_stub = ev.get("markets") or []
+        market_tickers = [m.get("ticker") for m in markets_stub if m.get("ticker")]
+        if focus_event and ev.get("event_ticker") == focus_event.get("event_ticker"):
+            # Focus event: pull per-market detail with real prices.
+            markets = fetch_event_markets_with_prices(ev.get("event_ticker"), market_tickers)
+        else:
+            # Other events: keep structure only, no prices. Save on API calls.
+            markets = [{
+                "ticker": m.get("ticker"),
+                "title": m.get("title"),
+                "subtitle": m.get("subtitle") or m.get("yes_sub_title"),
+                "status": m.get("status"),
+                "yes_bid": None, "yes_ask": None, "last_price": None,
+                "volume": None, "open_interest": None,
+                "close_time": m.get("close_time"),
+                "expiration_time": m.get("expiration_time"),
+            } for m in markets_stub]
         enriched.append({
-            "event_ticker": et,
+            "event_ticker": ev.get("event_ticker"),
             "title": ev.get("title"),
             "close_time": ev.get("close_time"),
             "status": ev.get("status"),
+            "is_focus": focus_event is not None and ev.get("event_ticker") == focus_event.get("event_ticker"),
             "markets": markets,
         })
     return {
         "series_ticker": series_ticker,
         "events": enriched,
+        "focus_event_ticker": focus_event.get("event_ticker") if focus_event else None,
         "fetched_at": datetime.now(timezone.utc).isoformat(),
     }
 
