@@ -89,6 +89,9 @@ def main() -> int:
         headers={
             "content-type": "application/json",
             "x-upload-auth": upload_key,
+            # Cloudflare bot-mode 1010-blocks the default "Python-urllib/3.x"
+            # UA on the worker's public URL. Send a browser UA to bypass.
+            "user-agent": UA,
         },
     )
     try:
