@@ -71,17 +71,22 @@ jobs:
       - name: Fetch live prediction-market implied value from calendar-worker
         id: market
         run: |
+          # Use curl — urllib returned empty body twice in a row from this
+          # endpoint despite direct curl working fine. Suspect content-
+          # negotiation weirdness; not worth debugging urllib specifically.
+          curl -sS -A "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0" \
+               "https://calendar.faractionradar.com/public/kalshi-implied" \
+               > /tmp/kalshi-implied.json || echo "curl failed"
+          echo "response size: $(wc -c < /tmp/kalshi-implied.json) bytes"
+          echo "response preview:"
+          head -c 300 /tmp/kalshi-implied.json; echo
           python - <<'PY'
-          import json, os, urllib.request
-          url = "https://calendar.faractionradar.com/public/kalshi-implied"
-          req = urllib.request.Request(url, headers={
-              "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
-          })
+          import json, os
           try:
-              data = json.loads(urllib.request.urlopen(req, timeout=20).read())
+              with open("/tmp/kalshi-implied.json") as f:
+                  data = json.load(f)
               nfp = (data.get("implied") or {}).get("nfp")
               if nfp and isinstance(nfp.get("value_k"), (int, float)):
-                  # Kalshi thresholds are RAW jobs count, not thousands. Divide.
                   raw = nfp["value_k"]
                   as_k = raw / 1000.0
                   print(f"kalshi implied NFP: raw={raw} -> {as_k}K (ticker={nfp.get('ticker')}, method={nfp.get('method')}, rungs={nfp.get('rungs_used')})")
@@ -93,7 +98,7 @@ jobs:
                   with open(os.environ["GITHUB_OUTPUT"], "a") as f:
                       f.write("pm_available=false\n")
           except Exception as e:
-              print(f"kalshi-implied fetch failed: {e} — falling back to hardcode")
+              print(f"parse failed: {e} — falling back to hardcode")
               with open(os.environ["GITHUB_OUTPUT"], "a") as f:
                   f.write("pm_available=false\n")
           PY
