@@ -74,8 +74,12 @@ jobs:
           # Use curl — urllib returned empty body twice in a row from this
           # endpoint despite direct curl working fine. Suspect content-
           # negotiation weirdness; not worth debugging urllib specifically.
-          curl -sS -A "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0" \
-               "https://calendar.faractionradar.com/public/kalshi-implied" \
+          # Hit the workers.dev URL directly. calendar.faractionradar.com
+          # returns a CF 302 on GHA IPs (probably some edge-routing quirk);
+          # the workers.dev origin is what the custom domain points at
+          # anyway, so this is one hop shorter + always resolves 200.
+          curl -sSL -A "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0" \
+               "https://faractionradar-calendar.faractionradar.workers.dev/public/kalshi-implied" \
                > /tmp/kalshi-implied.json || echo "curl failed"
           echo "response size: $(wc -c < /tmp/kalshi-implied.json) bytes"
           echo "response preview:"
