@@ -23,6 +23,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -64,14 +65,39 @@ def get_json(url: str, timeout: int = 20) -> dict | list | None:
         return None
 
 
+def fetch_markets_for_event(event_ticker: str) -> list[dict]:
+    """One call returns every market under an event with its current prices.
+    Way more efficient than per-market orderbook fetches AND avoids the
+    burst-rate-limit that killed the previous approach."""
+    url = f"{KALSHI_BASE}/markets?event_ticker={urllib.parse.quote(event_ticker)}&limit=200"
+    data = get_json(url)
+    if not data or not isinstance(data, dict):
+        return []
+    out = []
+    for m in data.get("markets") or []:
+        # Kalshi returns prices in cents (0-100). Convert to probability.
+        def cents(v):
+            return v / 100.0 if isinstance(v, (int, float)) else None
+        out.append({
+            "ticker": m.get("ticker"),
+            "title": m.get("title"),
+            "subtitle": m.get("subtitle") or m.get("yes_sub_title"),
+            "status": m.get("status"),
+            "yes_bid": cents(m.get("yes_bid")),
+            "yes_ask": cents(m.get("yes_ask")),
+            "last_price": cents(m.get("last_price")),
+            "volume": m.get("volume"),
+            "open_interest": m.get("open_interest"),
+            "close_time": m.get("close_time"),
+            "expiration_time": m.get("expiration_time"),
+        })
+    return out
+
+
 def fetch_series_snapshot(series_ticker: str) -> dict | None:
-    """Pull the series' open events + each event's markets + top-of-book yes."""
-    # with_nested_markets=true inlines the markets array on each event, saving
-    # an N+1 round trip per series (Kalshi's /events returns bare event shells
-    # without it).
+    """Pull the series' events + a per-event /markets call to get full prices."""
     events_url = (
-        f"{KALSHI_BASE}/events?series_ticker={urllib.parse.quote(series_ticker)}"
-        "&limit=100&with_nested_markets=true"
+        f"{KALSHI_BASE}/events?series_ticker={urllib.parse.quote(series_ticker)}&limit=100"
     )
     events_data = get_json(events_url)
     if not events_data or not isinstance(events_data, dict):
@@ -79,37 +105,15 @@ def fetch_series_snapshot(series_ticker: str) -> dict | None:
     events = events_data.get("events") or []
     enriched = []
     for ev in events:
-        markets_out = []
-        for m in ev.get("markets", []) or []:
-            ticker = m.get("ticker")
-            if not ticker:
-                continue
-            ob = get_json(f"{KALSHI_BASE}/markets/{urllib.parse.quote(ticker)}/orderbook")
-            yes_top = None
-            if ob and isinstance(ob, dict):
-                yes = (ob.get("orderbook") or {}).get("yes")
-                if yes and len(yes) > 0:
-                    yes_top = yes[-1][0] / 100.0  # cents -> probability
-            if yes_top is None:
-                mdet = get_json(f"{KALSHI_BASE}/markets/{urllib.parse.quote(ticker)}")
-                if mdet and isinstance(mdet, dict):
-                    mk = mdet.get("market") or {}
-                    cents = mk.get("last_price") or mk.get("yes_bid") or mk.get("yes_ask")
-                    if isinstance(cents, (int, float)):
-                        yes_top = cents / 100.0
-            markets_out.append({
-                "ticker": ticker,
-                "title": m.get("title"),
-                "subtitle": m.get("subtitle"),
-                "yes_price": yes_top,
-                "status": m.get("status"),
-            })
+        et = ev.get("event_ticker")
+        markets = fetch_markets_for_event(et) if et else []
+        time.sleep(0.15)  # gentle pacing to avoid a burst 429
         enriched.append({
-            "event_ticker": ev.get("event_ticker"),
+            "event_ticker": et,
             "title": ev.get("title"),
             "close_time": ev.get("close_time"),
             "status": ev.get("status"),
-            "markets": markets_out,
+            "markets": markets,
         })
     return {
         "series_ticker": series_ticker,
