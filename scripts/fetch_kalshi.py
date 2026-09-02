@@ -65,34 +65,57 @@ def get_json(url: str, timeout: int = 20) -> dict | list | None:
         return None
 
 
-_DEBUG_DUMPED = False
+def _num(v):
+    """Kalshi returns prices as string decimals in newer API ('0.9600'), older
+    endpoints used integer cents. Handle both."""
+    if v is None:
+        return None
+    if isinstance(v, str):
+        try:
+            return float(v)
+        except ValueError:
+            return None
+    if isinstance(v, (int, float)):
+        # Heuristic: if >= 1 it's cents (Kalshi old API), scale down
+        return v / 100.0 if v > 1 else float(v)
+    return None
+
 
 def fetch_market_detail(ticker: str) -> dict | None:
     """Individual market fetch — this is the endpoint that carries live prices.
-    Bulk /markets?event_ticker=X returns definitions only (all prices null)."""
-    global _DEBUG_DUMPED
+    Bulk /markets?event_ticker=X returns definitions only (all prices null).
+    Kalshi's newer API uses `*_dollars` string fields; older uses integer
+    cents on `yes_bid`/`yes_ask`. This handles both."""
     url = f"{KALSHI_BASE}/markets/{urllib.parse.quote(ticker)}"
     data = get_json(url)
     if not data or not isinstance(data, dict):
         return None
-    if not _DEBUG_DUMPED:
-        print(f"[fetch-kalshi] DEBUG raw /markets/{ticker} response:")
-        print(f"  keys: {list(data.keys())}")
-        print(f"  full: {json.dumps(data)[:800]}")
-        _DEBUG_DUMPED = True
     m = data.get("market") or {}
-    def cents(v):
-        return v / 100.0 if isinstance(v, (int, float)) else None
+
+    # Prefer new *_dollars string fields; fall back to legacy names.
+    yes_bid = _num(m.get("yes_bid_dollars") or m.get("yes_bid"))
+    yes_ask = _num(m.get("yes_ask_dollars") or m.get("yes_ask"))
+    last = _num(m.get("last_price_dollars") or m.get("last_price"))
+    # If yes-side prices are missing, derive from no-side: yes = 1 - no.
+    if yes_bid is None:
+        na = _num(m.get("no_ask_dollars") or m.get("no_ask"))
+        if na is not None:
+            yes_bid = round(1.0 - na, 4)
+    if yes_ask is None:
+        nb = _num(m.get("no_bid_dollars") or m.get("no_bid"))
+        if nb is not None:
+            yes_ask = round(1.0 - nb, 4)
+
     return {
         "ticker": m.get("ticker"),
         "title": m.get("title"),
-        "subtitle": m.get("subtitle") or m.get("yes_sub_title"),
+        "subtitle": m.get("subtitle") or m.get("yes_sub_title") or m.get("no_sub_title"),
         "status": m.get("status"),
-        "yes_bid": cents(m.get("yes_bid")),
-        "yes_ask": cents(m.get("yes_ask")),
-        "last_price": cents(m.get("last_price")),
-        "volume": m.get("volume"),
-        "open_interest": m.get("open_interest"),
+        "yes_bid": yes_bid,
+        "yes_ask": yes_ask,
+        "last_price": last,
+        "volume": _num(m.get("volume_dollars") or m.get("volume")),
+        "open_interest": _num(m.get("open_interest_fp") or m.get("open_interest")),
         "close_time": m.get("close_time"),
         "expiration_time": m.get("expiration_time"),
     }
