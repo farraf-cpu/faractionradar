@@ -145,6 +145,11 @@ def main() -> None:
         "grandMedian": format_grand_median(result),
         "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/nfp-model-card.md",
     }
+    if result.get("pred_markets_stale"):
+        prediction["caveat"] = (
+            "prediction-market input is a hardcoded July baseline pending Kalshi"
+            " ticker verification (Phase 1.5). Consensus is live from ForexFactory."
+        )
 
     report_md = build_report_md(result, release_date, days_out, model_version)
     year_month = release_date[:7]

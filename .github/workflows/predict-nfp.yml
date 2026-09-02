@@ -68,6 +68,47 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Fetch live consensus from calendar-worker
+        id: consensus
+        env:
+          CALENDAR_AUTH_KEY: ${{ secrets.CALENDAR_AUTH_KEY }}
+          NFP_RELEASE_DATE: ${{ needs.gate.outputs.nfp_release_date }}
+        run: |
+          python - <<'PY'
+          import json, os, re, sys, urllib.parse, urllib.request
+
+          key = os.environ["CALENDAR_AUTH_KEY"]
+          rel = os.environ["NFP_RELEASE_DATE"]
+          url = ("https://faractionradar-calendar.faractionradar.workers.dev/"
+                 f"?key={urllib.parse.quote(key)}&read")
+          req = urllib.request.Request(url, headers={
+              "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
+          })
+          data = json.loads(urllib.request.urlopen(req, timeout=30).read())
+          events = data.get("events", [])
+          matches = [
+              e for e in events
+              if e.get("country") == "USD"
+              and re.match(r"^non-?farm employment change$", (e.get("title") or "").strip(), re.I)
+              and (e.get("date") or "").startswith(rel)
+          ]
+          if not matches:
+              print(f"::error::no NFP event found in worker /?read for release {rel}")
+              sys.exit(1)
+          forecast = matches[0].get("forecast")
+          if not forecast:
+              print(f"::error::NFP event for {rel} has no forecast field")
+              sys.exit(1)
+          m = re.match(r"^([-+]?\d+(?:\.\d+)?)\s*[Kk]?$", forecast.strip())
+          if not m:
+              print(f"::error::unparseable forecast value: {forecast!r}")
+              sys.exit(1)
+          consensus_k = float(m.group(1))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"consensus_k={consensus_k}\n")
+          print(f"consensus for NFP {rel}: {consensus_k}K (from ForexFactory forecast {forecast!r})")
+          PY
+
       - name: Run predictor + POST to calendar-worker
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
@@ -75,6 +116,7 @@ jobs:
           CALENDAR_WORKER_URL: https://faractionradar-calendar.faractionradar.workers.dev
           NFP_RELEASE_DATE: ${{ needs.gate.outputs.nfp_release_date }}
           NFP_DAYS_OUT: ${{ needs.gate.outputs.nfp_days_out }}
+          NFP_CONSENSUS_K: ${{ steps.consensus.outputs.consensus_k }}
           MODEL_VERSION: v1-bayesian-blend
         run: python emit.py
 

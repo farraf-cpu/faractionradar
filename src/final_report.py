@@ -1,7 +1,10 @@
-"""Final synthesis: combine ML ensemble + bridge models + consensus + signal balance
-into a comprehensive prediction report."""
+"""Final synthesis: combine ML ensemble + bridge models + consensus into a
+blended prediction. Consensus comes from an env var set by the workflow so
+each release uses the live ForexFactory forecast, not a carry-over hardcode.
+"""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -23,17 +26,36 @@ from src.models import mask_covid
 PROC = Path(__file__).resolve().parent.parent / "data" / "processed"
 REPORTS = Path(__file__).resolve().parent.parent / "reports"
 
-CONSENSUS_NFP_K = 85.0   # REVISED post-ADP (was +120K pre-release, now +80-88K range)
 CONSENSUS_MAE_HIST_K = 55.0
+PREDICTION_MARKET_MAE_HIST_K = 40.0
 
-# Prediction market data (from Polymarket + Kalshi screenshots 2026-08-05 late afternoon)
-# Polymarket "How many jobs added in July?" ($25K vol): modal 50-100K at 40%,
-#   weighted midpoint EV ~85K
-# Kalshi "Jobs numbers in July 2026?" ($227K vol, higher liquidity, better signal):
-#   Above 60K 64%, Above 70K 58%, Above 80K 41% => implied central estimate ~80K
-# Averaging both markets (Kalshi weighted higher due to volume): ~82K
-PREDICTION_MARKET_NFP_K = 82.0
-PREDICTION_MARKET_MAE_HIST_K = 40.0  # prediction markets historically ~40K MAE for NFP
+
+def _resolve_consensus() -> float:
+    v = os.environ.get("NFP_CONSENSUS_K")
+    if v:
+        return float(v)
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        raise RuntimeError(
+            "NFP_CONSENSUS_K env var not set. The workflow must fetch the live"
+            " ForexFactory forecast for the target release date and pass it here."
+            " Refusing to publish a prediction anchored to a stale hardcoded value."
+        )
+    print("[warn] NFP_CONSENSUS_K not set — using local-dev fallback of 85.0 (July 2026 baseline)")
+    return 85.0
+
+
+def _resolve_prediction_market() -> tuple[float, bool]:
+    # Kalshi/Polymarket ticker mapping isn't verified yet (ROADMAP §237). Until
+    # Phase 1.5 wires real markets, this stays a hardcoded July baseline. The
+    # is_stale flag propagates into the ourCall caveat so consumers see it.
+    v = os.environ.get("NFP_PREDICTION_MARKET_K")
+    if v:
+        return float(v), False
+    return 82.0, True
+
+
+CONSENSUS_NFP_K = _resolve_consensus()
+PREDICTION_MARKET_NFP_K, PREDICTION_MARKET_STALE = _resolve_prediction_market()
 
 
 def compute_bridges(df, prediction_month):
@@ -56,9 +78,10 @@ def compute_bridges(df, prediction_month):
 
 
 def report():
+    release_date = os.environ.get("NFP_RELEASE_DATE", "unknown")
     print("=" * 78)
-    print(f"NFP PREDICTION FINAL REPORT — U.S. Nonfarm Payrolls (July 2026 ref)")
-    print(f"Release: Fri Aug 7 2026 08:30 ET  |  Report generated: {datetime.now().isoformat(timespec='seconds')}")
+    print(f"NFP PREDICTION FINAL REPORT — U.S. Nonfarm Payrolls (ref month {PREDICTION_MONTH.date()})")
+    print(f"Release: {release_date} 08:30 ET  |  Report generated: {datetime.now().isoformat(timespec='seconds')}")
     print("=" * 78)
 
     # 1. Load features + apply overrides
@@ -152,17 +175,6 @@ def report():
     w_c_fp = w_c
     w_fp = w_fp
 
-    # 6. Print report
-    print("\n### KNOWN INPUTS FOR JULY 2026 ###")
-    print(f"  ADP Nonfarm Private (Jul):    +68K  (vs 98K consensus — MISS -30K)")
-    print(f"  Jobless Claims 4wk avg:      ~203K  (LOW — labor market not deteriorating)")
-    print(f"  ISM Mfg Employment (Jul):    52.8  (up +3.1, expansion first time in 33mo)")
-    print(f"  Empire State employment:     11.4  (positive)")
-    print(f"  Philly Fed employment:       10.0  (positive)")
-    print(f"  UMich Consumer Sentiment:    55.2  (5-month high, +11.5% MoM)")
-    print(f"  Challenger Job Cuts:      62,075   (+29% MoM, +140% YoY — BEARISH)")
-    print(f"  Prior month NFP (Jun):       +57K  (weak print)")
-
     print("\n### MODEL PREDICTIONS ###")
     print(f"\n  ML ensemble (revised target, 9 models):        {ml_ensemble:+7.1f} K")
     print(f"    weighted RMSE: {ml_rmse:.0f}K   dispersion: {ml_dispersion:.0f}K")
@@ -223,53 +235,12 @@ def report():
         lean = "IN LINE WITH consensus"
     print(f"  {lean}  ({delta:+.0f} K deviation)")
 
-    print("\n### SIGNAL BALANCE ###")
-    print("  BULLISH signals:")
-    print("    + ISM Mfg Employment breakout (+3.1, first expansion in 33mo)")
-    print("    + Jobless claims LOW (~203K 4wk avg)")
-    print("    + UMich sentiment 5-month high (55.2)")
-    print("    + Empire/Philly Fed employment positive")
-    print("  BEARISH signals:")
-    print("    - ADP MISS (+68K vs 98K consensus, -30K)")
-    print("    - Challenger job cuts SURGE (+140% YoY)")
-    print("    - Prior NFP (Jun) was WEAK (+57K)")
-    print("    - Trend deceleration (12mo avg only +42K)")
-
-    # Save markdown report
-    md_path = REPORTS / f"final_forecast_{PREDICTION_MONTH.strftime('%Y_%m')}.md"
-    with open(md_path, "w") as f:
-        f.write(f"# NFP Forecast — July 2026 (release Fri Aug 7 2026)\n\n")
-        f.write(f"Generated: {datetime.now().isoformat(timespec='seconds')}\n\n")
-        f.write(f"## Final blended forecast\n\n")
-        f.write(f"**{blended:+.0f}K jobs**  (68% CI [{blended-blended_rmse:+.0f}, {blended+blended_rmse:+.0f}])\n\n")
-        f.write(f"Directional lean: **{lean}** ({delta:+.0f}K deviation)\n\n")
-        f.write(f"## Components\n\n")
-        f.write(f"| Component | Point | RMSE |\n|---|---|---|\n")
-        f.write(f"| ML ensemble (9 models) | {ml_ensemble:+.0f}K | {ml_rmse:.0f}K |\n")
-        f.write(f"| Bridge models (median of {len(bridge_preds)}) | {bridge_median:+.0f}K | ~110K |\n")
-        f.write(f"| All-models grand median | {grand_median:+.0f}K | dispersion {grand_std:.0f}K |\n")
-        f.write(f"| Consensus (Bloomberg pre-ADP) | {CONSENSUS_NFP_K:+.0f}K | {CONSENSUS_MAE_HIST_K:.0f}K |\n")
-        f.write(f"| **Blended (Bayesian)** | **{blended:+.0f}K** | **{blended_rmse:.0f}K** |\n\n")
-        f.write(f"## Known inputs used\n\n")
-        f.write(f"- ADP Jul: +68K (miss -30K)\n")
-        f.write(f"- Jobless claims 4wk: ~203K (low)\n")
-        f.write(f"- ISM Mfg Employment: 52.8 (+3.1 breakout)\n")
-        f.write(f"- Empire/Philly Fed employment: positive\n")
-        f.write(f"- UMich Sentiment: 55.2 (5mo high)\n")
-        f.write(f"- Challenger cuts: 62,075 (+140% YoY)\n\n")
-        f.write(f"## All model predictions\n\n")
-        f.write(f"```\n{merged[['model','prediction_k','MAE']].to_string(index=False)}\n```\n\n")
-        f.write(f"### Bridge models\n\n```\n")
-        for name, pred in sorted(bridge_preds.items(), key=lambda x: x[1]):
-            f.write(f"{name:30s}  {pred:+7.1f}K\n")
-        f.write(f"```\n")
-    print(f"\nReport saved: {md_path}")
-
     return {"blended": blended, "blended_rmse": blended_rmse,
             "ml_ensemble": ml_ensemble, "bridge_median": bridge_median,
             "grand_median": grand_median, "lean": lean,
             "first_print_ensemble": fp_ensemble, "sector_pred": sector_pred,
-            "consensus": CONSENSUS_NFP_K, "pred_markets": PREDICTION_MARKET_NFP_K}
+            "consensus": CONSENSUS_NFP_K, "pred_markets": PREDICTION_MARKET_NFP_K,
+            "pred_markets_stale": PREDICTION_MARKET_STALE}
 
 
 if __name__ == "__main__":
