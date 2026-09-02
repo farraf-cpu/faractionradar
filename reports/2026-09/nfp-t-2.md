@@ -1,7 +1,7 @@
 # NFP prediction — target 2026-09-04 (T-2)
 
 **Model version:** `v1-bayesian-blend`
-**Published:** 2026-09-02T22:21:17.013682+00:00
+**Published:** 2026-09-02T22:26:11.651825+00:00
 
 ## Final pick
 
