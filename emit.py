@@ -110,6 +110,7 @@ def post_to_worker(url: str, auth_key: str, payload: dict) -> None:
         headers={
             "content-type": "application/json",
             "x-upload-auth": auth_key,
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
         },
     )
     try:
