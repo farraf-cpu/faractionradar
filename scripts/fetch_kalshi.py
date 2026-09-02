@@ -66,7 +66,13 @@ def get_json(url: str, timeout: int = 20) -> dict | list | None:
 
 def fetch_series_snapshot(series_ticker: str) -> dict | None:
     """Pull the series' open events + each event's markets + top-of-book yes."""
-    events_url = f"{KALSHI_BASE}/events?series_ticker={urllib.parse.quote(series_ticker)}&limit=100"
+    # with_nested_markets=true inlines the markets array on each event, saving
+    # an N+1 round trip per series (Kalshi's /events returns bare event shells
+    # without it).
+    events_url = (
+        f"{KALSHI_BASE}/events?series_ticker={urllib.parse.quote(series_ticker)}"
+        "&limit=100&with_nested_markets=true"
+    )
     events_data = get_json(events_url)
     if not events_data or not isinstance(events_data, dict):
         return None
