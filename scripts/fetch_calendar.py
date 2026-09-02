@@ -25,7 +25,9 @@ from datetime import datetime, timezone
 
 FF_URLS = {
     "thisWeek": "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
-    "nextWeek": "https://nfs.faireconomy.media/ff_calendar_nextweek.json",
+    # ForexFactory dropped the nextweek/lastweek/thismonth JSON endpoints;
+    # only thisweek is served. Confirmed 2026-09-02 (all variants return 404
+    # from residential IPs, not a CF-block). Reinstate if FF republishes.
 }
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
@@ -66,19 +68,17 @@ def main() -> int:
     worker_url = require_env("CALENDAR_WORKER_URL").rstrip("/") + "/upload-events"
 
     this_week, this_status = fetch_json(FF_URLS["thisWeek"])
-    next_week, next_status = fetch_json(FF_URLS["nextWeek"])
     print(f"[fetch-calendar] thisWeek: {this_status} ({len(this_week) if this_week else 0} events)")
-    print(f"[fetch-calendar] nextWeek: {next_status} ({len(next_week) if next_week else 0} events)")
 
-    if this_week is None and next_week is None:
-        print("[fetch-calendar] both feeds failed — nothing to upload", file=sys.stderr)
+    if this_week is None:
+        print("[fetch-calendar] thisWeek fetch failed — nothing to upload", file=sys.stderr)
         return 1
 
     payload = {
-        "thisWeek": this_week or [],
-        "nextWeek": next_week or [],
+        "thisWeek": this_week,
+        "nextWeek": [],
         "fetchedAt": datetime.now(timezone.utc).isoformat(),
-        "sourceStatus": {"thisWeek": this_status, "nextWeek": next_status},
+        "sourceStatus": {"thisWeek": this_status, "nextWeek": "unavailable"},
     }
     body = json.dumps(payload).encode("utf-8")
 

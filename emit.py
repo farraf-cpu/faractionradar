@@ -66,6 +66,17 @@ def format_grand_median(result: dict) -> dict:
 def build_report_md(result: dict, release_date: str, days_out: int, model_version: str) -> str:
     b = result["blended"]
     r = result["blended_rmse"]
+    pm_note = " (stale, see caveat)" if result.get("pred_markets_stale") else ""
+    caveat_section = ""
+    if result.get("pred_markets_stale"):
+        caveat_section = (
+            "\n## Caveats\n\n"
+            "The prediction-markets input is a hardcoded July baseline pending"
+            " Kalshi ticker-mapping verification (Phase 1.5). Consensus is live"
+            " from ForexFactory; the point estimate is anchored to live"
+            " consensus + first-print model output. The markets weight will"
+            " refresh once real ticker mapping lands.\n"
+        )
     return f"""# NFP prediction — target {release_date} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -78,13 +89,13 @@ def build_report_md(result: dict, release_date: str, days_out: int, model_versio
 - 68% CI: [{b-r:+.0f}, {b+r:+.0f}] K
 - 95% CI: [{b-2*r:+.0f}, {b+2*r:+.0f}] K
 - Lean vs consensus: {result['lean']}
-
+{caveat_section}
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | Bloomberg consensus       | {result['consensus']:+7.0f} K | ~55 K |
-| Prediction markets (avg)  | {result['pred_markets']:+7.0f} K | ~40 K |
+| Prediction markets (avg)  | {result['pred_markets']:+7.0f} K{pm_note} | ~40 K |
 | ML ensemble (revised)     | {result['ml_ensemble']:+7.0f} K | — |
 | First-print ensemble      | {result['first_print_ensemble']:+7.0f} K | — |
 | Bridge models median      | {result['bridge_median']:+7.0f} K | — |

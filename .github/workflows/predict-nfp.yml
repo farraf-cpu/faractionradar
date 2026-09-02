@@ -92,24 +92,35 @@ jobs:
               and re.match(r"^non-?farm employment change$", (e.get("title") or "").strip(), re.I)
               and (e.get("date") or "").startswith(rel)
           ]
+
+          def skip(reason: str) -> None:
+              """Soft-skip the predict step. Not an error — ForexFactory frequently
+              publishes the forecast late in the T-7..T-1 window. Cron retries daily."""
+              print(f"::notice::skipping predict for {rel}: {reason}")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("skip=true\n")
+              sys.exit(0)
+
           if not matches:
-              print(f"::error::no NFP event found in worker /?read for release {rel}")
-              sys.exit(1)
+              skip(f"no NFP event in worker /?read (worker may not have fetched next-week's calendar yet)")
           forecast = matches[0].get("forecast")
           if not forecast:
-              print(f"::error::NFP event for {rel} has no forecast field")
-              sys.exit(1)
+              skip(f"NFP event exists but forecast is null (FF publishes closer to release)")
           m = re.match(r"^([-+]?\d+(?:\.\d+)?)\s*[Kk]?$", forecast.strip())
           if not m:
+              # Unparseable forecast is a real problem, not a wait-and-retry:
+              # every FF forecast we've observed matches the "NNK" pattern.
               print(f"::error::unparseable forecast value: {forecast!r}")
               sys.exit(1)
           consensus_k = float(m.group(1))
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"consensus_k={consensus_k}\n")
+              f.write("skip=false\n")
           print(f"consensus for NFP {rel}: {consensus_k}K (from ForexFactory forecast {forecast!r})")
           PY
 
       - name: Run predictor + POST to calendar-worker
+        if: steps.consensus.outputs.skip != 'true'
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           UPLOAD_AUTH_KEY: ${{ secrets.UPLOAD_AUTH_KEY }}
@@ -121,6 +132,7 @@ jobs:
         run: python emit.py
 
       - name: Commit report + ledger row
+        if: steps.consensus.outputs.skip != 'true'
         run: |
           git config user.name  "faractionradar-bot"
           git config user.email "bot@faractionradar.com"
