@@ -1,14 +1,14 @@
 # NFP prediction — target 2026-09-04 (T-2)
 
 **Model version:** `v1-bayesian-blend`
-**Published:** 2026-09-02T14:15:48.508926+00:00
+**Published:** 2026-09-02T22:21:17.013682+00:00
 
 ## Final pick
 
-**+80K jobs**
+**+81K jobs**
 
-- 68% CI: [+50, +111] K
-- 95% CI: [+19, +142] K
+- 68% CI: [+50, +112] K
+- 95% CI: [+19, +143] K
 - Lean vs consensus: MODESTLY ABOVE consensus
 
 ## Caveats
@@ -21,9 +21,9 @@ The prediction-markets input is a hardcoded July baseline pending Kalshi ticker-
 |-----------|-------|----------------|
 | Bloomberg consensus       |     +55 K | ~55 K |
 | Prediction markets (avg)  |     +82 K (stale, see caveat) | ~40 K |
-| ML ensemble (revised)     |     +20 K | — |
-| First-print ensemble      |    +166 K | — |
+| ML ensemble (revised)     |     +22 K | — |
+| First-print ensemble      |    +168 K | — |
 | Bridge models median      |    +109 K | — |
-| Sector decomposition (11) |    +109 K | — |
+| Sector decomposition (11) |    +110 K | — |
 | Grand median (all models) |     +94 K | — |
-| **Blended (Bayesian)**    | **    +80 K** | — |
+| **Blended (Bayesian)**    | **    +81 K** | — |
