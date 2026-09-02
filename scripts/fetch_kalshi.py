@@ -115,17 +115,26 @@ def fetch_series_snapshot(series_ticker: str) -> dict | None:
         return None
     events = events_data.get("events") or []
 
-    # Pick the nearest-future event as our "focus" — this is the one we
-    # care about for live prediction-market data. Kalshi events don't
-    # always have close_time populated (some show null), so we sort by
-    # event_ticker ascending as a fallback since Kalshi tickers embed
-    # the release date in YYMMM format (KXPAYROLLS-26SEP).
-    today = datetime.now(timezone.utc).date().isoformat()
-    def close_or_ticker(ev):
-        return ev.get("close_time") or ev.get("event_ticker") or ""
-    future_events = [ev for ev in events if (ev.get("close_time") or "9999") >= today]
-    future_events.sort(key=close_or_ticker)
-    focus_event = future_events[0] if future_events else None
+    # Pick the nearest-future event as our "focus". Kalshi events often
+    # show close_time: null even for real active events — fall back to the
+    # earliest close_time across the event's nested markets (which IS
+    # populated). Filter out events whose derived close_time is in the past.
+    today_iso = datetime.now(timezone.utc).date().isoformat()
+    def derived_close(ev):
+        if ev.get("close_time"):
+            return ev["close_time"]
+        market_closes = [m.get("close_time") for m in (ev.get("markets") or []) if m.get("close_time")]
+        return min(market_closes) if market_closes else None
+    with_close = []
+    for ev in events:
+        c = derived_close(ev)
+        if not c:
+            continue  # can't date it; skip
+        if c[:10] < today_iso:
+            continue  # past
+        with_close.append((c, ev))
+    with_close.sort(key=lambda x: x[0])
+    focus_event = with_close[0][1] if with_close else None
 
     enriched = []
     for ev in events:
