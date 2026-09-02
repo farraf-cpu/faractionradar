@@ -1,0 +1,28 @@
+name: Fetch Kalshi
+
+on:
+  # 6h cron matches fetch-calendar cadence. Kalshi contracts don't move
+  # fast enough to warrant more frequent polling; more importantly Kalshi
+  # rate-limits per-IP so tighter cadence risks getting the runner IP
+  # pool onto their block list.
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: fetch-kalshi
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Fetch Kalshi + POST to worker
+        env:
+          UPLOAD_AUTH_KEY: ${{ secrets.UPLOAD_AUTH_KEY }}
+          CALENDAR_WORKER_URL: https://faractionradar-calendar.faractionradar.workers.dev
+        run: python scripts/fetch_kalshi.py
