@@ -2,10 +2,11 @@
 into a comprehensive prediction report."""
 from __future__ import annotations
 
-import sys
-sys.path.insert(0, "C:/Predictor")
-
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+
 from datetime import datetime
 
 import numpy as np
@@ -19,8 +20,8 @@ from src.first_print_model import (build_first_print_features, predict_first_pri
 from sklearn.linear_model import LinearRegression
 from src.models import mask_covid
 
-PROC = Path("C:/Predictor/data/processed")
-REPORTS = Path("C:/Predictor/reports")
+PROC = Path(__file__).resolve().parent.parent / "data" / "processed"
+REPORTS = Path(__file__).resolve().parent.parent / "reports"
 
 CONSENSUS_NFP_K = 85.0   # REVISED post-ADP (was +120K pre-release, now +80-88K range)
 CONSENSUS_MAE_HIST_K = 55.0

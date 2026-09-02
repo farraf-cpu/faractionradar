@@ -7,10 +7,11 @@ matching that target lets us compare apples-to-apples.
 """
 from __future__ import annotations
 
-import sys
-sys.path.insert(0, "C:/Predictor")
-
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+
 
 import numpy as np
 import pandas as pd
@@ -26,8 +27,8 @@ try:
 except ImportError:
     XGBRegressor = None
 
-RAW = Path("C:/Predictor/data/raw")
-PROC = Path("C:/Predictor/data/processed")
+RAW = Path(__file__).resolve().parent.parent / "data" / "raw"
+PROC = Path(__file__).resolve().parent.parent / "data" / "processed"
 
 
 def load_first_print_target() -> pd.Series:

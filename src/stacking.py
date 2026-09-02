@@ -10,10 +10,11 @@ Approach:
 """
 from __future__ import annotations
 
-import sys
-sys.path.insert(0, "C:/Predictor")
-
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+
 
 import numpy as np
 import pandas as pd
@@ -25,7 +26,7 @@ from src.models import mask_covid, COVID_START, COVID_END
 from src.build_features import PREDICTION_MONTH
 from src.bridge_backtest import JULY_OVERRIDES
 
-PROC = Path("C:/Predictor/data/processed")
+PROC = Path(__file__).resolve().parent.parent / "data" / "processed"
 
 
 def stack_walk_forward(df, target_col, feature_cols,

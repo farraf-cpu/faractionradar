@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
-sys.path.insert(0, "C:/Predictor")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 import pandas as pd
@@ -15,8 +15,8 @@ import pandas as pd
 from src.build_features import build_feature_matrix, PREDICTION_MONTH
 from src.models import predict_next
 
-PROC = Path("C:/Predictor/data/processed")
-REPORTS = Path("C:/Predictor/reports")
+PROC = Path(__file__).resolve().parent.parent / "data" / "processed"
+REPORTS = Path(__file__).resolve().parent.parent / "reports"
 REPORTS.mkdir(parents=True, exist_ok=True)
 
 # Manual overrides for late-arriving data (populate as they release)

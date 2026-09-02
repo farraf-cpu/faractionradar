@@ -8,18 +8,19 @@ Steps:
 """
 from __future__ import annotations
 
+import os
 import sys
 import time
 from pathlib import Path
 
-# Repo-root on sys.path so `from src.foo import bar` works whether we're
-# invoked from repo root, a subdir, or a GHA runner.
 sys.path.insert(0, str(Path(__file__).parent))
 
-BANNER = """
+RELEASE_DATE = os.environ.get("NFP_RELEASE_DATE", "unknown")
+
+BANNER = f"""
 ================================================================================
                     U.S. NONFARM PAYROLLS PREDICTOR
-                    Target: Fri Aug 7 2026 08:30 ET
+                    Target release: {RELEASE_DATE} 08:30 ET
 ================================================================================
 """
 
@@ -62,7 +63,7 @@ def main(refresh_data: bool = True):
     print("#" + " " * 78 + "#")
     print("#" + f"           >>>  MY FINAL PICK:  {b:+.0f} K  jobs  <<<".ljust(78) + "#")
     print("#" + " " * 78 + "#")
-    print("#" + f"           Release: Fri Aug 7 2026 08:30 ET".ljust(78) + "#")
+    print("#" + f"           Release: {RELEASE_DATE} 08:30 ET".ljust(78) + "#")
     print("#" + f"           Confidence: 68% chance the print lands in [{b-r:+.0f}, {b+r:+.0f}] K".ljust(78) + "#")
     print("#" + " " * 78 + "#")
     print("#" * 80)
@@ -91,8 +92,6 @@ def main(refresh_data: bool = True):
     print(f"|    Blended (Bayesian FINAL):     {b:+7.0f} K   <-- THIS IS THE ANSWER          |")
     print("+" + "=" * 78 + "+")
     print()
-    print(f"Report saved: C:\\Predictor\\reports\\final_forecast_2026_07.md")
-    print(f"Brief:        C:\\Predictor\\BRIEF.md")
     print(f"Runtime: {elapsed:.1f} seconds")
     return result
 

@@ -5,10 +5,11 @@ to bound the range of reasonable forecasts.
 """
 from __future__ import annotations
 
-import sys
-sys.path.insert(0, "C:/Predictor")
-
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+
 
 import numpy as np
 import pandas as pd
@@ -18,7 +19,7 @@ from src.build_features import build_feature_matrix, PREDICTION_MONTH
 from src.models import mask_covid
 from src.bridge_backtest import BRIDGE_SPECS, JULY_OVERRIDES
 
-PROC = Path("C:/Predictor/data/processed")
+PROC = Path(__file__).resolve().parent.parent / "data" / "processed"
 
 
 def run_scenario(overrides: dict) -> dict:

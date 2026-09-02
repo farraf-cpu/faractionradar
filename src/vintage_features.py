@@ -15,7 +15,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-RAW = Path("C:/Predictor/data/raw")
+RAW = Path(__file__).resolve().parent.parent / "data" / "raw"
 
 ALFRED_URL = "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id={sid}&vintage_date={dt}"
 

@@ -6,10 +6,11 @@ that isn't diluted by correlated features in a multivariate model.
 """
 from __future__ import annotations
 
-import sys
-sys.path.insert(0, "C:/Predictor")
-
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+
 
 import numpy as np
 import pandas as pd
@@ -17,7 +18,7 @@ from sklearn.linear_model import LinearRegression
 
 from src.models import load_features, mask_covid
 
-PROC = Path("C:/Predictor/data/processed")
+PROC = Path(__file__).resolve().parent.parent / "data" / "processed"
 
 
 def fit_adp_bridge(df: pd.DataFrame, train_start=pd.Timestamp("2010-01-01"),

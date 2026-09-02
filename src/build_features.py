@@ -12,16 +12,30 @@ Timing model — when predicting NFP for reference month t (released early t+1):
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-RAW = Path("C:/Predictor/data/raw")
-PROC = Path("C:/Predictor/data/processed")
+REPO_ROOT = Path(__file__).resolve().parent.parent
+RAW = REPO_ROOT / "data" / "raw"
+PROC = REPO_ROOT / "data" / "processed"
 PROC.mkdir(parents=True, exist_ok=True)
 
-PREDICTION_MONTH = pd.Timestamp("2026-07-01")
+
+def _prediction_month() -> pd.Timestamp:
+    """Reference month = the payrolls month reported on NFP_RELEASE_DATE.
+    A Sep 4 release reports August payrolls, so it's release_date's month - 1.
+    Falls back to a hardcoded value for local dev when the env var is unset."""
+    override = os.environ.get("NFP_RELEASE_DATE")
+    if override:
+        rel = pd.Timestamp(override)
+        return (rel - pd.DateOffset(months=1)).to_period("M").to_timestamp()
+    return pd.Timestamp("2026-07-01")
+
+
+PREDICTION_MONTH = _prediction_month()
 
 
 def load(sid: str) -> pd.Series:

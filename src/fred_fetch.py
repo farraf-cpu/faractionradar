@@ -1,7 +1,11 @@
-"""Pull FRED time series via public CSV endpoint. No API key required."""
+"""Pull FRED time series via the FRED API. Requires FRED_API_KEY env var.
+
+The public graph endpoint (`fred.stlouisfed.org/graph/fredgraph.csv`) is blocked
+from GitHub Actions runners — every request read-times-out. The API subdomain
+(`api.stlouisfed.org`) is not blocked, but requires a key.
+"""
 from __future__ import annotations
 
-import io
 import os
 import sys
 from datetime import datetime
@@ -10,7 +14,9 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-FRED_CSV_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_CACHE = REPO_ROOT / "data" / "raw"
+FRED_API_URL = "https://api.stlouisfed.org/fred/series/observations"
 
 SERIES = {
     "PAYEMS":   "Total Nonfarm Payrolls (SA, thousands) — TARGET SOURCE",
@@ -51,13 +57,22 @@ SERIES = {
 }
 
 
-def fetch_series(sid: str, cache_dir: str | Path = "C:/Predictor/data/raw", timeout: int = 30) -> pd.DataFrame:
+def fetch_series(sid: str, cache_dir: str | Path = DEFAULT_CACHE, timeout: int = 30) -> pd.DataFrame:
     """Fetch a single FRED series as a two-column DataFrame (date, value)."""
-    url = FRED_CSV_URL.format(sid=sid)
-    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Predictor/1.0"})
+    api_key = os.environ.get("FRED_API_KEY")
+    if not api_key:
+        raise RuntimeError("FRED_API_KEY env var is not set")
+    r = requests.get(
+        FRED_API_URL,
+        params={"series_id": sid, "api_key": api_key, "file_type": "json"},
+        timeout=timeout,
+        headers={"User-Agent": "faractionradar-predictor/1.0"},
+    )
     r.raise_for_status()
-    df = pd.read_csv(io.StringIO(r.text))
-    df.columns = ["date", "value"]
+    obs = r.json().get("observations", [])
+    if not obs:
+        raise RuntimeError(f"empty observations payload for {sid}")
+    df = pd.DataFrame(obs)[["date", "value"]]
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df["value"] = pd.to_numeric(df["value"], errors="coerce")
     df = df.dropna(subset=["date", "value"]).reset_index(drop=True)
@@ -67,7 +82,7 @@ def fetch_series(sid: str, cache_dir: str | Path = "C:/Predictor/data/raw", time
     return df
 
 
-def fetch_all(cache_dir: str | Path = "C:/Predictor/data/raw") -> dict[str, pd.DataFrame]:
+def fetch_all(cache_dir: str | Path = DEFAULT_CACHE) -> dict[str, pd.DataFrame]:
     """Fetch every series in SERIES. Prints per-series status. Returns dict of DataFrames."""
     results: dict[str, pd.DataFrame] = {}
     for sid, desc in SERIES.items():
@@ -83,7 +98,7 @@ def fetch_all(cache_dir: str | Path = "C:/Predictor/data/raw") -> dict[str, pd.D
 
 
 if __name__ == "__main__":
-    print(f"Fetching {len(SERIES)} FRED series to C:/Predictor/data/raw/")
+    print(f"Fetching {len(SERIES)} FRED series to {DEFAULT_CACHE}")
     print(f"Start: {datetime.now().isoformat(timespec='seconds')}\n")
     fetch_all()
     print(f"\nDone: {datetime.now().isoformat(timespec='seconds')}")

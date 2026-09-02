@@ -22,10 +22,11 @@ Sectors (thousands of jobs, June 2026 levels):
 """
 from __future__ import annotations
 
-import sys
-sys.path.insert(0, "C:/Predictor")
-
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+
 
 import numpy as np
 import pandas as pd
@@ -35,8 +36,8 @@ from src.build_features import build_feature_matrix, load, load_raw, lag_months,
 from src.models import mask_covid, COVID_START, COVID_END
 from src.bridge_backtest import JULY_OVERRIDES
 
-RAW = Path("C:/Predictor/data/raw")
-PROC = Path("C:/Predictor/data/processed")
+RAW = Path(__file__).resolve().parent.parent / "data" / "raw"
+PROC = Path(__file__).resolve().parent.parent / "data" / "processed"
 
 # Sector series with sector-specific predictor sets. Predictors must be present
 # in the feature matrix (or added inline).

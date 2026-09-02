@@ -28,7 +28,7 @@ from sklearn.preprocessing import StandardScaler
 
 warnings.filterwarnings("ignore")
 
-PROC = Path("C:/Predictor/data/processed")
+PROC = Path(__file__).resolve().parent.parent / "data" / "processed"
 COVID_START = pd.Timestamp("2020-03-01")
 COVID_END = pd.Timestamp("2020-12-01")
 
