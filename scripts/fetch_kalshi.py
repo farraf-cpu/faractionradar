@@ -65,13 +65,21 @@ def get_json(url: str, timeout: int = 20) -> dict | list | None:
         return None
 
 
+_DEBUG_DUMPED = False
+
 def fetch_market_detail(ticker: str) -> dict | None:
     """Individual market fetch — this is the endpoint that carries live prices.
     Bulk /markets?event_ticker=X returns definitions only (all prices null)."""
+    global _DEBUG_DUMPED
     url = f"{KALSHI_BASE}/markets/{urllib.parse.quote(ticker)}"
     data = get_json(url)
     if not data or not isinstance(data, dict):
         return None
+    if not _DEBUG_DUMPED:
+        print(f"[fetch-kalshi] DEBUG raw /markets/{ticker} response:")
+        print(f"  keys: {list(data.keys())}")
+        print(f"  full: {json.dumps(data)[:800]}")
+        _DEBUG_DUMPED = True
     m = data.get("market") or {}
     def cents(v):
         return v / 100.0 if isinstance(v, (int, float)) else None
