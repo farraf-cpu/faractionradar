@@ -90,10 +90,12 @@ jobs:
               with open("/tmp/kalshi-implied.json") as f:
                   data = json.load(f)
               nfp = (data.get("implied") or {}).get("nfp")
+              # Worker now normalizes: value_k is already in K units for NFP
+              # (unit="jobs" with kUnitsPerRaw=1/1000 applied worker-side).
+              # value_raw is the raw threshold count if we need it.
               if nfp and isinstance(nfp.get("value_k"), (int, float)):
-                  raw = nfp["value_k"]
-                  as_k = raw / 1000.0
-                  print(f"kalshi implied NFP: raw={raw} -> {as_k}K (ticker={nfp.get('ticker')}, method={nfp.get('method')}, rungs={nfp.get('rungs_used')})")
+                  as_k = float(nfp["value_k"])
+                  print(f"kalshi implied NFP: {nfp.get('display')} ({as_k}K, ticker={nfp.get('ticker')}, method={nfp.get('method')}, rungs={nfp.get('rungs_used')})")
                   with open(os.environ["GITHUB_OUTPUT"], "a") as f:
                       f.write(f"pm_value_k={as_k}\n")
                       f.write("pm_available=true\n")
