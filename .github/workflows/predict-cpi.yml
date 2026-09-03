@@ -175,7 +175,7 @@ jobs:
           CPI_DAYS_OUT: ${{ needs.gate.outputs.cpi_days_out }}
           CPI_CONSENSUS_PCT: ${{ steps.consensus.outputs.consensus_pct }}
           CPI_MARKET_PCT: ${{ steps.market.outputs.pm_value_pct }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v1.1-simple-blend
         run: python emit_cpi.py
 
       - name: Commit report + ledger row

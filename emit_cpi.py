@@ -41,10 +41,17 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 # Market: Kalshi CPI event MAE hard to bound before we have live scoring; use
 # 0.12 pp as a conservative starting weight. Trend: naive 6-mo mean of recent
 # CPI m/m as a persistence check, MAE ~0.15 pp (regime-dependent).
+# Historical MAE benchmarks (percentage points on headline CPI m/m).
+# Consensus: Bloomberg/FF ~0.08. Market: Kalshi ~0.12 (bootstrap). Trend: naive
+# 6-mo mean of past CPIAUCSL m/m ~0.15 (regime-dependent). Trimmed-mean:
+# Dallas Fed 8% trimmed-mean CPI m/m — good mean-reverting anchor, published
+# alongside headline release with modest lag, historical MAE ~0.10pp when
+# used as a standalone predictor of headline m/m.
 MAE = {
-    "consensus": 0.08,
-    "market":    0.12,
-    "trend":     0.15,
+    "consensus":    0.08,
+    "market":       0.12,
+    "trimmed_mean": 0.10,
+    "trend":        0.15,
 }
 
 
@@ -67,22 +74,30 @@ def parse_pct(env_key: str) -> float | None:
         return None
 
 
-def fetch_fred_cpi_trend(api_key: str) -> float | None:
-    """Return mean of last 6 published m/m %-changes of CPIAUCSL headline.
-    Used only as a naive persistence-anchor sub-model."""
+def _fetch_fred_observations(api_key: str, series_id: str, limit: int) -> list[dict] | None:
+    """Shared FRED series-observations fetcher. Returns raw observations
+    list (newest-first) or None on error / empty. Filters out '.' / '' values."""
     url = ("https://api.stlouisfed.org/fred/series/observations"
-           f"?series_id=CPIAUCSL&api_key={urllib.parse.quote(api_key)}"
-           "&file_type=json&sort_order=desc&limit=8")
+           f"?series_id={urllib.parse.quote(series_id)}"
+           f"&api_key={urllib.parse.quote(api_key)}"
+           f"&file_type=json&sort_order=desc&limit={limit}")
     req = urllib.request.Request(url, headers={"user-agent": UA})
     try:
         with urllib.request.urlopen(req, timeout=20) as res:
             data = json.loads(res.read().decode("utf-8"))
     except Exception as e:
-        print(f"[emit-cpi] FRED CPIAUCSL fetch failed: {e}", file=sys.stderr)
+        print(f"[emit-cpi] FRED {series_id} fetch failed: {e}", file=sys.stderr)
         return None
     obs = [o for o in (data.get("observations") or [])
            if o.get("value") not in (None, ".", "")]
-    if len(obs) < 7:
+    return obs or None
+
+
+def fetch_fred_cpi_trend(api_key: str) -> float | None:
+    """Return mean of last 6 published m/m %-changes of CPIAUCSL headline.
+    Used only as a naive persistence-anchor sub-model."""
+    obs = _fetch_fred_observations(api_key, "CPIAUCSL", 8)
+    if not obs or len(obs) < 7:
         return None
     # Newest first; compute 6 most-recent m/m %-changes from 7 most-recent levels.
     levels = [float(o["value"]) for o in obs[:7]]
@@ -97,8 +112,24 @@ def fetch_fred_cpi_trend(api_key: str) -> float | None:
     return sum(mom_pcts) / len(mom_pcts)
 
 
+def fetch_fred_trimmed_mean(api_key: str) -> float | None:
+    """Dallas Fed 8% trimmed-mean CPI m/m %-change, most recent observation.
+    Series ID: TRMMEANCPIM159SFRBDAL. Published monthly alongside CPI headline;
+    a good mean-reverting anchor because it excludes the top + bottom 8% of
+    price change tails (energy spikes, one-off jumps). Used as a Phase 2
+    sub-model that historically forecasts headline m/m with ~0.10pp MAE."""
+    obs = _fetch_fred_observations(api_key, "TRMMEANCPIM159SFRBDAL", 1)
+    if not obs:
+        return None
+    try:
+        return float(obs[0]["value"])
+    except (ValueError, KeyError):
+        return None
+
+
 def blend(consensus: float | None,
           market: float | None,
+          trimmed_mean: float | None,
           trend: float | None) -> tuple[float, float, list[str]]:
     """Inverse-variance blend of available sub-models.
     Returns (point_estimate, blended_sigma_pp, used_labels)."""
@@ -107,6 +138,8 @@ def blend(consensus: float | None,
         parts.append(("consensus", consensus, MAE["consensus"]))
     if market is not None:
         parts.append(("market", market, MAE["market"]))
+    if trimmed_mean is not None:
+        parts.append(("trimmed_mean", trimmed_mean, MAE["trimmed_mean"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
     if not parts:
@@ -140,11 +173,12 @@ def format_value(pct: float) -> str:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    market: float | None, trend: float | None,
-                    used: list[str], lean: str) -> str:
+                    market: float | None, trimmed_mean: float | None,
+                    trend: float | None, used: list[str], lean: str) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f} pp |"
-        for name, v in (("consensus", consensus), ("market", market), ("trend", trend))
+        for name, v in (("consensus", consensus), ("market", market),
+                        ("trimmed_mean", trimmed_mean), ("trend", trend))
     )
     return f"""# CPI prediction — target {release} (T-{days_out})
 
@@ -168,11 +202,16 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-v1-simple-blend: inverse-MAE-weighted mean of the sub-models above. Weights
-are hardcoded from published/estimated MAE benchmarks (consensus 0.08pp,
-market 0.12pp, trend 0.15pp). CI is inverse-variance-combined sigma. This
-is a Phase 1.5 placeholder — Phase 2 target is a proper Bayesian blend with
-Cleveland Fed nowcast + trimmed-mean sub-model + shelter/energy carve-outs.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of up to 4 sub-models.
+Consensus + Kalshi market + FRED trimmed-mean CPI + FRED CPIAUCSL 6-mo
+trend. Weights are `1 / MAE`, so tighter historical sources dominate.
+CI is inverse-variance-combined sigma. `TRMMEANCPIM159SFRBDAL` (Dallas
+Fed 8% trimmed mean m/m) added in v1.1 as a mean-reverting anchor that
+excludes the top + bottom 8% of price change tails — historically
+forecasts headline m/m with ~0.10pp MAE.
+
+Phase 2 target adds Cleveland Fed nowcast + shelter/energy carve-outs
+and restructures as a proper Bayesian blend with regime-aware weights.
 """
 
 
@@ -207,26 +246,28 @@ def main() -> None:
 
     release = os.environ["CPI_RELEASE_DATE"]
     days_out = int(os.environ["CPI_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
 
     consensus = parse_pct("CPI_CONSENSUS_PCT")
     market = parse_pct("CPI_MARKET_PCT")
 
     fred_key = os.environ.get("FRED_API_KEY")
     trend = fetch_fred_cpi_trend(fred_key) if fred_key else None
+    trimmed_mean = fetch_fred_trimmed_mean(fred_key) if fred_key else None
 
-    if consensus is None and market is None and trend is None:
+    if consensus is None and market is None and trend is None and trimmed_mean is None:
         print("[emit-cpi] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, market, trend)
+    point, sigma, used = blend(consensus, market, trimmed_mean, trend)
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-cpi] CPI {release} T-{days_out}: {format_value(point)} m/m "
           f"(sigma {sigma:.2f}pp, used: {', '.join(used)})")
-    if consensus is not None: print(f"  consensus:  {consensus:+.2f}%")
-    if market   is not None: print(f"  market:     {market:+.2f}%")
-    if trend    is not None: print(f"  trend(6mo): {trend:+.2f}%")
+    if consensus    is not None: print(f"  consensus:     {consensus:+.2f}%")
+    if market       is not None: print(f"  market:        {market:+.2f}%")
+    if trimmed_mean is not None: print(f"  trimmed_mean:  {trimmed_mean:+.2f}%")
+    if trend        is not None: print(f"  trend(6mo):    {trend:+.2f}%")
 
     prediction = {
         "eventSlug": f"cpi-{release}",
@@ -247,7 +288,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, market, trend, used, lean)
+                                consensus, market, trimmed_mean, trend, used, lean)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"cpi-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
