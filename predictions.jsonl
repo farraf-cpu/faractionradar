@@ -10,3 +10,4 @@
 {"publishedAt":"2026-09-03T10:06:17.242325+00:00","eventSlug":"ppi-2026-09-10","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.29,0.59],"grandMedian":null,"reportPath":"reports/2026-09/ppi-t-7.md"}
 {"publishedAt":"2026-09-03T10:14:42.086628+00:00","eventSlug":"pce-2026-09-22","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.24,0.44],"grandMedian":null,"reportPath":"reports/2026-09/pce-t-7.md"}
 {"publishedAt":"2026-09-03T10:34:58.441221+00:00","eventSlug":"retail-2026-09-16","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.25,1.05],"grandMedian":null,"reportPath":"reports/2026-09/retail-t-7.md"}
+{"publishedAt":"2026-09-03T11:46:01.834517+00:00","eventSlug":"claims-2026-09-10","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"206K","ci68":[192,220],"grandMedian":null,"reportPath":"reports/2026-09/claims-t-1.md"}
