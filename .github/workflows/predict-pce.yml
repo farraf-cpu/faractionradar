@@ -1,0 +1,146 @@
+name: Predict PCE
+
+on:
+  # Daily at 14:15 UTC — offset 15 min from NFP/CPI (14:00), FOMC (14:05),
+  # PPI (14:10). Prevents cron stacking.
+  schedule:
+    - cron: '15 14 * * *'
+  workflow_dispatch:
+    inputs:
+      force_release_date:
+        description: 'Override PCE release date (YYYY-MM-DD). Leave blank for auto.'
+        required: false
+      force_days_out:
+        description: 'Override days_out (1|2|3|4|7). Leave blank for auto.'
+        required: false
+
+concurrency:
+  group: predict-pce
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+      pce_release_date: ${{ steps.check.outputs.pce_release_date }}
+      pce_days_out: ${{ steps.check.outputs.pce_days_out }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+      - name: Decide if today is a PCE predict day
+        id: check
+        run: |
+          if [ -n "${{ github.event.inputs.force_release_date }}" ]; then
+            echo "Manual override in effect"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "pce_release_date=${{ github.event.inputs.force_release_date }}" >> "$GITHUB_OUTPUT"
+            echo "pce_days_out=${{ github.event.inputs.force_days_out }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if python scripts/should_run_pce.py; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  predict:
+    needs: gate
+    if: needs.gate.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch live PCE consensus from calendar-worker
+        id: consensus
+        env:
+          CALENDAR_AUTH_KEY: ${{ secrets.CALENDAR_AUTH_KEY }}
+          PCE_RELEASE_DATE: ${{ needs.gate.outputs.pce_release_date }}
+        run: |
+          python - <<'PY'
+          import json, os, re, sys, urllib.parse, urllib.request
+
+          key = os.environ["CALENDAR_AUTH_KEY"]
+          rel = os.environ["PCE_RELEASE_DATE"]
+          url = ("https://faractionradar-calendar.faractionradar.workers.dev/"
+                 f"?key={urllib.parse.quote(key)}&read")
+          req = urllib.request.Request(url, headers={
+              "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
+          })
+          data = json.loads(urllib.request.urlopen(req, timeout=30).read())
+          events = data.get("events", [])
+
+          def is_headline_pce_mom(title: str) -> bool:
+              t = (title or "").strip().lower()
+              # Match "Core PCE Price Index m/m" — that's the primary market
+              # focus event. Skip plain PCE if it ever appears separately.
+              # Also match if FF ever labels as "PCE Price Index m/m".
+              return bool(re.match(r"^(core\s+pce|pce)\s+price\s+index\s+m\/?m$", t))
+
+          matches = [
+              e for e in events
+              if e.get("country") == "USD"
+              and is_headline_pce_mom(e.get("title") or "")
+              and (e.get("date") or "").startswith(rel)
+          ]
+
+          if not matches:
+              print(f"::notice::no PCE event in worker /?read for {rel} — consensus omitted")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("consensus_available=false\n")
+              sys.exit(0)
+          forecast = matches[0].get("forecast")
+          if not forecast:
+              print(f"::notice::PCE event present but forecast null for {rel} — consensus omitted")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("consensus_available=false\n")
+              sys.exit(0)
+          m = re.match(r"^([-+]?\d+(?:\.\d+)?)\s*%?$", forecast.strip())
+          if not m:
+              print(f"::error::unparseable PCE forecast value: {forecast!r}")
+              sys.exit(1)
+          consensus_pct = float(m.group(1))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"consensus_pct={consensus_pct}\n")
+              f.write("consensus_available=true\n")
+          print(f"consensus for PCE {rel}: {consensus_pct}% m/m (from ForexFactory forecast {forecast!r})")
+          PY
+
+      - name: Run PCE predictor + POST to calendar-worker
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          UPLOAD_AUTH_KEY: ${{ secrets.UPLOAD_AUTH_KEY }}
+          CALENDAR_WORKER_URL: https://faractionradar-calendar.faractionradar.workers.dev
+          PCE_RELEASE_DATE: ${{ needs.gate.outputs.pce_release_date }}
+          PCE_DAYS_OUT: ${{ needs.gate.outputs.pce_days_out }}
+          PCE_CONSENSUS_PCT: ${{ steps.consensus.outputs.consensus_pct }}
+          MODEL_VERSION: v1-simple-blend
+        run: python emit_pce.py
+
+      - name: Commit report + ledger row
+        run: |
+          git config user.name  "faractionradar-bot"
+          git config user.email "bot@faractionradar.com"
+          git add reports/ predictions.jsonl || true
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "PCE prediction T-${{ needs.gate.outputs.pce_days_out }} for ${{ needs.gate.outputs.pce_release_date }}
+
+          Auto-generated by predict-pce workflow. v1-simple-blend — see reports/${{ needs.gate.outputs.pce_release_date }}/... for details."
+          git push
