@@ -54,8 +54,11 @@ def _resolve_prediction_market() -> tuple[float, bool]:
     return 82.0, True
 
 
-CONSENSUS_NFP_K = _resolve_consensus()
-PREDICTION_MARKET_NFP_K, PREDICTION_MARKET_STALE = _resolve_prediction_market()
+# Deferred to inside report() so `import src.final_report` in the smoke-test
+# CI job doesn't fire the GHA guard. Resolved once per report() invocation.
+CONSENSUS_NFP_K: float | None = None
+PREDICTION_MARKET_NFP_K: float | None = None
+PREDICTION_MARKET_STALE: bool = False
 
 
 def compute_bridges(df, prediction_month):
@@ -78,6 +81,10 @@ def compute_bridges(df, prediction_month):
 
 
 def report():
+    global CONSENSUS_NFP_K, PREDICTION_MARKET_NFP_K, PREDICTION_MARKET_STALE
+    CONSENSUS_NFP_K = _resolve_consensus()
+    PREDICTION_MARKET_NFP_K, PREDICTION_MARKET_STALE = _resolve_prediction_market()
+
     release_date = os.environ.get("NFP_RELEASE_DATE", "unknown")
     print("=" * 78)
     print(f"NFP PREDICTION FINAL REPORT — U.S. Nonfarm Payrolls (ref month {PREDICTION_MONTH.date()})")
