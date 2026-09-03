@@ -1,0 +1,184 @@
+name: Predict CPI
+
+on:
+  # Daily at 14:00 UTC (same slot as NFP; different gate). CPI releases
+  # aren't fixed to a weekday so gate resolves next release via worker's
+  # /public/upcoming-marquee endpoint (FRED-driven, 45-day horizon).
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+    inputs:
+      force_release_date:
+        description: 'Override CPI release date (YYYY-MM-DD). Leave blank for auto.'
+        required: false
+      force_days_out:
+        description: 'Override days_out (1|2|3|4|7). Leave blank for auto.'
+        required: false
+
+concurrency:
+  group: predict-cpi
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+      cpi_release_date: ${{ steps.check.outputs.cpi_release_date }}
+      cpi_days_out: ${{ steps.check.outputs.cpi_days_out }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+      - name: Decide if today is a CPI predict day
+        id: check
+        run: |
+          if [ -n "${{ github.event.inputs.force_release_date }}" ]; then
+            echo "Manual override in effect"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "cpi_release_date=${{ github.event.inputs.force_release_date }}" >> "$GITHUB_OUTPUT"
+            echo "cpi_days_out=${{ github.event.inputs.force_days_out }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if python scripts/should_run_cpi.py; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  predict:
+    needs: gate
+    if: needs.gate.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch live prediction-market implied m/m from calendar-worker
+        id: market
+        run: |
+          # See predict-nfp.yml notes on the workers.dev origin + curl choice.
+          curl -sSL -A "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0" \
+               "https://faractionradar-calendar.faractionradar.workers.dev/public/kalshi-implied" \
+               > /tmp/kalshi-implied.json || echo "curl failed"
+          echo "response size: $(wc -c < /tmp/kalshi-implied.json) bytes"
+          python - <<'PY'
+          import json, os
+          try:
+              with open("/tmp/kalshi-implied.json") as f:
+                  data = json.load(f)
+              cpi = (data.get("implied") or {}).get("cpi")
+              # For CPI the worker returns value_k as the m/m %-point value
+              # directly (unit="%_mom", no scaling). Guard the branch anyway
+              # in case future normalization shifts the shape.
+              if cpi and isinstance(cpi.get("value_k"), (int, float)) and cpi.get("unit") == "%_mom":
+                  v = float(cpi["value_k"])
+                  print(f"kalshi implied CPI m/m: {cpi.get('display')} ({v}pp, ticker={cpi.get('ticker')}, rungs={cpi.get('rungs_used')})")
+                  with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                      f.write(f"pm_value_pct={v}\n")
+                      f.write("pm_available=true\n")
+              else:
+                  print("kalshi implied CPI not available — will proceed without market input")
+                  with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                      f.write("pm_available=false\n")
+          except Exception as e:
+              print(f"parse failed: {e}")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("pm_available=false\n")
+          PY
+
+      - name: Fetch live CPI consensus from calendar-worker
+        id: consensus
+        env:
+          CALENDAR_AUTH_KEY: ${{ secrets.CALENDAR_AUTH_KEY }}
+          CPI_RELEASE_DATE: ${{ needs.gate.outputs.cpi_release_date }}
+        run: |
+          python - <<'PY'
+          import json, os, re, sys, urllib.parse, urllib.request
+
+          key = os.environ["CALENDAR_AUTH_KEY"]
+          rel = os.environ["CPI_RELEASE_DATE"]
+          url = ("https://faractionradar-calendar.faractionradar.workers.dev/"
+                 f"?key={urllib.parse.quote(key)}&read")
+          req = urllib.request.Request(url, headers={
+              "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
+          })
+          data = json.loads(urllib.request.urlopen(req, timeout=30).read())
+          events = data.get("events", [])
+
+          # FF labels CPI as "CPI m/m" or "Core CPI m/m" or "CPI y/y". Match
+          # headline m/m only for now; core is a separate model in Phase 2.
+          def is_headline_cpi_mom(title: str) -> bool:
+              t = (title or "").strip().lower()
+              return bool(re.match(r"^cpi\s*m\/?m$", t))
+
+          matches = [
+              e for e in events
+              if e.get("country") == "USD"
+              and is_headline_cpi_mom(e.get("title") or "")
+              and (e.get("date") or "").startswith(rel)
+          ]
+
+          def skip(reason: str) -> None:
+              # Soft-skip: FF often publishes the CPI forecast late in the T-7
+              # window (sometimes not until T-3 or T-2). Cron retries daily.
+              print(f"::notice::skipping CPI predict for {rel}: {reason}")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("skip=true\n")
+              sys.exit(0)
+
+          if not matches:
+              skip(f"no headline CPI m/m event in worker /?read (FF may not have published week yet)")
+          forecast = matches[0].get("forecast")
+          if not forecast:
+              skip("CPI event exists but forecast is null (FF publishes closer to release)")
+          m = re.match(r"^([-+]?\d+(?:\.\d+)?)\s*%?$", forecast.strip())
+          if not m:
+              print(f"::error::unparseable CPI forecast value: {forecast!r}")
+              sys.exit(1)
+          consensus_pct = float(m.group(1))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"consensus_pct={consensus_pct}\n")
+              f.write("skip=false\n")
+          print(f"consensus for CPI {rel}: {consensus_pct}% m/m (from ForexFactory forecast {forecast!r})")
+          PY
+
+      - name: Run CPI predictor + POST to calendar-worker
+        if: steps.consensus.outputs.skip != 'true'
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          UPLOAD_AUTH_KEY: ${{ secrets.UPLOAD_AUTH_KEY }}
+          CALENDAR_WORKER_URL: https://faractionradar-calendar.faractionradar.workers.dev
+          CPI_RELEASE_DATE: ${{ needs.gate.outputs.cpi_release_date }}
+          CPI_DAYS_OUT: ${{ needs.gate.outputs.cpi_days_out }}
+          CPI_CONSENSUS_PCT: ${{ steps.consensus.outputs.consensus_pct }}
+          CPI_MARKET_PCT: ${{ steps.market.outputs.pm_value_pct }}
+          MODEL_VERSION: v1-simple-blend
+        run: python emit_cpi.py
+
+      - name: Commit report + ledger row
+        if: steps.consensus.outputs.skip != 'true'
+        run: |
+          git config user.name  "faractionradar-bot"
+          git config user.email "bot@faractionradar.com"
+          git add reports/ predictions.jsonl || true
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "CPI prediction T-${{ needs.gate.outputs.cpi_days_out }} for ${{ needs.gate.outputs.cpi_release_date }}
+
+          Auto-generated by predict-cpi workflow. v1-simple-blend model — see reports/${{ needs.gate.outputs.cpi_release_date }}/... for details."
+          git push

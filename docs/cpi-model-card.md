@@ -1,41 +1,59 @@
 # CPI Predictor — Model Card
 
-**Model version:** `v1-beta` (placeholder — no trained model yet)
-**Event:** US Consumer Price Index (monthly, mid-month, 08:30 ET)
-**Status:** Beta — OUR CALL cell shows "model not yet trained · beta shipping Phase 2 (EUR expansion)"
+**Model version:** `v1-simple-blend`
+**Event:** US Consumer Price Index headline m/m (monthly, mid-month, 08:30 ET)
+**Status:** Live — cadence T-7, T-4, T-3, T-2, T-1 via `predict-cpi.yml`
 
-## Why no model yet
+## What v1-simple-blend does
 
-Phase 1 scope is NFP only. CPI + FOMC ship with visible-roadmap placeholders so the /calendar page can launch with all four columns filled for NFP, and readers can see exactly which events we've built for vs. which are coming.
+Inverse-MAE-weighted point estimate over up to three sub-models. Runs from
+the `predict-cpi.yml` workflow on the same daily cron as NFP; the gate script
+(`scripts/should_run_cpi.py`) resolves the next CPI release date from the
+calendar-worker's `/public/upcoming-marquee` endpoint and exits early on
+non-cadence days.
 
-Building CPI right is non-trivial:
-- Core vs. headline distinction, shelter revisions, energy volatility
-- Post-COVID regime shift means shorter usable training window
-- The Bayesian-blend architecture designed for NFP transfers, but sub-models change (no ADP-analog for CPI)
+Sub-models:
 
-## What we DO show today
+| Sub-model | Source | Historical MAE (pp) |
+|-----------|--------|---------------------|
+| Bloomberg / FF consensus | live from calendar-worker `?read` → matched FF `forecast` field | ~0.08 |
+| Kalshi prediction market | live from calendar-worker `/public/kalshi-implied` → `cpi.value_k` (interpolated ladder) | ~0.12 (bootstrap estimate) |
+| FRED 6-mo trend | mean of last 6 published m/m %-changes of CPIAUCSL headline | ~0.15 |
 
-The calendar row for CPI events still populates three of the four columns:
+Weights are `1 / MAE` per sub-model, normalized. The blended sigma is the
+inverse-variance combination — reported as 68%/95% CIs in the payload.
 
-- **Consensus** — from ForexFactory forecast field
-- **Prediction Markets** — from Kalshi + Polymarket if a contract exists for that specific print
-- **Grand Median** — currently null (no sub-models yet)
-- **OUR CALL** — "model not yet trained · beta shipping Phase 2 (EUR expansion)"
+If a sub-model is unavailable at run time (FF hasn't published forecast yet,
+Kalshi ladder isn't interpolable, FRED fetch failed), it drops out. If all
+three are missing, the emitter soft-skips (no error, no upload).
 
-## Phase 2 target
+## What v1-simple-blend is NOT
 
-Ship a `v1-bayesian-blend` CPI predictor alongside the EUR expansion (ECB rate decisions, Eurozone CPI, DE IFO). Sub-models planned:
+- **Not a trained model.** No ML component; weights are hardcoded from
+  published/estimated MAE benchmarks rather than fit on data.
+- **Not a core-CPI model.** Headline m/m only. Core CPI ships in Phase 2
+  as a separate slug (`cpi-core-YYYY-MM-DD`).
+- **Not shelter-decomposed.** Shelter is ~1/3 of headline CPI and drives most
+  of the recent post-COVID model error; a shelter carve-out sub-model is a
+  Phase 2 upgrade priority.
 
-- Bloomberg consensus
-- Prediction markets (Kalshi + Polymarket)
-- Cleveland Fed nowcast
-- Trimmed-mean CPI trend
-- Energy/food carve-out
-- Shelter component tracker
-- Grand median
+## Phase 2 target: v2-bayesian-blend
 
-Rough MAE target: <0.10% on core CPI m/m.
+Add three sub-models to bring CPI parity with the NFP predictor:
+
+- **Cleveland Fed inflation nowcast** — public, daily-updated during the
+  release cycle, historical MAE ~0.06pp on headline
+- **Trimmed-mean CPI** — 8% trimmed mean series (published by FRB Dallas)
+  as a mean-reverting anchor
+- **Shelter component tracker** — separately model the shelter sub-index
+  (has its own release cycle + lag structure) and reweight into headline
+
+Same Bayesian inverse-variance blend architecture as NFP. Target MAE < 0.10pp
+on headline m/m over ~40 post-COVID months.
 
 ## Change log
 
-- **v1-beta (2026-09-01)** — placeholder shipped alongside NFP. No trained model.
+- **v1-simple-blend (2026-09-03)** — three sub-model live blend. Consensus +
+  Kalshi implied + FRED trend, inverse-MAE weighted. First CPI predictions
+  fire for Sep 11 event on T-7 (2026-09-04).
+- **v1-beta (2026-09-01)** — placeholder shipped alongside NFP. Superseded.
