@@ -22,9 +22,10 @@ jobs:
           import importlib
           mods = [
               'src.alfred_fetch', 'src.bridge_backtest', 'src.bridge_model',
-              'src.build_features', 'src.final_report', 'src.first_print_model',
-              'src.fred_fetch', 'src.models', 'src.predict', 'src.sector_model',
-              'src.sensitivity', 'src.stacking', 'src.vintage_features',
+              'src.build_features', 'src.cpi_history', 'src.final_report',
+              'src.first_print_model', 'src.fred_fetch', 'src.models',
+              'src.predict', 'src.sector_model', 'src.sensitivity',
+              'src.stacking', 'src.vintage_features',
           ]
           for m in mods:
               importlib.import_module(m)
