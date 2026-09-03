@@ -139,24 +139,34 @@ jobs:
                   f.write("skip=true\n")
               sys.exit(0)
 
+          # Don't hard-skip on missing consensus — Kalshi implied + FRED trend
+          # can still produce a defensible early call. Emit_cpi.py will
+          # soft-skip if ALL sub-models are absent.
           if not matches:
-              skip(f"no headline CPI m/m event in worker /?read (FF may not have published week yet)")
+              print(f"::notice::no headline CPI m/m in worker /?read for {rel} — consensus omitted")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("consensus_available=false\n")
+              sys.exit(0)
           forecast = matches[0].get("forecast")
           if not forecast:
-              skip("CPI event exists but forecast is null (FF publishes closer to release)")
+              print(f"::notice::CPI event present but forecast null for {rel} — consensus omitted")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("consensus_available=false\n")
+              sys.exit(0)
           m = re.match(r"^([-+]?\d+(?:\.\d+)?)\s*%?$", forecast.strip())
           if not m:
+              # Unparseable is a real problem — every FF CPI forecast observed
+              # follows the "0.2%" / "0.2" pattern.
               print(f"::error::unparseable CPI forecast value: {forecast!r}")
               sys.exit(1)
           consensus_pct = float(m.group(1))
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"consensus_pct={consensus_pct}\n")
-              f.write("skip=false\n")
+              f.write("consensus_available=true\n")
           print(f"consensus for CPI {rel}: {consensus_pct}% m/m (from ForexFactory forecast {forecast!r})")
           PY
 
       - name: Run CPI predictor + POST to calendar-worker
-        if: steps.consensus.outputs.skip != 'true'
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           UPLOAD_AUTH_KEY: ${{ secrets.UPLOAD_AUTH_KEY }}
@@ -169,7 +179,6 @@ jobs:
         run: python emit_cpi.py
 
       - name: Commit report + ledger row
-        if: steps.consensus.outputs.skip != 'true'
         run: |
           git config user.name  "faractionradar-bot"
           git config user.email "bot@faractionradar.com"
