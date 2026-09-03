@@ -92,9 +92,36 @@ anything with "FOMC". Later tightened to only match `federal funds rate` /
 purge only removes FUTURE-dated placeholders whose slug no longer maps.
 Past-dated stale placeholders survive.
 
-Manually deleted via `wrangler kv key delete`. If Phase 2 tightens any
-slug regex, dedicated pass to purge past-dated stale placeholders may be
-worth writing. Or accept the KV lint and clean up ad-hoc.
+Manually deleted via `wrangler kv key delete`. Later that day I extended
+`purgeStaleBetaPlaceholders` in the worker to also purge past-dated illegit
+slugs — so this class of orphan self-heals now.
+
+### 5. Scoring proximity thresholds must be scale-aware.
+
+The worker's `scoreResolvedPredictions` ranks each predictor by |value - actual|
+and assigns a "closest / close / off" pill. The "close" threshold was:
+```
+closeThreshold = max(bestDist * 1.2, bestDist + 5)
+```
+
+The `+5` fallback was calibrated for NFP (K-jobs scale). For CPI + FOMC,
+which are on a %-points scale (typical actual values 0.0-0.4 for CPI m/m,
+3.75-5.00 for FOMC rate), a +5 threshold would make EVERY predictor "close"
+regardless of quality — 5 percentage points is enormous.
+
+Fix: read the slug prefix, use a scale-aware minimum. NFP keeps +5; CPI +
+FOMC use +0.05pp (about +5 basis points). Ratio threshold (`bestDist * 1.2`)
+stays the same across scales.
+
+This bit us at *design time*, not runtime — no CPI/FOMC had resolved yet
+when I caught it during a manual code review. If it had shipped and the
+first CPI resolution painted everyone "close", the track record page would
+have looked useless. Worth catching now.
+
+**Rule for Phase 2:** every time we add a new event type with a different
+value scale (%, K jobs, rate, %-YoY, absolute levels), audit
+`parseNumericValue` (does it parse the value format?) AND the scoring
+threshold (does the +N fallback make sense at this scale?).
 
 ## What worked well in Phase 1.5
 
