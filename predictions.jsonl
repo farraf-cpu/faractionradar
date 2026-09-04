@@ -50,3 +50,4 @@
 {"publishedAt":"2026-09-04T17:03:48.206088+00:00","eventSlug":"boe-2026-09-17","daysOut":13,"modelVersion":"v2-outcome-distribution","ourCall":"3.73%","ci68":[3.48,3.98],"grandMedian":null,"reportPath":"reports/2026-09/boe-t-13.md"}
 {"publishedAt":"2026-09-04T17:16:47.545852+00:00","eventSlug":"credit-2026-09-08","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+$11.0B","ci68":[3.0,19.0],"grandMedian":null,"reportPath":"reports/2026-09/credit-t-4.md"}
 {"publishedAt":"2026-09-04T17:24:58.563855+00:00","eventSlug":"budget-2026-09-11","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"-$291.1B","ci68":[-331.1,-251.1],"grandMedian":null,"reportPath":"reports/2026-09/budget-t-7.md"}
+{"publishedAt":"2026-09-04T17:29:32.836711+00:00","eventSlug":"corecpi-2026-09-11","daysOut":7,"modelVersion":"v1.2-simple-blend","ourCall":"+0.2%","ci68":[0.05,0.35],"grandMedian":null,"reportPath":"reports/2026-09/corecpi-t-7.md"}
