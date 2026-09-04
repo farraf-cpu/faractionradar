@@ -86,3 +86,4 @@
 {"publishedAt":"2026-09-04T20:34:46.992219+00:00","eventSlug":"cngdp-2026-10-19","daysOut":45,"modelVersion":"v1-simple-blend","ourCall":"+4.8%","ci68":[4.65,4.95],"grandMedian":null,"reportPath":"reports\\2026-10\\cngdp-t-45.md"}
 {"publishedAt":"2026-09-04T20:35:28.373792+00:00","eventSlug":"pboc-2026-09-22","daysOut":18,"modelVersion":"v2-outcome-distribution","ourCall":"2.87%","ci68":[2.81,2.93],"grandMedian":null,"reportPath":"reports\\2026-09\\pboc-t-18.md"}
 {"publishedAt":"2026-09-04T20:36:07.834233+00:00","eventSlug":"pboc-2026-09-22","daysOut":18,"modelVersion":"v2-outcome-distribution","ourCall":"3.07%","ci68":[3.01,3.13],"grandMedian":null,"reportPath":"reports\\2026-09\\pboc-t-18.md"}
+{"publishedAt":"2026-09-04T20:40:30.564391+00:00","eventSlug":"pboc-2026-09-22","daysOut":18,"modelVersion":"v2-outcome-distribution","ourCall":"2.90%","ci68":[2.6,3.2],"grandMedian":null,"reportPath":"reports/2026-09/pboc-t-18.md"}

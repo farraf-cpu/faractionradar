@@ -1,22 +1,22 @@
 # PBOC Policy Rate prediction - target 2026-09-22 (T-18)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T20:36:07.834248+00:00
+**Published:** 2026-09-04T20:40:30.564418+00:00
 
 ## Final pick
 
-**3.07%** PBOC Policy Rate
+**2.90%** PBOC Policy Rate
 
-- 68% CI: [3.01%, 3.13%]
-- 95% CI: [2.95%, 3.19%]
-- Lean vs anchor: +17bp move vs current rate
-- Sub-models used: consensus, anchor
+- 68% CI: [2.60%, 3.20%]
+- 95% CI: [2.30%, 3.50%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 3.10% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 2.90% | 0.30pp |
 
 ## Method
