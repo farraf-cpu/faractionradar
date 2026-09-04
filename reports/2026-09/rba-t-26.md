@@ -1,22 +1,22 @@
 # RBA Cash Rate prediction - target 2026-09-30 (T-26)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T17:43:13.436160+00:00
+**Published:** 2026-09-04T17:54:27.736208+00:00
 
 ## Final pick
 
 **4.35%** RBA Cash Rate
 
-- 68% CI: [4.30%, 4.40%]
-- 95% CI: [4.24%, 4.46%]
+- 68% CI: [4.20%, 4.50%]
+- 95% CI: [4.05%, 4.65%]
 - Lean vs anchor: hold expected
-- Sub-models used: consensus, anchor
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 4.35% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 4.35% | 0.15pp |
 
 ## Method
