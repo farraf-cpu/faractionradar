@@ -1,22 +1,22 @@
 # BOC Overnight Rate prediction - target 2026-09-10 (T-6)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T18:04:43.867331+00:00
+**Published:** 2026-09-04T18:10:26.121622+00:00
 
 ## Final pick
 
-**2.25%** BOC Overnight Rate
+**2.27%** BOC Overnight Rate
 
-- 68% CI: [2.20%, 2.31%]
-- 95% CI: [2.15%, 2.36%]
+- 68% CI: [2.12%, 2.42%]
+- 95% CI: [1.97%, 2.57%]
 - Lean vs anchor: hold expected
-- Sub-models used: consensus, anchor
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 2.25% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 2.27% | 0.15pp |
 
 ## Method
