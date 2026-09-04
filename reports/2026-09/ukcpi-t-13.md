@@ -1,23 +1,23 @@
 # UK CPI prediction - target 2026-09-17 (T-13)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-04T16:49:33.920245+00:00
+**Published:** 2026-09-04T17:03:44.096729+00:00
 
 ## Final pick
 
-**+3.0%** y/y UK CPI
+**+3.7%** y/y UK CPI
 
 - Regime: above-target inflation
-- 68% CI: [+2.93%, +3.12%]
-- 95% CI: [+2.83%, +3.21%]
-- Lean vs consensus: above consensus by 0.32pp
-- Sub-models used: consensus, trend
+- 68% CI: [+3.47%, +3.87%]
+- 95% CI: [+3.27%, +4.07%]
+- Lean vs consensus: no consensus
+- Sub-models used: trend
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | +2.70% | 0.10pp |
+| consensus | - | 0.10pp |
 | trend | +3.67% | 0.20pp |
 
 ## Method
