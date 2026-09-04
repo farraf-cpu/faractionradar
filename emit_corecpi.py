@@ -30,8 +30,9 @@ ROOT = Path(__file__).parent
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
-    "consensus": 0.08,
-    "trend":     0.15,
+    "consensus":     0.08,
+    "cleveland_fed": 0.06,   # academic benchmark on headline CPI; slightly tighter than consensus
+    "trend":         0.15,
 }
 
 
@@ -82,11 +83,41 @@ def fetch_fred_trend() -> float | None:
     return sum(vals) / len(vals)
 
 
+def fetch_cleveland_fed_nowcast() -> float | None:
+    """Latest non-empty 'Core CPI Inflation' m/m nowcast from Cleveland Fed.
+    Cleveland Fed cycles between CPI + PCE nowcast windows; returns None
+    when the CPI series is empty (PCE cycle currently active)."""
+    url = "https://www.clevelandfed.org/-/media/files/webcharts/inflationnowcasting/nowcast_month.json"
+    req = urllib.request.Request(url, headers={"user-agent": UA, "accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit-corecpi] Cleveland Fed fetch failed: {e}", file=sys.stderr)
+        return None
+    if not isinstance(data, list) or not data:
+        return None
+    for ds in data[0].get("dataset") or []:
+        if ds.get("seriesname") != "Core CPI Inflation":
+            continue
+        non_empty = [x for x in ds.get("data") or [] if x.get("value")]
+        if not non_empty:
+            return None
+        try:
+            return float(non_empty[-1]["value"])
+        except (ValueError, TypeError):
+            return None
+    return None
+
+
 def blend(consensus: float | None,
+          cleveland_fed: float | None,
           trend: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
+    if cleveland_fed is not None:
+        parts.append(("cleveland_fed", cleveland_fed, MAE["cleveland_fed"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
     if not parts:
@@ -122,10 +153,11 @@ def format_value(v: float) -> str:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
+                    cleveland_fed: float | None,
                     trend: float | None, used: list[str], lean: str) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f}pp |"
-        for name, v in (("consensus", consensus), ("trend", trend))
+        for name, v in (("consensus", consensus), ("cleveland_fed", cleveland_fed), ("trend", trend))
     )
     return f"""# Core CPI prediction — target {release} (T-{days_out})
 
@@ -150,8 +182,9 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: inverse-MAE-weighted mean of FF consensus + FRED
-CPILFESL 6-month m/m trend.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of FF consensus +
+Cleveland Fed daily nowcast (when CPI cycle active) + FRED CPILFESL
+6-month m/m trend.
 
 ## Positioning
 
@@ -197,22 +230,24 @@ def main() -> None:
 
     release = os.environ["CORECPI_RELEASE_DATE"]
     days_out = int(os.environ["CORECPI_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
 
     consensus = parse_float("CORECPI_CONSENSUS")
+    cleveland_fed = fetch_cleveland_fed_nowcast()
     trend = fetch_fred_trend()
 
-    if consensus is None and trend is None:
+    if consensus is None and cleveland_fed is None and trend is None:
         print("[emit-corecpi] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, trend)
+    point, sigma, used = blend(consensus, cleveland_fed, trend)
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-corecpi] Core CPI {release} T-{days_out}: {format_value(point)} "
           f"(sigma {sigma:.2f}pp, {regime_annotation(point)}, used: {', '.join(used)})")
-    if consensus is not None: print(f"  consensus:  {consensus:+.2f}%")
-    if trend    is not None: print(f"  trend:      {trend:+.2f}%")
+    if consensus     is not None: print(f"  consensus:      {consensus:+.2f}%")
+    if cleveland_fed is not None: print(f"  cleveland_fed:  {cleveland_fed:+.2f}%")
+    if trend         is not None: print(f"  trend:          {trend:+.2f}%")
 
     prediction = {
         "eventSlug": f"corecpi-{release}",
@@ -233,7 +268,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, used, lean)
+                                consensus, cleveland_fed, trend, used, lean)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"corecpi-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
