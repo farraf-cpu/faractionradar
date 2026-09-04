@@ -121,26 +121,30 @@ def normal_cdf(x: float, mu: float, sigma: float) -> float:
 
 def compute_outcome_distribution(point: float, sigma: float,
                                   anchor: float | None) -> dict:
-    """v2 outcome-distribution over standard BCB 25bp rate outcomes."""
+    """v2.1 outcome-distribution over 50bp buckets — BCB Selic
+    typically moves in 25-100bp increments (larger than DM but
+    tighter than CBRT). 50bp buckets balance resolution + coverage
+    (Rule 36 variant)."""
     if anchor is None:
         return {"note": "no anchor; distribution not discretized"}
+    half = 0.25  # 50bp bucket half-width
     outcomes = [
-        ("hike50", anchor + 0.50, "+50bp hike"),
-        ("hike25", anchor + 0.25, "+25bp hike"),
-        ("hold",   anchor + 0.00, "hold"),
-        ("cut25",  anchor - 0.25, "-25bp cut"),
-        ("cut50",  anchor - 0.50, "-50bp cut"),
-        ("cut75_plus", anchor - 0.75, "-75bp or deeper"),
+        ("hike100",     anchor + 1.00, "+100bp hike"),
+        ("hike50",      anchor + 0.50, "+50bp hike"),
+        ("hold",        anchor + 0.00, "hold"),
+        ("cut50",       anchor - 0.50, "-50bp cut"),
+        ("cut100",      anchor - 1.00, "-100bp cut"),
+        ("cut150_plus", anchor - 1.50, "-150bp or deeper"),
     ]
     dist = {}
     for i, (key, level, _) in enumerate(outcomes):
         if i == 0:
-            p = 1.0 - normal_cdf(level - 0.125, point, sigma)
+            p = 1.0 - normal_cdf(level - half, point, sigma)
         elif i == len(outcomes) - 1:
-            p = normal_cdf(level + 0.125, point, sigma)
+            p = normal_cdf(level + half, point, sigma)
         else:
-            p = (normal_cdf(level + 0.125, point, sigma)
-                 - normal_cdf(level - 0.125, point, sigma))
+            p = (normal_cdf(level + half, point, sigma)
+                 - normal_cdf(level - half, point, sigma))
         dist[key] = round(p, 3)
     modal_key = max(dist.items(), key=lambda x: x[1])[0]
     dist["modal"] = modal_key

@@ -113,7 +113,7 @@ jobs:
           BCB_RELEASE_DATE: ${{ needs.gate.outputs.bcb_release_date }}
           BCB_DAYS_OUT: ${{ needs.gate.outputs.bcb_days_out }}
           BCB_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v2-outcome-distribution
+          MODEL_VERSION: v2.1-wide-buckets
         run: python emit_bcb.py
 
       - name: Commit report + ledger row

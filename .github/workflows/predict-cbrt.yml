@@ -113,7 +113,7 @@ jobs:
           CBRT_RELEASE_DATE: ${{ needs.gate.outputs.cbrt_release_date }}
           CBRT_DAYS_OUT: ${{ needs.gate.outputs.cbrt_days_out }}
           CBRT_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v2-outcome-distribution
+          MODEL_VERSION: v2.1-wide-buckets
         run: python emit_cbrt.py
 
       - name: Commit report + ledger row
