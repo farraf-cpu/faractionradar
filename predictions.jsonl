@@ -80,3 +80,4 @@
 {"publishedAt":"2026-09-04T20:26:13.934708+00:00","eventSlug":"secpi-2026-09-11","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.5%","ci68":[0.35,0.65],"grandMedian":null,"reportPath":"reports\\2026-09\\secpi-t-7.md"}
 {"publishedAt":"2026-09-04T20:26:15.291539+00:00","eventSlug":"segdp-2026-11-27","daysOut":84,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.29,0.57],"grandMedian":null,"reportPath":"reports\\2026-11\\segdp-t-84.md"}
 {"publishedAt":"2026-09-04T20:30:20.954037+00:00","eventSlug":"riksbank-2026-09-24","daysOut":20,"modelVersion":"v2-outcome-distribution","ourCall":"1.95%","ci68":[1.65,2.25],"grandMedian":null,"reportPath":"reports/2026-09/riksbank-t-20.md"}
+{"publishedAt":"2026-09-04T20:30:38.045693+00:00","eventSlug":"segdp-2026-11-27","daysOut":84,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.38,0.98],"grandMedian":null,"reportPath":"reports/2026-11/segdp-t-84.md"}
