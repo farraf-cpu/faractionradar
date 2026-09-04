@@ -1,22 +1,22 @@
 # CBRT Policy Rate prediction - target 2026-09-25 (T-20)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T21:40:38.153923+00:00
+**Published:** 2026-09-04T21:45:26.967386+00:00
 
 ## Final pick
 
-**38.11%** CBRT Policy Rate
+**38.75%** CBRT Policy Rate
 
-- 68% CI: [38.05%, 38.17%]
-- 95% CI: [37.99%, 38.23%]
-- Lean vs anchor: -64bp cut vs current rate
-- Sub-models used: consensus, anchor
+- 68% CI: [38.45%, 39.05%]
+- 95% CI: [38.15%, 39.35%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 38.00% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 38.75% | 0.30pp |
 
 ## Method
