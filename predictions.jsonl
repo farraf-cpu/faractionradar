@@ -39,3 +39,4 @@
 {"publishedAt":"2026-09-04T11:49:42.172076+00:00","eventSlug":"nfp-2026-09-04","daysOut":0,"modelVersion":"v1-bayesian-blend","ourCall":"+53K","ci68":[22,84],"grandMedian":"+95K","reportPath":"reports/2026-09/nfp-t-0.md"}
 {"publishedAt":"2026-09-04T12:12:02.384313+00:00","eventSlug":"fomc-2026-09-17","daysOut":13,"modelVersion":"v2-outcome-distribution","ourCall":"3.96%","ci68":[3.9,4.02],"grandMedian":null,"reportPath":"reports/2026-09/fomc-t-13.md"}
 {"publishedAt":"2026-09-04T12:26:06.365629+00:00","eventSlug":"ecb-2026-09-10","daysOut":6,"modelVersion":"v2-outcome-distribution","ourCall":"2.25%","ci68":[2.0,2.5],"grandMedian":null,"reportPath":"reports/2026-09/ecb-t-6.md"}
+{"publishedAt":"2026-09-04T14:09:08.090620+00:00","eventSlug":"cpi-2026-09-11","daysOut":7,"modelVersion":"v1.2-simple-blend","ourCall":"+0.1%","ci68":[0.05,0.23],"grandMedian":null,"reportPath":"reports/2026-09/cpi-t-7.md"}
