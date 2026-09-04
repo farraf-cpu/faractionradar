@@ -1,23 +1,23 @@
 # NBP Policy Rate prediction - target 2026-10-01 (T-26)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T22:18:51.990058+00:00
+**Published:** 2026-09-04T22:23:42.001550+00:00
 
 ## Final pick
 
-**5.25%** NBP Policy Rate
+**3.74%** NBP Policy Rate
 
-- 68% CI: [5.20%, 5.30%]
-- 95% CI: [5.15%, 5.35%]
-- Lean vs anchor: no anchor (dropped: scale mismatch)
-- Sub-models used: consensus
+- 68% CI: [3.59%, 3.89%]
+- 95% CI: [3.44%, 4.04%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 5.25% | 0.05pp |
-| anchor | - | 0.15pp |
+| consensus | - | 0.05pp |
+| anchor | 3.74% | 0.15pp |
 
 ## Method
 
