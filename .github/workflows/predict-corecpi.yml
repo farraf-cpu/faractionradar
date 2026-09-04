@@ -3,6 +3,7 @@ name: Predict Core CPI
 on:
   schedule:
     - cron: '20 17 * * *'
+    - cron: '30 10 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

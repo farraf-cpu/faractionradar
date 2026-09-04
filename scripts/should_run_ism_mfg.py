@@ -9,7 +9,7 @@ from datetime import date, datetime
 
 WORKER_URL = "https://faractionradar-calendar.faractionradar.workers.dev/public/upcoming-marquee"
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
-VALID_DAYS_OUT = {7, 4, 3, 2, 1}
+VALID_DAYS_OUT = {7, 4, 3, 2, 1, 0}   # 0 = release-day T-0 refresh
 
 
 def next_ism_mfg_date(today: date) -> date | None:

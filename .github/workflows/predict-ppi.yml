@@ -5,6 +5,7 @@ on:
   # avoid stacking cron startups and GHA runner contention.
   schedule:
     - cron: '10 14 * * *'
+    - cron: '30 10 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

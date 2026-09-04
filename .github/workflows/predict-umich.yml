@@ -4,6 +4,7 @@ on:
   # Daily at 15:25 UTC (next offset after NewHome 15:20).
   schedule:
     - cron: '25 15 * * *'
+    - cron: '0 12 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

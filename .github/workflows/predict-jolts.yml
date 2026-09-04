@@ -4,6 +4,7 @@ on:
   # Daily at 15:00 UTC (next offset after Durable 14:55).
   schedule:
     - cron: '0 15 * * *'
+    - cron: '0 12 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

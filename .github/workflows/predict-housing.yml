@@ -4,6 +4,7 @@ on:
   # Daily at 14:40 UTC (next offset after Claims 14:35).
   schedule:
     - cron: '40 14 * * *'
+    - cron: '30 10 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

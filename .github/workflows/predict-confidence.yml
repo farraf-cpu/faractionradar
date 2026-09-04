@@ -4,6 +4,7 @@ on:
   # Daily at 15:05 UTC (next offset after JOLTS 15:00).
   schedule:
     - cron: '5 15 * * *'
+    - cron: '0 12 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

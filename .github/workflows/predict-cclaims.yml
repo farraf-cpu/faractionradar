@@ -4,6 +4,7 @@ on:
   # Daily at 15:30 UTC (next offset after UMich 15:25).
   schedule:
     - cron: '30 15 * * *'
+    - cron: '30 10 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

@@ -5,6 +5,7 @@ on:
   # so gate exits ~90% of days.
   schedule:
     - cron: '45 14 * * *'
+    - cron: '30 10 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

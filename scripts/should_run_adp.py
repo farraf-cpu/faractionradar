@@ -13,7 +13,7 @@ import os
 import sys
 from datetime import date, timedelta
 
-VALID_DAYS_OUT = {7, 4, 3, 2, 1}
+VALID_DAYS_OUT = {7, 4, 3, 2, 1, 0}   # 0 = release-day T-0 refresh
 
 
 def next_nfp_friday(today: date) -> date:

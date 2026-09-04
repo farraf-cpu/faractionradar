@@ -5,6 +5,7 @@ on:
   # PPI (14:10), PCE (14:15). Prevents cron stacking.
   schedule:
     - cron: '20 14 * * *'
+    - cron: '30 10 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

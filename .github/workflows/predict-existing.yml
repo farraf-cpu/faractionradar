@@ -4,6 +4,7 @@ on:
   # Daily at 15:15 UTC (next offset after Trade 15:10).
   schedule:
     - cron: '15 15 * * *'
+    - cron: '0 12 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

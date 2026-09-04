@@ -5,6 +5,7 @@ on:
   # PPI (14:10), PCE (14:15), Retail (14:20).
   schedule:
     - cron: '25 14 * * *'
+    - cron: '0 12 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:
