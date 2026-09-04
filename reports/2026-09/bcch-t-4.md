@@ -1,22 +1,22 @@
 # BCCH Policy Rate prediction - target 2026-09-09 (T-4)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T22:27:50.216271+00:00
+**Published:** 2026-09-04T22:39:30.993540+00:00
 
 ## Final pick
 
 **4.50%** BCCH Policy Rate
 
-- 68% CI: [4.45%, 4.55%]
-- 95% CI: [4.39%, 4.61%]
+- 68% CI: [4.35%, 4.65%]
+- 95% CI: [4.20%, 4.80%]
 - Lean vs anchor: hold expected
-- Sub-models used: consensus, anchor
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 4.50% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 4.50% | 0.15pp |
 
 ## Method
