@@ -1,22 +1,22 @@
 # SARB Policy Rate prediction - target 2026-09-17 (T-12)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T21:32:37.282898+00:00
+**Published:** 2026-09-04T21:37:16.013118+00:00
 
 ## Final pick
 
 **7.00%** SARB Policy Rate
 
-- 68% CI: [6.95%, 7.05%]
-- 95% CI: [6.89%, 7.11%]
+- 68% CI: [6.85%, 7.15%]
+- 95% CI: [6.70%, 7.30%]
 - Lean vs anchor: hold expected
-- Sub-models used: consensus, anchor
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 7.00% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 7.00% | 0.15pp |
 
 ## Method
