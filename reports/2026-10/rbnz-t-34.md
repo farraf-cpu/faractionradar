@@ -1,22 +1,22 @@
 # RBNZ Official Cash Rate prediction - target 2026-10-08 (T-34)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T20:06:05.477866+00:00
+**Published:** 2026-09-04T20:10:27.722938+00:00
 
 ## Final pick
 
-**2.53%** RBNZ Official Cash Rate
+**2.68%** RBNZ Official Cash Rate
 
-- 68% CI: [2.47%, 2.59%]
-- 95% CI: [2.40%, 2.65%]
-- Lean vs anchor: -15bp cut vs current rate
-- Sub-models used: consensus, anchor
+- 68% CI: [2.38%, 2.98%]
+- 95% CI: [2.08%, 3.28%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 2.50% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 2.68% | 0.30pp |
 
 ## Method

@@ -70,3 +70,4 @@
 {"publishedAt":"2026-09-04T20:06:05.477848+00:00","eventSlug":"rbnz-2026-10-08","daysOut":34,"modelVersion":"v2-outcome-distribution","ourCall":"2.53%","ci68":[2.47,2.59],"grandMedian":null,"reportPath":"reports\\2026-10\\rbnz-t-34.md"}
 {"publishedAt":"2026-09-04T20:06:06.132421+00:00","eventSlug":"nzcpi-2026-10-21","daysOut":47,"modelVersion":"v1-simple-blend","ourCall":"+2.4%","ci68":[2.25,2.55],"grandMedian":null,"reportPath":"reports\\2026-10\\nzcpi-t-47.md"}
 {"publishedAt":"2026-09-04T20:06:06.818977+00:00","eventSlug":"nzgdp-2026-12-17","daysOut":104,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.25,0.55],"grandMedian":null,"reportPath":"reports\\2026-12\\nzgdp-t-104.md"}
+{"publishedAt":"2026-09-04T20:10:27.722912+00:00","eventSlug":"rbnz-2026-10-08","daysOut":34,"modelVersion":"v2-outcome-distribution","ourCall":"2.68%","ci68":[2.38,2.98],"grandMedian":null,"reportPath":"reports/2026-10/rbnz-t-34.md"}
