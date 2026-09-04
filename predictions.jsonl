@@ -35,3 +35,4 @@
 {"publishedAt":"2026-09-04T10:53:52.568118+00:00","eventSlug":"eurcpi-2026-09-17","daysOut":13,"modelVersion":"v1-simple-blend","ourCall":"+2.9%","ci68":[2.74,3.14],"grandMedian":null,"reportPath":"reports/2026-09/eurcpi-t-13.md"}
 {"publishedAt":"2026-09-04T11:04:34.182107+00:00","eventSlug":"corecpi-2026-09-11","daysOut":7,"modelVersion":"v1.2-simple-blend","ourCall":"+0.2%","ci68":[0.05,0.35],"grandMedian":null,"reportPath":"reports/2026-09/corecpi-t-7.md"}
 {"publishedAt":"2026-09-04T11:21:04.162801+00:00","eventSlug":"deifo-2026-09-25","daysOut":21,"modelVersion":"v1-simple-blend","ourCall":"-13.3","ci68":[-14.8,-11.8],"grandMedian":null,"reportPath":"reports/2026-09/deifo-t-21.md"}
+{"publishedAt":"2026-09-04T11:32:50.054164+00:00","eventSlug":"nfp-2026-09-04","daysOut":0,"modelVersion":"v1-bayesian-blend","ourCall":"+53K","ci68":[22,84],"grandMedian":"+95K","reportPath":"reports/2026-09/nfp-t-0.md"}
