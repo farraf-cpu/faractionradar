@@ -1,23 +1,23 @@
 # JP Preliminary GDP prediction - target 2026-11-16 (T-73)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-04T17:26:17.050141+00:00
+**Published:** 2026-09-04T17:34:19.480567+00:00
 
 ## Final pick
 
-**+0.2%** q/q JP Preliminary GDP
+**+0.1%** q/q JP Preliminary GDP
 
 - Regime: flat / stall
-- 68% CI: [+0.02%, +0.30%]
-- 95% CI: [-0.12%, +0.44%]
-- Lean vs consensus: in line with consensus
-- Sub-models used: consensus, trend
+- 68% CI: [-0.22%, +0.38%]
+- 95% CI: [-0.52%, +0.68%]
+- Lean vs consensus: no consensus
+- Sub-models used: trend
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | +0.20% | 0.15pp |
+| consensus | - | 0.15pp |
 | trend | +0.08% | 0.30pp |
 
 ## Method
