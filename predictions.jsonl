@@ -43,3 +43,6 @@
 {"publishedAt":"2026-09-04T14:15:00.811602+00:00","eventSlug":"nfp-2026-09-04","daysOut":0,"modelVersion":"v1-bayesian-blend","ourCall":"-20K","ci68":[-51,11],"grandMedian":"+107K","reportPath":"reports/2026-09/nfp-t-0.md"}
 {"publishedAt":"2026-09-04T15:14:22.525735+00:00","eventSlug":"jolts-2026-09-08","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"7.33M","ci68":[7.08,7.58],"grandMedian":null,"reportPath":"reports/2026-09/jolts-t-4.md"}
 {"publishedAt":"2026-09-04T15:32:31.165165+00:00","eventSlug":"umich-2026-09-11","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"49.8","ci68":[47.3,52.3],"grandMedian":null,"reportPath":"reports/2026-09/umich-t-7.md"}
+{"publishedAt":"2026-09-04T16:49:33.920228+00:00","eventSlug":"ukcpi-2026-09-17","daysOut":13,"modelVersion":"v1-simple-blend","ourCall":"+3.0%","ci68":[2.93,3.12],"grandMedian":null,"reportPath":"reports\\2026-09\\ukcpi-t-13.md"}
+{"publishedAt":"2026-09-04T16:50:17.914768+00:00","eventSlug":"ukgdp-2026-09-11","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.2%","ci68":[0.05,0.35],"grandMedian":null,"reportPath":"reports\\2026-09\\ukgdp-t-7.md"}
+{"publishedAt":"2026-09-04T16:51:49.385813+00:00","eventSlug":"boe-2026-09-17","daysOut":13,"modelVersion":"v2-outcome-distribution","ourCall":"3.75%","ci68":[3.69,3.81],"grandMedian":null,"reportPath":"reports\\2026-09\\boe-t-13.md"}
