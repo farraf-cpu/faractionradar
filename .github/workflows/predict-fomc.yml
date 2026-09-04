@@ -107,7 +107,7 @@ jobs:
           FOMC_RELEASE_DATE: ${{ needs.gate.outputs.fomc_release_date }}
           FOMC_DAYS_OUT: ${{ needs.gate.outputs.fomc_days_out }}
           FOMC_MARKET_RATE: ${{ steps.market.outputs.pm_rate }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v2-outcome-distribution
         run: python emit_fomc.py
 
       - name: Commit report + ledger row

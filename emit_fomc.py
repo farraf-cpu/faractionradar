@@ -110,6 +110,61 @@ def format_rate(pct: float) -> str:
     return f"{pct:.2f}%"
 
 
+def normal_cdf(x: float, mu: float, sigma: float) -> float:
+    """Cumulative distribution function of normal distribution. Pure Python
+    (no scipy dep needed) using math.erf."""
+    if sigma <= 0:
+        return 1.0 if x >= mu else 0.0
+    return 0.5 * (1.0 + math.erf((x - mu) / (sigma * math.sqrt(2))))
+
+
+def compute_outcome_distribution(point: float, sigma: float,
+                                  anchor: float | None) -> dict:
+    """v2 upgrade: discretize the point + sigma into probabilities over
+    standard FOMC outcomes at 25bp intervals around the current rate.
+
+    Fed target rate ranges are 25bp wide; each outcome corresponds to a
+    specific target range. We assign each 25bp bucket a probability by
+    integrating the assumed-normal posterior over that bucket.
+
+    Buckets (relative to current anchor rate):
+      hike50: current + 0.50%
+      hike25: current + 0.25%
+      hold:   current + 0.00%
+      cut25:  current - 0.25%
+      cut50:  current - 0.50%
+      cut75+: current - 0.75% and below
+    """
+    if anchor is None:
+        # Without anchor we can't name buckets; fall back to unnamed distribution
+        return {"note": "no anchor; distribution not discretized"}
+
+    outcomes = [
+        ("hike50", anchor + 0.50, "+50bp hike"),
+        ("hike25", anchor + 0.25, "+25bp hike"),
+        ("hold",   anchor + 0.00, "hold"),
+        ("cut25",  anchor - 0.25, "-25bp cut"),
+        ("cut50",  anchor - 0.50, "-50bp cut"),
+        ("cut75_plus", anchor - 0.75, "-75bp or deeper"),
+    ]
+    # Each bucket is +/- 0.125 (half of 25bp) wide, centered on outcome level.
+    # Endpoints extend the tail buckets to +/- infinity.
+    dist = {}
+    for i, (key, level, _) in enumerate(outcomes):
+        if i == 0:  # top bucket: hike50 or higher
+            p = 1.0 - normal_cdf(level - 0.125, point, sigma)
+        elif i == len(outcomes) - 1:  # bottom bucket: cut75 or deeper
+            p = normal_cdf(level + 0.125, point, sigma)
+        else:
+            p = (normal_cdf(level + 0.125, point, sigma)
+                 - normal_cdf(level - 0.125, point, sigma))
+        dist[key] = round(p, 3)
+    # Modal outcome
+    modal_key = max(dist.items(), key=lambda x: x[1])[0]
+    dist["modal"] = modal_key
+    return dist
+
+
 def lean_vs_current(point: float, anchor: float | None) -> str:
     if anchor is None:
         return "no current-rate anchor available"
@@ -209,12 +264,14 @@ def main() -> None:
 
     point, sigma, used = blend(market, consensus, anchor)
     lean = lean_vs_current(point, anchor)
+    outcome_dist = compute_outcome_distribution(point, sigma, anchor)
 
     print(f"[emit-fomc] FOMC {release} T-{days_out}: {format_rate(point)} "
           f"(sigma {sigma:.3f}pp, used: {', '.join(used)})")
     if market    is not None: print(f"  market:     {market:.2f}%")
     if consensus is not None: print(f"  consensus:  {consensus:.2f}%")
     if anchor    is not None: print(f"  anchor:     {anchor:.2f}%")
+    print(f"  outcome distribution: {outcome_dist}")
 
     prediction = {
         "eventSlug": f"fomc-{release}",
@@ -229,6 +286,7 @@ def main() -> None:
             "ci95": [round(point - 2 * sigma, 2), round(point + 2 * sigma, 2)],
             "publishedAt": datetime.now(timezone.utc).isoformat(),
             "model_version": model_version,
+            "outcomeDistribution": outcome_dist,
         },
         "grandMedian": None,
         "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/fomc-model-card.md",
