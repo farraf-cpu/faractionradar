@@ -1,23 +1,23 @@
 # BANXICO Policy Rate prediction - target 2026-09-25 (T-20)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T21:04:16.987141+00:00
+**Published:** 2026-09-04T21:09:21.607511+00:00
 
 ## Final pick
 
-**7.00%** BANXICO Policy Rate
+**5.19%** BANXICO Policy Rate
 
-- 68% CI: [6.95%, 7.05%]
-- 95% CI: [6.90%, 7.10%]
-- Lean vs anchor: no anchor (dropped: scale mismatch)
-- Sub-models used: consensus
+- 68% CI: [4.19%, 6.19%]
+- 95% CI: [3.19%, 7.19%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 7.00% | 0.05pp |
-| anchor | - | 1.00pp |
+| consensus | - | 0.05pp |
+| anchor | 5.19% | 1.00pp |
 
 ## Method
 
