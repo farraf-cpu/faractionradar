@@ -124,7 +124,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     anchor: float | None, used: list[str], lean: str) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else format_value(v)} | ${MAE[name]:.1f}B |"
-        for name, v in (("consensus", consensus), ("anchor (yr ago)", anchor))
+        for name, v in (("consensus", consensus), ("anchor", anchor))
     )
     return f"""# Monthly Treasury Budget prediction — target {release} (T-{days_out})
 
