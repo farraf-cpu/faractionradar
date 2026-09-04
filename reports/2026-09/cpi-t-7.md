@@ -1,7 +1,7 @@
 # CPI prediction — target 2026-09-11 (T-7)
 
-**Model version:** `v1.1-simple-blend`
-**Published:** 2026-09-04T10:05:05.949887+00:00
+**Model version:** `v1.2-simple-blend`
+**Published:** 2026-09-04T10:06:47.371076+00:00
 
 ## Final pick
 
