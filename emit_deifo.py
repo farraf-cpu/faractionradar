@@ -131,7 +131,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     anchor: float | None, used: list[str], lean: str) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'-' if v is None else f'{v:.1f}'} | {MAE[name]:.1f} pts |"
-        for name, v in (("consensus", consensus), ("anchor (OECD proxy)", anchor))
+        for name, v in (("consensus", consensus), ("anchor", anchor))
     )
     return f"""# German IFO Business Climate prediction - target {release} (T-{days_out})
 
