@@ -48,10 +48,11 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 # alongside headline release with modest lag, historical MAE ~0.10pp when
 # used as a standalone predictor of headline m/m.
 MAE = {
-    "consensus":    0.08,
-    "market":       0.12,
-    "trimmed_mean": 0.10,
-    "trend":        0.15,
+    "consensus":     0.08,
+    "cleveland_fed": 0.06,   # daily nowcast; academic benchmark, tightest sub-model
+    "market":        0.12,
+    "trimmed_mean":  0.10,
+    "trend":         0.15,
 }
 
 
@@ -112,6 +113,34 @@ def fetch_fred_cpi_trend(api_key: str) -> float | None:
     return sum(mom_pcts) / len(mom_pcts)
 
 
+def fetch_cleveland_fed_nowcast() -> float | None:
+    """Latest non-empty 'CPI Inflation' m/m nowcast from Cleveland Fed.
+    Cleveland Fed cycles between CPI + PCE nowcast windows; returns None
+    when the CPI series is empty (PCE cycle currently active). Sub-model
+    auto-activates ~T-14 days before each CPI release."""
+    url = "https://www.clevelandfed.org/-/media/files/webcharts/inflationnowcasting/nowcast_month.json"
+    req = urllib.request.Request(url, headers={"user-agent": UA, "accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit-cpi] Cleveland Fed fetch failed: {e}", file=sys.stderr)
+        return None
+    if not isinstance(data, list) or not data:
+        return None
+    for ds in data[0].get("dataset") or []:
+        if ds.get("seriesname") != "CPI Inflation":
+            continue
+        non_empty = [x for x in ds.get("data") or [] if x.get("value")]
+        if not non_empty:
+            return None
+        try:
+            return float(non_empty[-1]["value"])
+        except (ValueError, TypeError):
+            return None
+    return None
+
+
 def fetch_fred_trimmed_mean(api_key: str) -> float | None:
     """Dallas Fed 8% trimmed-mean CPI m/m %-change, most recent observation.
     Series ID: TRMMEANCPIM159SFRBDAL. Published monthly alongside CPI headline;
@@ -128,6 +157,7 @@ def fetch_fred_trimmed_mean(api_key: str) -> float | None:
 
 
 def blend(consensus: float | None,
+          cleveland_fed: float | None,
           market: float | None,
           trimmed_mean: float | None,
           trend: float | None) -> tuple[float, float, list[str]]:
@@ -136,6 +166,8 @@ def blend(consensus: float | None,
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
+    if cleveland_fed is not None:
+        parts.append(("cleveland_fed", cleveland_fed, MAE["cleveland_fed"]))
     if market is not None:
         parts.append(("market", market, MAE["market"]))
     if trimmed_mean is not None:
@@ -173,11 +205,13 @@ def format_value(pct: float) -> str:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
+                    cleveland_fed: float | None,
                     market: float | None, trimmed_mean: float | None,
                     trend: float | None, used: list[str], lean: str) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f} pp |"
-        for name, v in (("consensus", consensus), ("market", market),
+        for name, v in (("consensus", consensus), ("cleveland_fed", cleveland_fed),
+                        ("market", market),
                         ("trimmed_mean", trimmed_mean), ("trend", trend))
     )
     return f"""# CPI prediction — target {release} (T-{days_out})
@@ -254,20 +288,22 @@ def main() -> None:
     fred_key = os.environ.get("FRED_API_KEY")
     trend = fetch_fred_cpi_trend(fred_key) if fred_key else None
     trimmed_mean = fetch_fred_trimmed_mean(fred_key) if fred_key else None
+    cleveland_fed = fetch_cleveland_fed_nowcast()
 
-    if consensus is None and market is None and trend is None and trimmed_mean is None:
+    if consensus is None and market is None and trend is None and trimmed_mean is None and cleveland_fed is None:
         print("[emit-cpi] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, market, trimmed_mean, trend)
+    point, sigma, used = blend(consensus, cleveland_fed, market, trimmed_mean, trend)
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-cpi] CPI {release} T-{days_out}: {format_value(point)} m/m "
           f"(sigma {sigma:.2f}pp, used: {', '.join(used)})")
-    if consensus    is not None: print(f"  consensus:     {consensus:+.2f}%")
-    if market       is not None: print(f"  market:        {market:+.2f}%")
-    if trimmed_mean is not None: print(f"  trimmed_mean:  {trimmed_mean:+.2f}%")
-    if trend        is not None: print(f"  trend(6mo):    {trend:+.2f}%")
+    if consensus     is not None: print(f"  consensus:      {consensus:+.2f}%")
+    if cleveland_fed is not None: print(f"  cleveland_fed:  {cleveland_fed:+.2f}%")
+    if market        is not None: print(f"  market:         {market:+.2f}%")
+    if trimmed_mean  is not None: print(f"  trimmed_mean:   {trimmed_mean:+.2f}%")
+    if trend         is not None: print(f"  trend(6mo):     {trend:+.2f}%")
 
     prediction = {
         "eventSlug": f"cpi-{release}",
@@ -288,7 +324,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, market, trimmed_mean, trend, used, lean)
+                                consensus, cleveland_fed, market, trimmed_mean, trend, used, lean)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"cpi-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
