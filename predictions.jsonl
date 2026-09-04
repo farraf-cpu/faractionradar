@@ -18,3 +18,4 @@
 {"publishedAt":"2026-09-04T07:22:19.286585+00:00","eventSlug":"income-2026-09-22","daysOut":18,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.23,0.63],"grandMedian":null,"reportPath":"reports/2026-09/income-t-18.md"}
 {"publishedAt":"2026-09-04T07:48:23.171143+00:00","eventSlug":"caputil-2026-09-16","daysOut":12,"modelVersion":"v1-simple-blend","ourCall":"76.2%","ci68":[75.78,76.58],"grandMedian":null,"reportPath":"reports/2026-09/caputil-t-12.md"}
 {"publishedAt":"2026-09-04T07:52:06.269245+00:00","eventSlug":"businv-2026-09-16","daysOut":12,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.09,0.59],"grandMedian":null,"reportPath":"reports/2026-09/businv-t-12.md"}
+{"publishedAt":"2026-09-04T07:56:43.455089+00:00","eventSlug":"factory-2026-10-02","daysOut":28,"modelVersion":"v1-simple-blend","ourCall":"-0.1%","ci68":[-0.61,0.39],"grandMedian":null,"reportPath":"reports/2026-10/factory-t-28.md"}
