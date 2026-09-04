@@ -1,7 +1,7 @@
 # Core CPI prediction — target 2026-09-11 (T-7)
 
-**Model version:** `v1.1-simple-blend`
-**Published:** 2026-09-04T10:01:45.306929+00:00
+**Model version:** `v1.2-simple-blend`
+**Published:** 2026-09-04T11:04:34.182135+00:00
 
 ## Final pick
 
@@ -17,8 +17,9 @@
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | — | 0.08pp |
-| cleveland_fed | — | 0.06pp |
+| consensus | - | 0.08pp |
+| cleveland_fed | - | 0.06pp |
+| trimmed_mean | - | 0.10pp |
 | trend | +0.20% | 0.15pp |
 
 ## Method
