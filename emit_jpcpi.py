@@ -1,19 +1,26 @@
-"""JP CPI (National Core CPI y/y) predictor. v1-simple-blend.
+"""JP CPI (National Core CPI y/y) predictor. v1.1-estat.
 
 MIC (Ministry of Internal Affairs and Communications) publishes
 National Core CPI y/y ~19th-27th of following month at 08:30 JST
 (23:30 UTC prior day / 00:30 UTC same day depending on JST-UTC offset).
 
-Consensus-only for v1: FRED's Japan CPI series (JPNCPIALLMINMEI,
-CPALTT01JPM659N, JPNCPICORMINMEI) all discontinued 2022 with empty
-observations. e-Stat API integration deferred to v1.1.
+v1.1 adds e-Stat trend anchor sub-model. FRED's Japan CPI series
+(JPNCPIALLMINMEI, CPALTT01JPM659N, JPNCPICORMINMEI) all discontinued
+2022; e-Stat (api.e-stat.go.jp) is Japan's official statistics
+portal and the only fresh source of JP CPI data.
+
+Activate: set ESTAT_APP_ID env var to a free e-Stat API key
+(register at https://www.e-stat.go.jp/api/en/). When key absent,
+falls back to consensus-only (v1 behavior).
 
 Value format: y/y %-change (e.g. "+2.9%").
 Sub-models:
-  - FF consensus (~0.15pp MAE - primary signal)
+  - FF consensus (~0.15pp MAE)
+  - e-Stat National Core CPI y/y 3-mo mean (~0.25pp MAE) [opt-in]
 
 Env: UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      JPCPI_RELEASE_DATE, JPCPI_DAYS_OUT, JPCPI_CONSENSUS, MODEL_VERSION
+     ESTAT_APP_ID (optional, activates e-Stat trend anchor)
 """
 from __future__ import annotations
 
@@ -32,7 +39,55 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
     "consensus": 0.15,
+    "trend":     0.25,   # e-Stat National Core CPI y/y 3-mo mean
 }
+
+# e-Stat National Core CPI (excluding fresh food) y/y series.
+# Table 0003143513 = "Monthly CPI - by Item - Japan".
+# cdCat01 = "0001" is the "総合(除く生鮮食品)" (all items less fresh food) code.
+# cdCat02 = "01" is "前年同月比" (y/y % change) presentation.
+ESTAT_STATS_DATA_ID = "0003143513"
+ESTAT_CAT01 = "0001"
+ESTAT_CAT02 = "01"
+
+
+def fetch_estat_trend() -> float | None:
+    """3-mo mean of JP National Core CPI y/y from e-Stat API.
+    Returns None if ESTAT_APP_ID env not set or API errors.
+    Requires free API key registered at https://www.e-stat.go.jp/api/en/."""
+    app_id = os.environ.get("ESTAT_APP_ID")
+    if not app_id:
+        return None
+    params = urllib.parse.urlencode({
+        "appId": app_id,
+        "statsDataId": ESTAT_STATS_DATA_ID,
+        "cdCat01": ESTAT_CAT01,
+        "cdCat02": ESTAT_CAT02,
+        "limit": "3",
+        "sectionHeaderFlg": "2",
+    })
+    url = "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?" + params
+    req = urllib.request.Request(url, headers={"user-agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit-jpcpi] e-Stat fetch failed: {e}", file=sys.stderr)
+        return None
+    try:
+        values = data["GET_STATS_DATA"]["STATISTICAL_DATA"]["DATA_INF"]["VALUE"]
+    except (KeyError, TypeError):
+        print(f"[emit-jpcpi] e-Stat response missing VALUE", file=sys.stderr)
+        return None
+    vals = []
+    for v in values:
+        try:
+            vals.append(float(v.get("$", "")))
+        except (ValueError, TypeError):
+            continue
+    if len(vals) < 2:
+        return None
+    return sum(vals) / len(vals)
 
 
 def require_env(key: str) -> str:
@@ -53,12 +108,14 @@ def parse_float(env_key: str) -> float | None:
         return None
 
 
-def blend(consensus: float | None) -> tuple[float, float, list[str]]:
+def blend(consensus: float | None, trend: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
+    if trend is not None:
+        parts.append(("trend", trend, MAE["trend"]))
     if not parts:
-        raise RuntimeError("blend called with no consensus")
+        raise RuntimeError("blend called with no sub-models")
     weights = [1.0 / m for (_, _, m) in parts]
     wsum = sum(weights)
     point = sum(w * v for (_, v, _), w in zip(parts, weights)) / wsum
@@ -91,8 +148,12 @@ def format_value(v: float) -> str:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
+                    trend: float | None,
                     used: list[str], lean: str) -> str:
-    parts_tbl = f"| consensus | {'-' if consensus is None else f'{consensus:+.2f}%'} | {MAE['consensus']:.2f}pp |"
+    parts_tbl = "\n".join(
+        f"| {name} | {'-' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f}pp |"
+        for name, v in (("consensus", consensus), ("trend", trend))
+    )
     return f"""# JP CPI prediction - target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -116,21 +177,17 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: consensus-only. FRED Japan CPI series all
-discontinued 2022 with empty observations (JPNCPIALLMINMEI,
-CPALTT01JPM659N, JPNCPICORMINMEI). Soft-skips when consensus missing.
+`v1.1-estat`: inverse-MAE-weighted blend of FF consensus + e-Stat
+3-mo mean y/y trend. e-Stat trend fetched from api.e-stat.go.jp
+(statsDataId 0003143513, cdCat01 0001 = "総合(除く生鮮食品)").
+Trend sub-model soft-skips when ESTAT_APP_ID env not set;
+predictor degrades to consensus-only (v1 behavior).
 
 ## Positioning
 
 Second Phase 4 (JPY expansion) predictor. National Core CPI y/y is
 BOJ's preferred inflation gauge. Released by MIC ~19th-27th of
 following month at 08:30 JST.
-
-## Caveats
-
-FRED coverage for Japan CPI is dead — an e-Stat API integration
-(api.e-stat.go.jp, free with registration) would give a real trend
-anchor. Phase 4.1 target.
 
 ## Change log
 
@@ -172,17 +229,19 @@ def main() -> None:
     model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
 
     consensus = parse_float("JPCPI_CONSENSUS")
+    trend = fetch_estat_trend()
 
-    if consensus is None:
-        print("[emit-jpcpi] consensus missing; nothing to blend - exit 0 (soft skip)")
+    if consensus is None and trend is None:
+        print("[emit-jpcpi] all sub-models missing; nothing to blend - exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus)
+    point, sigma, used = blend(consensus, trend)
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-jpcpi] JPCPI {release} T-{days_out}: {format_value(point)} y/y "
           f"(sigma {sigma:.2f}pp, {regime_annotation(point)}, used: {', '.join(used)})")
     if consensus is not None: print(f"  consensus: {consensus:+.2f}%")
+    if trend is not None:     print(f"  trend:     {trend:+.2f}%")
 
     prediction = {
         "eventSlug": f"jpcpi-{release}",
@@ -203,7 +262,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, used, lean)
+                                consensus, trend, used, lean)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"jpcpi-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)

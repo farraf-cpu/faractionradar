@@ -112,7 +112,8 @@ jobs:
           JPCPI_RELEASE_DATE: ${{ needs.gate.outputs.jpcpi_release_date }}
           JPCPI_DAYS_OUT: ${{ needs.gate.outputs.jpcpi_days_out }}
           JPCPI_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v1-simple-blend
+          ESTAT_APP_ID: ${{ secrets.ESTAT_APP_ID }}
+          MODEL_VERSION: v1.1-estat
         run: python emit_jpcpi.py
 
       - name: Commit report + ledger row
