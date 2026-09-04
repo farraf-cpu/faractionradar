@@ -1,23 +1,23 @@
 # AU CPI prediction - target 2026-10-28 (T-54)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-04T17:41:40.865908+00:00
+**Published:** 2026-09-04T17:54:22.423846+00:00
 
 ## Final pick
 
-**+2.6%** y/y AU CPI
+**+2.4%** y/y AU CPI
 
 - Regime: upper end of RBA band
-- 68% CI: [+2.46%, +2.74%]
-- 95% CI: [+2.32%, +2.88%]
-- Lean vs consensus: in line with consensus
-- Sub-models used: consensus, trend
+- 68% CI: [+2.10%, +2.70%]
+- 95% CI: [+1.80%, +3.00%]
+- Lean vs consensus: no consensus
+- Sub-models used: trend
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | +2.70% | 0.15pp |
+| consensus | - | 0.15pp |
 | trend | +2.40% | 0.30pp |
 
 ## Method
