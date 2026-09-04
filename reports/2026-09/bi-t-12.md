@@ -1,22 +1,22 @@
 # BI Policy Rate prediction - target 2026-09-17 (T-12)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T23:13:55.602113+00:00
+**Published:** 2026-09-04T23:20:42.543034+00:00
 
 ## Final pick
 
-**5.78%** BI Policy Rate
+**5.88%** BI Policy Rate
 
-- 68% CI: [5.73%, 5.84%]
-- 95% CI: [5.68%, 5.89%]
-- Lean vs anchor: -10bp cut vs current rate
-- Sub-models used: consensus, anchor
+- 68% CI: [5.73%, 6.03%]
+- 95% CI: [5.58%, 6.18%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 5.75% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 5.88% | 0.15pp |
 
 ## Method
