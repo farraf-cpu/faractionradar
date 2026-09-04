@@ -1,11 +1,14 @@
 name: Predict NFP
 
 on:
-  # Daily at 14:00 UTC (~09:00 ET, before market open). The gate script
-  # decides whether today is T-7/T-4/T-3/T-2/T-1 from the next NFP Friday
-  # and exits early if not.
+  # Two daily fires (gate script exits early on non-predict days):
+  #   - 14:00 UTC — main cadence T-7/T-4/T-3/T-2/T-1 lock cycle
+  #   - 10:15 UTC — T-0 pre-release refresh (~2h15m before 12:30 UTC NFP);
+  #     captures overnight Kalshi + last-hour FF consensus revisions.
+  #     Only fires when today is release day (gate handles).
   schedule:
     - cron: '0 14 * * *'
+    - cron: '15 10 * * *'
   # Manual override for backfills or ad-hoc runs
   workflow_dispatch:
     inputs:

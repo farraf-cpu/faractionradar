@@ -15,7 +15,7 @@ import sys
 from datetime import date, timedelta
 
 
-VALID_DAYS_OUT = {7, 4, 3, 2, 1}
+VALID_DAYS_OUT = {7, 4, 3, 2, 1, 0}   # 0 = T-0 fire on release day (see cron 10:15 UTC)
 
 
 def next_nfp_friday(today: date) -> date:
