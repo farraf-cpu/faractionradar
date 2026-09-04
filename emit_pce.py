@@ -34,8 +34,9 @@ ROOT = Path(__file__).parent
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
-    "consensus": 0.05,
-    "trend":     0.10,
+    "consensus":     0.05,
+    "cleveland_fed": 0.04,   # daily nowcast; tighter than consensus for PCE
+    "trend":         0.10,
 }
 
 
@@ -74,6 +75,33 @@ def _fetch_fred_observations(api_key: str, series_id: str, limit: int) -> list[d
     return obs or None
 
 
+def fetch_cleveland_fed_nowcast() -> float | None:
+    """Latest non-empty 'PCE Inflation' m/m nowcast from Cleveland Fed.
+    Cleveland Fed cycles between CPI + PCE nowcast windows; returns None
+    when the PCE series is empty (CPI cycle currently active)."""
+    url = "https://www.clevelandfed.org/-/media/files/webcharts/inflationnowcasting/nowcast_month.json"
+    req = urllib.request.Request(url, headers={"user-agent": UA, "accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit-pce] Cleveland Fed fetch failed: {e}", file=sys.stderr)
+        return None
+    if not isinstance(data, list) or not data:
+        return None
+    for ds in data[0].get("dataset") or []:
+        if ds.get("seriesname") != "PCE Inflation":
+            continue
+        non_empty = [x for x in ds.get("data") or [] if x.get("value")]
+        if not non_empty:
+            return None
+        try:
+            return float(non_empty[-1]["value"])
+        except (ValueError, TypeError):
+            return None
+    return None
+
+
 def fetch_fred_pce_trend(api_key: str) -> float | None:
     """Mean of last 6 published m/m %-changes of PCEPI (Personal Consumption
     Expenditures Chain-type Price Index)."""
@@ -93,10 +121,13 @@ def fetch_fred_pce_trend(api_key: str) -> float | None:
 
 
 def blend(consensus: float | None,
+          cleveland_fed: float | None,
           trend: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
+    if cleveland_fed is not None:
+        parts.append(("cleveland_fed", cleveland_fed, MAE["cleveland_fed"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
     if not parts:
@@ -125,10 +156,11 @@ def format_value(pct: float) -> str:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
+                    cleveland_fed: float | None,
                     trend: float | None, used: list[str], lean: str) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f} pp |"
-        for name, v in (("consensus", consensus), ("trend", trend))
+        for name, v in (("consensus", consensus), ("cleveland_fed", cleveland_fed), ("trend", trend))
     )
     return f"""# PCE prediction — target {release} (T-{days_out})
 
@@ -152,13 +184,13 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: inverse-MAE-weighted mean of consensus (0.05pp) + FRED
-PCEPI 6-mo m/m trend (0.10pp). Blended sigma is the inverse-variance
-combination. Consensus MAE on PCE is tighter than CPI/PPI because it's the
-Fed's target — analysts scrutinize it more.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of consensus (0.05pp) +
+Cleveland Fed daily nowcast (0.04pp; when PCE cycle active) + FRED
+PCEPI 6-mo m/m trend (0.10pp). Consensus MAE on PCE is tighter than
+CPI/PPI because it's the Fed's target — analysts scrutinize it more.
 
-Phase 2 target adds Cleveland Fed nowcast + Core PCE decomposition and
-splits headline vs core into separate slugs (pce-<date> vs pce-core-<date>).
+Phase 2 target adds Core PCE decomposition and splits headline vs
+core into separate slugs (pce-<date> vs pce-core-<date>).
 """
 
 
@@ -193,23 +225,25 @@ def main() -> None:
 
     release = os.environ["PCE_RELEASE_DATE"]
     days_out = int(os.environ["PCE_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
 
     consensus = parse_pct("PCE_CONSENSUS_PCT")
     fred_key = os.environ.get("FRED_API_KEY")
     trend = fetch_fred_pce_trend(fred_key) if fred_key else None
+    cleveland_fed = fetch_cleveland_fed_nowcast()
 
-    if consensus is None and trend is None:
+    if consensus is None and trend is None and cleveland_fed is None:
         print("[emit-pce] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, trend)
+    point, sigma, used = blend(consensus, cleveland_fed, trend)
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-pce] PCE {release} T-{days_out}: {format_value(point)} m/m "
           f"(sigma {sigma:.2f}pp, used: {', '.join(used)})")
-    if consensus is not None: print(f"  consensus:  {consensus:+.2f}%")
-    if trend     is not None: print(f"  trend(6mo): {trend:+.2f}%")
+    if consensus     is not None: print(f"  consensus:      {consensus:+.2f}%")
+    if cleveland_fed is not None: print(f"  cleveland_fed:  {cleveland_fed:+.2f}%")
+    if trend         is not None: print(f"  trend(6mo):     {trend:+.2f}%")
 
     prediction = {
         "eventSlug": f"pce-{release}",
@@ -230,7 +264,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, used, lean)
+                                consensus, cleveland_fed, trend, used, lean)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"pce-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)

@@ -128,7 +128,7 @@ jobs:
           PCE_RELEASE_DATE: ${{ needs.gate.outputs.pce_release_date }}
           PCE_DAYS_OUT: ${{ needs.gate.outputs.pce_days_out }}
           PCE_CONSENSUS_PCT: ${{ steps.consensus.outputs.consensus_pct }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v1.1-simple-blend
         run: python emit_pce.py
 
       - name: Commit report + ledger row
