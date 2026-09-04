@@ -20,3 +20,4 @@
 {"publishedAt":"2026-09-04T07:52:06.269245+00:00","eventSlug":"businv-2026-09-16","daysOut":12,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.09,0.59],"grandMedian":null,"reportPath":"reports/2026-09/businv-t-12.md"}
 {"publishedAt":"2026-09-04T07:56:43.455089+00:00","eventSlug":"factory-2026-10-02","daysOut":28,"modelVersion":"v1-simple-blend","ourCall":"-0.1%","ci68":[-0.61,0.39],"grandMedian":null,"reportPath":"reports/2026-10/factory-t-28.md"}
 {"publishedAt":"2026-09-04T07:58:17.002435+00:00","eventSlug":"construction-2026-10-01","daysOut":27,"modelVersion":"v1-simple-blend","ourCall":"-0.2%","ci68":[-0.56,0.24],"grandMedian":null,"reportPath":"reports/2026-10/construction-t-27.md"}
+{"publishedAt":"2026-09-04T07:59:52.855381+00:00","eventSlug":"adtrade-2026-09-30","daysOut":26,"modelVersion":"v1-simple-blend","ourCall":"-$109.3B","ci68":[-114.3,-104.3],"grandMedian":null,"reportPath":"reports/2026-09/adtrade-t-26.md"}
