@@ -1,22 +1,22 @@
 # BOJ Policy Rate prediction - target 2026-09-19 (T-15)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T17:26:15.254179+00:00
+**Published:** 2026-09-04T17:34:15.431002+00:00
 
 ## Final pick
 
-**0.77%** BOJ Policy Rate
+**0.84%** BOJ Policy Rate
 
-- 68% CI: [0.72%, 0.83%]
-- 95% CI: [0.67%, 0.88%]
-- Lean vs anchor: -7bp cut vs current rate
-- Sub-models used: consensus, anchor
+- 68% CI: [0.69%, 0.99%]
+- 95% CI: [0.54%, 1.14%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 0.75% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 0.84% | 0.15pp |
 
 ## Method
