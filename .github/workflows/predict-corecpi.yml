@@ -112,7 +112,7 @@ jobs:
           CORECPI_RELEASE_DATE: ${{ needs.gate.outputs.corecpi_release_date }}
           CORECPI_DAYS_OUT: ${{ needs.gate.outputs.corecpi_days_out }}
           CORECPI_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v1.1-simple-blend
+          MODEL_VERSION: v1.2-simple-blend
         run: python emit_corecpi.py
 
       - name: Commit report + ledger row
