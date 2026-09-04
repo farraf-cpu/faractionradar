@@ -1,22 +1,22 @@
 # NORGES Policy Rate prediction - target 2026-09-18 (T-14)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T20:44:55.385137+00:00
+**Published:** 2026-09-04T20:49:03.450925+00:00
 
 ## Final pick
 
 **4.25%** NORGES Policy Rate
 
-- 68% CI: [4.20%, 4.30%]
-- 95% CI: [4.14%, 4.36%]
+- 68% CI: [4.10%, 4.40%]
+- 95% CI: [3.95%, 4.55%]
 - Lean vs anchor: hold expected
-- Sub-models used: consensus, anchor
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 4.25% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 4.25% | 0.15pp |
 
 ## Method
