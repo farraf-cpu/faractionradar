@@ -1,7 +1,7 @@
 # Monthly Treasury Budget prediction — target 2026-09-11 (T-7)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-04T07:15:57.995649+00:00
+**Published:** 2026-09-04T17:24:58.563883+00:00
 
 ## Final pick
 
