@@ -1,22 +1,22 @@
 # NB Policy Rate prediction - target 2026-09-17 (T-12)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T23:12:01.577716+00:00
+**Published:** 2026-09-04T23:20:38.686647+00:00
 
 ## Final pick
 
-**1.74%** NB Policy Rate
+**1.72%** NB Policy Rate
 
-- 68% CI: [1.69%, 1.80%]
-- 95% CI: [1.64%, 1.85%]
-- Lean vs anchor: +2bp move vs current rate
-- Sub-models used: consensus, anchor
+- 68% CI: [1.57%, 1.87%]
+- 95% CI: [1.42%, 2.02%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 1.75% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 1.72% | 0.15pp |
 
 ## Method
