@@ -1,10 +1,14 @@
 name: Predict FOMC
 
 on:
-  # Daily at 14:05 UTC — offset 5 min from NFP/CPI to avoid stacking cron
-  # startup + concurrent Kalshi calls. FOMC gate is cheap (single JSON fetch).
+  # Two daily fires:
+  #   14:05 UTC — main cadence T-7/T-4/T-3/T-2/T-1 lock cycle
+  #   16:00 UTC — T-0 pre-release refresh (~2h before 18:00 UTC FOMC);
+  #     captures overnight Kalshi + last-hour speaker signals.
+  #     Only fires when today is release day (gate handles).
   schedule:
     - cron: '5 14 * * *'
+    - cron: '0 16 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

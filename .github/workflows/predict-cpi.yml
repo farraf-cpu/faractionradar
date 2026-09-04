@@ -1,11 +1,14 @@
 name: Predict CPI
 
 on:
-  # Daily at 14:00 UTC (same slot as NFP; different gate). CPI releases
-  # aren't fixed to a weekday so gate resolves next release via worker's
-  # /public/upcoming-marquee endpoint (FRED-driven, 45-day horizon).
+  # Two daily fires:
+  #   14:00 UTC — main cadence T-7/T-4/T-3/T-2/T-1 lock cycle
+  #   10:30 UTC — T-0 pre-release refresh (~2h before 12:30 UTC CPI);
+  #     captures overnight Kalshi + last-hour FF consensus revisions.
+  #     Only fires when today is release day (gate handles).
   schedule:
     - cron: '0 14 * * *'
+    - cron: '30 10 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:
