@@ -1,61 +1,76 @@
 # FOMC Predictor — Model Card
 
-**Model version:** `v1-simple-blend`
+**Model version:** `v2-outcome-distribution`
 **Event:** FOMC federal funds target rate decision (~8 meetings/year)
-**Status:** Live — cadence T-7, T-4, T-3, T-2, T-1 via `predict-fomc.yml`
+**Status:** Live — cadence T-7, T-4, T-3, T-2, T-1 + T-0 release-day refresh via `predict-fomc.yml`
 
-## What v1-simple-blend does
+## What v2-outcome-distribution does
 
-Inverse-MAE-weighted point estimate of the target fed funds rate. Publishes
-as a scalar rate (e.g. `4.25%`) — a simplification of what's really a
-distribution over discrete outcomes (hold / cut25 / cut50 / hike25).
-Phase 2 target: publish the full outcome distribution.
+Emits both:
+1. A scalar point estimate (backward compat with v1)
+2. A **probability distribution over discrete rate outcomes** (the primary v2 upgrade)
 
-Sub-models:
+Discretization: the posterior point + sigma is integrated over standard
+25bp buckets centered on outcome levels. Each 25bp bucket is +/- 0.125%
+wide relative to its target level. Tail buckets extend to +/- infinity.
+
+Output shape (`ourCall.outcomeDistribution`):
+```json
+{
+  "hike50":     0.02,
+  "hike25":     0.92,
+  "hold":       0.05,
+  "cut25":      0.00,
+  "cut50":      0.00,
+  "cut75_plus": 0.00,
+  "modal":      "hike25"
+}
+```
+
+Rendered on `/calendar/pred/fomc-<date>` as horizontal probability bars
+with the modal outcome highlighted.
+
+Sub-models feeding the point + sigma:
 
 | Sub-model | Source | Historical MAE (pp) |
 |-----------|--------|---------------------|
-| Kalshi prediction market | live from calendar-worker `/public/kalshi-implied` → `fomc.value_k` (interpolated rate) | ~0.05 |
-| Bloomberg / FF consensus | live from calendar-worker `?read` if present (often blank for FOMC) | ~0.07 |
-| Current fed funds anchor | FRED `DFEDTARU` (upper bound of current target range) | ~0.25 |
+| Kalshi prediction market | worker `/public/kalshi-implied` → `fomc.value_k` | ~0.05 |
+| Bloomberg / FF consensus | worker `?read` if present (often blank for FOMC) | ~0.07 |
+| Current fed funds anchor | FRED `DFEDTARU` (upper bound of target range) | ~0.25 |
 
-Weights are `1 / MAE`. In practice this makes markets dominate: their
-0.05pp MAE is 5x tighter than the anchor's 0.25pp, so market weight is ~5x
-larger. That matches the empirical observation that fed funds futures and
-Kalshi have called every FOMC decision within a rounding error since 2015.
+Inverse-MAE weighting: markets dominate (5x tighter MAE than anchor).
+Anchor + consensus provide fallback when markets are stale.
 
-Anchor is included only so the emitter never returns zero — if markets fail
-and consensus is blank, "no change from current target" is a defensible
-fallback.
+## Method notes
 
-## What v1-simple-blend is NOT
+- **Normal-distribution assumption:** the discretization treats the
+  posterior as `N(point, sigma^2)`. This is a proxy for a true Bayesian
+  posterior — real sub-model errors are correlated and non-Gaussian, so
+  distribution is directionally informative but should not be taken as
+  a calibrated probability.
+- **No policy-signal decomposition yet:** no dot-plot ingestion, no SEP
+  integration, no speaker-hawkishness index. Distribution comes from
+  discretizing the market-anchored blend.
+- **Anchor only fallback:** if Kalshi + consensus both missing, anchor
+  alone drives the distribution (typically peaks at hold with wide tails).
 
-- **Not a probability distribution.** Just a scalar. The real prediction on
-  rate-decision day is a distribution over ~5 discrete outcomes; a scalar
-  point estimate collapses information. Phase 2 fixes this.
-- **Not a policy-signal decomposition.** No Fed speaker index, no dot-plot
-  ingestion, no SEP integration. The scalar is Kalshi + a fallback; the
-  value-add above pure market data is minimal at this version.
-- **Not tuned to volatility regime.** FOMC MAE is very low during holds and
-  wider during transition meetings. Weights are static across regimes.
+## What v2 does NOT do (yet)
 
-## Phase 2 target: v2-outcome-distribution
-
-Discrete-outcome Bayesian model publishing a probability distribution:
-
-- Prediction markets (Kalshi + Polymarket, if we clear the geo-block)
-- Fed funds futures implied probability distribution (CME)
-- SEP dot-plot median (from most recent SEP release)
-- Speaker-hawkishness rolling index (Fed speeches since last meeting)
-- Data surprise index (CPI + NFP + PCE surprises since last meeting)
-
-Payload becomes `outcomeDistribution: {hold: 0.85, cut25: 0.12, cut50: 0.03}`
-plus a `modalOutcome` string and a scalar-collapsed `value` for
-backwards-compat with the current schema.
+- **Empirical variance calibration** — sigma is derived from sub-model
+  MAE priors, not from historical resolutions. Blocked on live scoring
+  accumulating enough data to calibrate.
+- **Correlated-error handling** — sub-models draw from correlated data
+  (Kalshi tracks futures which track SEP). Treating them independently
+  over-weights information.
+- **SEP + speaker signal** — dot-plot median from most recent SEP release
+  and speaker-hawkishness rolling index would tighten distribution during
+  transition meetings.
 
 ## Change log
 
+- **v2-outcome-distribution (2026-09-04)** — adds discrete outcome
+  probability distribution over 25bp buckets. Same underlying blend as
+  v1 for the point estimate; discretization is the upgrade.
 - **v1-simple-blend (2026-09-03)** — three sub-model live blend. Kalshi
-  implied + optional consensus + FRED anchor. First FOMC prediction fires
-  for Sep 17 event on T-7 (2026-09-10).
-- **v1-beta (2026-09-01)** — placeholder shipped alongside NFP. Superseded.
+  implied + optional consensus + FRED anchor.
+- **v1-beta (2026-09-01)** — placeholder shipped alongside NFP.
