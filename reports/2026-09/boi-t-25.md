@@ -1,22 +1,22 @@
 # BOI Policy Rate prediction - target 2026-09-30 (T-25)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T21:51:59.615955+00:00
+**Published:** 2026-09-04T21:56:12.758475+00:00
 
 ## Final pick
 
 **3.75%** BOI Policy Rate
 
-- 68% CI: [3.70%, 3.80%]
-- 95% CI: [3.64%, 3.86%]
+- 68% CI: [3.60%, 3.90%]
+- 95% CI: [3.45%, 4.05%]
 - Lean vs anchor: hold expected
-- Sub-models used: consensus, anchor
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 3.75% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 3.75% | 0.15pp |
 
 ## Method
