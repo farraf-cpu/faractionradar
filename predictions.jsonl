@@ -91,3 +91,4 @@
 {"publishedAt":"2026-09-04T20:44:56.164390+00:00","eventSlug":"nocpi-2026-09-10","daysOut":6,"modelVersion":"v1-simple-blend","ourCall":"+2.5%","ci68":[2.35,2.65],"grandMedian":null,"reportPath":"reports\\2026-09\\nocpi-t-6.md"}
 {"publishedAt":"2026-09-04T20:44:57.220356+00:00","eventSlug":"nogdp-2026-11-24","daysOut":81,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.23,0.51],"grandMedian":null,"reportPath":"reports\\2026-11\\nogdp-t-81.md"}
 {"publishedAt":"2026-09-04T20:49:03.450898+00:00","eventSlug":"norges-2026-09-18","daysOut":14,"modelVersion":"v2-outcome-distribution","ourCall":"4.25%","ci68":[4.1,4.4],"grandMedian":null,"reportPath":"reports/2026-09/norges-t-14.md"}
+{"publishedAt":"2026-09-04T20:49:10.480094+00:00","eventSlug":"nogdp-2026-11-24","daysOut":81,"modelVersion":"v1-simple-blend","ourCall":"+0.5%","ci68":[0.2,0.8],"grandMedian":null,"reportPath":"reports/2026-11/nogdp-t-81.md"}
