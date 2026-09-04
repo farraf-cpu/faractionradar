@@ -1,22 +1,22 @@
 # MNB Policy Rate prediction - target 2026-09-29 (T-24)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T22:09:28.912284+00:00
+**Published:** 2026-09-04T22:14:50.662303+00:00
 
 ## Final pick
 
-**6.40%** MNB Policy Rate
+**6.11%** MNB Policy Rate
 
-- 68% CI: [6.35%, 6.45%]
-- 95% CI: [6.30%, 6.51%]
-- Lean vs anchor: +30bp move vs current rate
-- Sub-models used: consensus, anchor
+- 68% CI: [5.96%, 6.26%]
+- 95% CI: [5.81%, 6.41%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 6.50% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 6.11% | 0.15pp |
 
 ## Method
