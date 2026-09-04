@@ -112,7 +112,9 @@ jobs:
           INCPI_RELEASE_DATE: ${{ needs.gate.outputs.incpi_release_date }}
           INCPI_DAYS_OUT: ${{ needs.gate.outputs.incpi_days_out }}
           INCPI_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v1-simple-blend
+          MOSPI_APP_ID: ${{ secrets.MOSPI_APP_ID }}
+          MOSPI_RESOURCE_ID: ${{ secrets.MOSPI_RESOURCE_ID }}
+          MODEL_VERSION: v1.1-mospi
         run: python emit_incpi.py
 
       - name: Commit report + ledger row
