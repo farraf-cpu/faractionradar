@@ -1,19 +1,24 @@
-"""Swiss CPI predictor. v1-simple-blend.
+"""KR CPI predictor. v1.1-kosis.
 
-Statistics Korea (KOSIS) publishes monthly CPI y/y
-~1 week after reference month at 08:30 CET (07:30 UTC winter).
-BOK targets 2% CPI y/y.
+Statistics Korea (KOSIS) publishes monthly CPI y/y ~2nd of following
+month at 08:00 KST (23:00 UTC prior day). BOK targets 2% CPI y/y.
 
-Consensus-only for v1: FRED's CPALTT01KRM659N is stale (last obs
-2025-03, usable but slow-moving). KOSIS Statistical Portal API
-integration deferred to v1.1.
+v1.1 adds KOSIS trend anchor sub-model. FRED's CPALTT01KRM659N is
+dead since 2023-11; KOSIS (kosis.kr/openapi) is the authoritative
+Korean statistics portal.
 
-Value format: y/y %-change (e.g. "+2.9%").
+Activate: set KOSIS_APP_ID env var to a free KOSIS API key
+(register at https://kosis.kr/openapi/index/index.jsp). When key
+absent, falls back to consensus-only (v1 behavior).
+
+Value format: y/y %-change (e.g. "+2.0%").
 Sub-models:
-  - FF consensus (~0.15pp MAE - primary signal)
+  - FF consensus (~0.15pp MAE)
+  - KOSIS CPI y/y 3-mo mean (~0.25pp MAE) [opt-in]
 
 Env: UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      KRCPI_RELEASE_DATE, KRCPI_DAYS_OUT, KRCPI_CONSENSUS, MODEL_VERSION
+     KOSIS_APP_ID (optional, activates KOSIS trend anchor)
 """
 from __future__ import annotations
 
@@ -32,7 +37,71 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
     "consensus": 0.15,
+    "trend":     0.25,   # KOSIS CPI y/y 3-mo mean
 }
+
+# KOSIS Consumer Price Survey y/y series.
+# orgId=101 (Statistics Korea), tblId=DT_1J17001 (Consumer Price Survey monthly)
+# itmId=T20 = y/y % change; objL1=A = all items (headline CPI).
+KOSIS_ORG_ID = "101"
+KOSIS_TBL_ID = "DT_1J17001"
+KOSIS_ITM_ID = "T20"
+KOSIS_OBJ_L1 = "A"
+
+
+def fetch_kosis_trend() -> float | None:
+    """3-mo mean of KR CPI y/y from KOSIS API.
+    Returns None if KOSIS_APP_ID env not set or API errors.
+    Requires free API key registered at https://kosis.kr/openapi/index/index.jsp."""
+    app_id = os.environ.get("KOSIS_APP_ID")
+    if not app_id:
+        return None
+    # Use last 3 months window ending previous month.
+    now = datetime.now(timezone.utc)
+    end_year = now.year
+    end_month = now.month - 1 if now.month > 1 else 12
+    if end_month == 12: end_year -= 1
+    start_year = end_year
+    start_month = end_month - 2
+    if start_month <= 0:
+        start_month += 12
+        start_year -= 1
+    end_prd = f"{end_year:04d}{end_month:02d}"
+    start_prd = f"{start_year:04d}{start_month:02d}"
+    params = urllib.parse.urlencode({
+        "method": "getList",
+        "apiKey": app_id,
+        "format": "json",
+        "jsonVD": "Y",
+        "userStatsId": "",
+        "orgId": KOSIS_ORG_ID,
+        "tblId": KOSIS_TBL_ID,
+        "itmId": KOSIS_ITM_ID,
+        "objL1": KOSIS_OBJ_L1,
+        "prdSe": "M",
+        "startPrdDe": start_prd,
+        "endPrdDe": end_prd,
+    })
+    url = "https://kosis.kr/openapi/Param/statisticsParameterData.do?" + params
+    req = urllib.request.Request(url, headers={"user-agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit-krcpi] KOSIS fetch failed: {e}", file=sys.stderr)
+        return None
+    if not isinstance(data, list):
+        print(f"[emit-krcpi] KOSIS response unexpected shape", file=sys.stderr)
+        return None
+    vals = []
+    for row in data:
+        try:
+            vals.append(float(row.get("DT", "")))
+        except (ValueError, TypeError):
+            continue
+    if len(vals) < 2:
+        return None
+    return sum(vals) / len(vals)
 
 
 def require_env(key: str) -> str:
@@ -53,12 +122,14 @@ def parse_float(env_key: str) -> float | None:
         return None
 
 
-def blend(consensus: float | None) -> tuple[float, float, list[str]]:
+def blend(consensus: float | None, trend: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
+    if trend is not None:
+        parts.append(("trend", trend, MAE["trend"]))
     if not parts:
-        raise RuntimeError("blend called with no consensus")
+        raise RuntimeError("blend called with no sub-models")
     weights = [1.0 / m for (_, _, m) in parts]
     wsum = sum(weights)
     point = sum(w * v for (_, v, _), w in zip(parts, weights)) / wsum
@@ -91,16 +162,20 @@ def format_value(v: float) -> str:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
+                    trend: float | None,
                     used: list[str], lean: str) -> str:
-    parts_tbl = f"| consensus | {'-' if consensus is None else f'{consensus:+.2f}%'} | {MAE['consensus']:.2f}pp |"
-    return f"""# JP CPI prediction - target {release} (T-{days_out})
+    parts_tbl = "\n".join(
+        f"| {name} | {'-' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f}pp |"
+        for name, v in (("consensus", consensus), ("trend", trend))
+    )
+    return f"""# KR CPI prediction - target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
 **Published:** {datetime.now(timezone.utc).isoformat()}
 
 ## Final pick
 
-**{format_value(point)}** y/y NZ CPI CPI
+**{format_value(point)}** y/y KR CPI
 
 - Regime: {regime_annotation(point)}
 - 68% CI: [{point - sigma:+.2f}%, {point + sigma:+.2f}%]
@@ -116,15 +191,16 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: consensus-only. FRED Japan CPI series all
-discontinued 2022 with empty observations (JPNCPIALLMINMEI,
-CPALTT01JPM659N, JPNCPICORMINMEI). Soft-skips when consensus missing.
+`v1.1-kosis`: inverse-MAE-weighted blend of FF consensus + KOSIS
+3-mo mean y/y trend. KOSIS trend fetched from kosis.kr/openapi
+(orgId=101, tblId=DT_1J17001, itmId=T20, objL1=A). Trend sub-model
+soft-skips when KOSIS_APP_ID env not set; predictor degrades to
+consensus-only.
 
 ## Positioning
 
-Second Phase 12 (KRW expansion) predictor. National Core CPI y/y is
-RBNZ's preferred gauge. Released by KOSIS ~19th-27th of
-following month at 10:45 KRWT.
+Second Phase 12 (KRW expansion) predictor. BOK targets 2% CPI y/y.
+Released by KOSIS ~2nd of following month at 08:00 KST.
 
 ## Caveats
 
@@ -172,21 +248,23 @@ def main() -> None:
     model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
 
     consensus = parse_float("KRCPI_CONSENSUS")
+    trend = fetch_kosis_trend()
 
-    if consensus is None:
-        print("[emit-krcpi] consensus missing; nothing to blend - exit 0 (soft skip)")
+    if consensus is None and trend is None:
+        print("[emit-krcpi] all sub-models missing; nothing to blend - exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus)
+    point, sigma, used = blend(consensus, trend)
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-krcpi] KRCPI {release} T-{days_out}: {format_value(point)} y/y "
           f"(sigma {sigma:.2f}pp, {regime_annotation(point)}, used: {', '.join(used)})")
     if consensus is not None: print(f"  consensus: {consensus:+.2f}%")
+    if trend is not None:     print(f"  trend:     {trend:+.2f}%")
 
     prediction = {
         "eventSlug": f"krcpi-{release}",
-        "eventTitle": "NZ CPI CPI y/y",
+        "eventTitle": "KR CPI y/y",
         "country": "KRW",
         "releaseDate": release,
         "daysOut": days_out,
@@ -203,7 +281,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, used, lean)
+                                consensus, trend, used, lean)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"krcpi-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)

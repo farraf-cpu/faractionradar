@@ -112,7 +112,8 @@ jobs:
           KRCPI_RELEASE_DATE: ${{ needs.gate.outputs.krcpi_release_date }}
           KRCPI_DAYS_OUT: ${{ needs.gate.outputs.krcpi_days_out }}
           KRCPI_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v1-simple-blend
+          KOSIS_APP_ID: ${{ secrets.KOSIS_APP_ID }}
+          MODEL_VERSION: v1.1-kosis
         run: python emit_krcpi.py
 
       - name: Commit report + ledger row
