@@ -1,7 +1,7 @@
 # CPI prediction — target 2026-09-11 (T-7)
 
-**Model version:** `v1-simple-blend`
-**Published:** 2026-09-03T00:48:16.574051+00:00
+**Model version:** `v1.1-simple-blend`
+**Published:** 2026-09-04T10:05:05.949887+00:00
 
 ## Final pick
 
@@ -17,13 +17,20 @@
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | — | 0.08 pp |
+| cleveland_fed | — | 0.06 pp |
 | market | +0.00% | 0.12 pp |
+| trimmed_mean | — | 0.10 pp |
 | trend | +0.32% | 0.15 pp |
 
 ## Method
 
-v1-simple-blend: inverse-MAE-weighted mean of the sub-models above. Weights
-are hardcoded from published/estimated MAE benchmarks (consensus 0.08pp,
-market 0.12pp, trend 0.15pp). CI is inverse-variance-combined sigma. This
-is a Phase 1.5 placeholder — Phase 2 target is a proper Bayesian blend with
-Cleveland Fed nowcast + trimmed-mean sub-model + shelter/energy carve-outs.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of up to 4 sub-models.
+Consensus + Kalshi market + FRED trimmed-mean CPI + FRED CPIAUCSL 6-mo
+trend. Weights are `1 / MAE`, so tighter historical sources dominate.
+CI is inverse-variance-combined sigma. `TRMMEANCPIM159SFRBDAL` (Dallas
+Fed 8% trimmed mean m/m) added in v1.1 as a mean-reverting anchor that
+excludes the top + bottom 8% of price change tails — historically
+forecasts headline m/m with ~0.10pp MAE.
+
+Phase 2 target adds Cleveland Fed nowcast + shelter/energy carve-outs
+and restructures as a proper Bayesian blend with regime-aware weights.
