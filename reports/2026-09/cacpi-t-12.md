@@ -1,23 +1,23 @@
 # CA CPI prediction - target 2026-09-16 (T-12)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-04T18:04:45.245266+00:00
+**Published:** 2026-09-04T18:10:28.344433+00:00
 
 ## Final pick
 
 **+2.3%** y/y CA CPI
 
 - Regime: upper end of BOC band
-- 68% CI: [+2.15%, +2.44%]
-- 95% CI: [+2.01%, +2.58%]
-- Lean vs consensus: in line with consensus
-- Sub-models used: consensus, trend
+- 68% CI: [+1.99%, +2.59%]
+- 95% CI: [+1.69%, +2.89%]
+- Lean vs consensus: no consensus
+- Sub-models used: trend
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | +2.30% | 0.15pp |
+| consensus | - | 0.15pp |
 | trend | +2.29% | 0.30pp |
 
 ## Method

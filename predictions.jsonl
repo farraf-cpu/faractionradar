@@ -66,3 +66,4 @@
 {"publishedAt":"2026-09-04T18:04:45.245226+00:00","eventSlug":"cacpi-2026-09-16","daysOut":12,"modelVersion":"v1-simple-blend","ourCall":"+2.3%","ci68":[2.15,2.44],"grandMedian":null,"reportPath":"reports\\2026-09\\cacpi-t-12.md"}
 {"publishedAt":"2026-09-04T18:04:45.916574+00:00","eventSlug":"cagdp-2026-09-30","daysOut":26,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.15,0.45],"grandMedian":null,"reportPath":"reports\\2026-09\\cagdp-t-26.md"}
 {"publishedAt":"2026-09-04T18:10:26.121593+00:00","eventSlug":"boc-2026-09-10","daysOut":6,"modelVersion":"v2-outcome-distribution","ourCall":"2.27%","ci68":[2.12,2.42],"grandMedian":null,"reportPath":"reports/2026-09/boc-t-6.md"}
+{"publishedAt":"2026-09-04T18:10:28.344407+00:00","eventSlug":"cacpi-2026-09-16","daysOut":12,"modelVersion":"v1-simple-blend","ourCall":"+2.3%","ci68":[1.99,2.59],"grandMedian":null,"reportPath":"reports/2026-09/cacpi-t-12.md"}
