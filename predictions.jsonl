@@ -41,3 +41,4 @@
 {"publishedAt":"2026-09-04T12:26:06.365629+00:00","eventSlug":"ecb-2026-09-10","daysOut":6,"modelVersion":"v2-outcome-distribution","ourCall":"2.25%","ci68":[2.0,2.5],"grandMedian":null,"reportPath":"reports/2026-09/ecb-t-6.md"}
 {"publishedAt":"2026-09-04T14:09:08.090620+00:00","eventSlug":"cpi-2026-09-11","daysOut":7,"modelVersion":"v1.2-simple-blend","ourCall":"+0.1%","ci68":[0.05,0.23],"grandMedian":null,"reportPath":"reports/2026-09/cpi-t-7.md"}
 {"publishedAt":"2026-09-04T14:15:00.811602+00:00","eventSlug":"nfp-2026-09-04","daysOut":0,"modelVersion":"v1-bayesian-blend","ourCall":"-20K","ci68":[-51,11],"grandMedian":"+107K","reportPath":"reports/2026-09/nfp-t-0.md"}
+{"publishedAt":"2026-09-04T15:14:22.525735+00:00","eventSlug":"jolts-2026-09-08","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"7.33M","ci68":[7.08,7.58],"grandMedian":null,"reportPath":"reports/2026-09/jolts-t-4.md"}
