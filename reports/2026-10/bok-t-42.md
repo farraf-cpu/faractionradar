@@ -1,22 +1,22 @@
 # BOK Policy Rate prediction - target 2026-10-16 (T-42)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T20:53:47.345779+00:00
+**Published:** 2026-09-04T20:58:33.695046+00:00
 
 ## Final pick
 
-**2.51%** BOK Policy Rate
+**2.54%** BOK Policy Rate
 
-- 68% CI: [2.46%, 2.56%]
-- 95% CI: [2.40%, 2.62%]
-- Lean vs anchor: -3bp cut vs current rate
-- Sub-models used: consensus, anchor
+- 68% CI: [2.39%, 2.69%]
+- 95% CI: [2.24%, 2.84%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 2.50% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 2.54% | 0.15pp |
 
 ## Method
