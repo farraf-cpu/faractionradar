@@ -61,3 +61,4 @@
 {"publishedAt":"2026-09-04T17:43:13.436143+00:00","eventSlug":"rba-2026-09-30","daysOut":26,"modelVersion":"v2-outcome-distribution","ourCall":"4.35%","ci68":[4.3,4.4],"grandMedian":null,"reportPath":"reports\\2026-09\\rba-t-26.md"}
 {"publishedAt":"2026-09-04T17:54:22.423820+00:00","eventSlug":"aucpi-2026-10-28","daysOut":54,"modelVersion":"v1-simple-blend","ourCall":"+2.4%","ci68":[2.1,2.7],"grandMedian":null,"reportPath":"reports/2026-10/aucpi-t-54.md"}
 {"publishedAt":"2026-09-04T17:54:27.736182+00:00","eventSlug":"rba-2026-09-30","daysOut":26,"modelVersion":"v2-outcome-distribution","ourCall":"4.35%","ci68":[4.2,4.5],"grandMedian":null,"reportPath":"reports/2026-09/rba-t-26.md"}
+{"publishedAt":"2026-09-04T17:54:28.142376+00:00","eventSlug":"augdp-2026-12-03","daysOut":90,"modelVersion":"v1-simple-blend","ourCall":"+0.6%","ci68":[0.32,0.92],"grandMedian":null,"reportPath":"reports/2026-12/augdp-t-90.md"}

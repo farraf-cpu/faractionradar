@@ -1,23 +1,23 @@
 # AU GDP prediction - target 2026-12-03 (T-90)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-04T17:41:42.075423+00:00
+**Published:** 2026-09-04T17:54:28.142439+00:00
 
 ## Final pick
 
-**+0.5%** q/q AU GDP
+**+0.6%** q/q AU GDP
 
 - Regime: solid growth
-- 68% CI: [+0.40%, +0.68%]
-- 95% CI: [+0.26%, +0.82%]
-- Lean vs consensus: in line with consensus
-- Sub-models used: consensus, trend
+- 68% CI: [+0.32%, +0.92%]
+- 95% CI: [+0.02%, +1.22%]
+- Lean vs consensus: no consensus
+- Sub-models used: trend
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | +0.50% | 0.15pp |
+| consensus | - | 0.15pp |
 | trend | +0.62% | 0.30pp |
 
 ## Method
