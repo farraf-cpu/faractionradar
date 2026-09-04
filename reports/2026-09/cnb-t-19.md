@@ -1,22 +1,22 @@
 # CNB Policy Rate prediction - target 2026-09-24 (T-19)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T21:58:37.148685+00:00
+**Published:** 2026-09-04T22:04:13.060170+00:00
 
 ## Final pick
 
-**3.52%** CNB Policy Rate
+**3.58%** CNB Policy Rate
 
-- 68% CI: [3.47%, 3.57%]
-- 95% CI: [3.41%, 3.63%]
-- Lean vs anchor: -6bp cut vs current rate
-- Sub-models used: consensus, anchor
+- 68% CI: [3.43%, 3.73%]
+- 95% CI: [3.28%, 3.88%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 3.50% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 3.58% | 0.15pp |
 
 ## Method
