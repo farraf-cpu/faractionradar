@@ -16,3 +16,4 @@
 {"publishedAt":"2026-09-04T07:11:51.262717+00:00","eventSlug":"credit-2026-09-08","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+$11.0B","ci68":[3.0,19.0],"grandMedian":null,"reportPath":"reports/2026-09/credit-t-4.md"}
 {"publishedAt":"2026-09-04T07:15:57.995631+00:00","eventSlug":"budget-2026-09-11","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"-$291.1B","ci68":[-331.1,-251.1],"grandMedian":null,"reportPath":"reports/2026-09/budget-t-7.md"}
 {"publishedAt":"2026-09-04T07:22:19.286585+00:00","eventSlug":"income-2026-09-22","daysOut":18,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.23,0.63],"grandMedian":null,"reportPath":"reports/2026-09/income-t-18.md"}
+{"publishedAt":"2026-09-04T07:48:23.171143+00:00","eventSlug":"caputil-2026-09-16","daysOut":12,"modelVersion":"v1-simple-blend","ourCall":"76.2%","ci68":[75.78,76.58],"grandMedian":null,"reportPath":"reports/2026-09/caputil-t-12.md"}
