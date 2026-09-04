@@ -33,7 +33,9 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
     "consensus": 0.4,
-    "anchor":    1.5,
+    # OECD proxy anchor deferred: BCCICP02DEM460S publishes on % balance
+    # scale (net positive-vs-negative responses, ~-14 to +5), not IFO's
+    # 85-95 index level. Not comparable without a calibrated bridge model.
 }
 
 
@@ -87,15 +89,12 @@ def fetch_fred_anchor() -> float | None:
     return sum(vals) / len(vals)
 
 
-def blend(consensus: float | None,
-          anchor: float | None) -> tuple[float, float, list[str]]:
+def blend(consensus: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
-    if anchor is not None:
-        parts.append(("anchor", anchor, MAE["anchor"]))
     if not parts:
-        raise RuntimeError("blend called with all sub-models missing")
+        raise RuntimeError("blend called with no consensus")
     weights = [1.0 / m for (_, _, m) in parts]
     wsum = sum(weights)
     point = sum(w * v for (_, v, _), w in zip(parts, weights)) / wsum
@@ -128,11 +127,8 @@ def format_value(v: float) -> str:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    anchor: float | None, used: list[str], lean: str) -> str:
-    parts_tbl = "\n".join(
-        f"| {name} | {'-' if v is None else f'{v:.1f}'} | {MAE[name]:.1f} pts |"
-        for name, v in (("consensus", consensus), ("anchor", anchor))
-    )
+                    used: list[str], lean: str) -> str:
+    parts_tbl = f"| consensus | {'-' if consensus is None else f'{consensus:.1f}'} | {MAE['consensus']:.1f} pts |"
     return f"""# German IFO Business Climate prediction - target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -209,19 +205,17 @@ def main() -> None:
     model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
 
     consensus = parse_float("DEIFO_CONSENSUS")
-    anchor = fetch_fred_anchor()
 
-    if consensus is None and anchor is None:
-        print("[emit-deifo] all sub-models missing; nothing to blend - exit 0 (soft skip)")
+    if consensus is None:
+        print("[emit-deifo] consensus missing; nothing to blend - exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, anchor)
+    point, sigma, used = blend(consensus)
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-deifo] DE IFO {release} T-{days_out}: {format_value(point)} "
           f"(sigma {sigma:.1f} pts, {regime_annotation(point)}, used: {', '.join(used)})")
     if consensus is not None: print(f"  consensus: {consensus:.1f}")
-    if anchor    is not None: print(f"  anchor:    {anchor:.1f} (OECD proxy, ~2mo lag)")
 
     prediction = {
         "eventSlug": f"deifo-{release}",
@@ -242,7 +236,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, anchor, used, lean)
+                                consensus, used, lean)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"deifo-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
