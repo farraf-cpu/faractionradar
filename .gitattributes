@@ -1,0 +1,4 @@
+# Append-only JSONL ledger — always take both sides of a merge/rebase.
+# Without this, parallel GHA predict-*.yml workflows collide on the append
+# and the retry-with-rebase loop hits unresolved conflicts.
+predictions.jsonl merge=union
