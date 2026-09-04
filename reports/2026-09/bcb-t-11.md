@@ -1,22 +1,22 @@
 # BCB Policy Rate prediction - target 2026-09-16 (T-11)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T21:22:50.617466+00:00
+**Published:** 2026-09-04T21:27:47.620383+00:00
 
 ## Final pick
 
 **21.00%** BCB Policy Rate
 
-- 68% CI: [20.94%, 21.06%]
-- 95% CI: [20.88%, 21.12%]
+- 68% CI: [20.70%, 21.30%]
+- 95% CI: [20.40%, 21.60%]
 - Lean vs anchor: hold expected
-- Sub-models used: consensus, anchor
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 21.00% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 21.00% | 0.30pp |
 
 ## Method
