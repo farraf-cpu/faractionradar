@@ -1,22 +1,22 @@
 # SNB Policy Rate prediction - target 2026-09-25 (T-21)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T20:16:56.408211+00:00
+**Published:** 2026-09-04T20:21:45.566454+00:00
 
 ## Final pick
 
-**-0.01%** SNB Policy Rate
+**-0.04%** SNB Policy Rate
 
-- 68% CI: [-0.07%, 0.05%]
-- 95% CI: [-0.13%, 0.11%]
-- Lean vs anchor: +4bp move vs current rate
-- Sub-models used: consensus, anchor
+- 68% CI: [-0.34%, 0.26%]
+- 95% CI: [-0.65%, 0.55%]
+- Lean vs anchor: hold expected
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 0.00% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | -0.04% | 0.30pp |
 
 ## Method
