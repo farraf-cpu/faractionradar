@@ -109,6 +109,43 @@ def format_value(v: float) -> str:
     return f"{v:.2f}%"
 
 
+def normal_cdf(x: float, mu: float, sigma: float) -> float:
+    """Cumulative distribution function of normal distribution."""
+    if sigma <= 0:
+        return 1.0 if x >= mu else 0.0
+    return 0.5 * (1.0 + math.erf((x - mu) / (sigma * math.sqrt(2))))
+
+
+def compute_outcome_distribution(point: float, sigma: float,
+                                  anchor: float | None) -> dict:
+    """v2 outcome-distribution over standard ECB 25bp rate outcomes.
+    Same discretization as FOMC v2. Buckets relative to current
+    Deposit Facility Rate anchor."""
+    if anchor is None:
+        return {"note": "no anchor; distribution not discretized"}
+    outcomes = [
+        ("hike50", anchor + 0.50, "+50bp hike"),
+        ("hike25", anchor + 0.25, "+25bp hike"),
+        ("hold",   anchor + 0.00, "hold"),
+        ("cut25",  anchor - 0.25, "-25bp cut"),
+        ("cut50",  anchor - 0.50, "-50bp cut"),
+        ("cut75_plus", anchor - 0.75, "-75bp or deeper"),
+    ]
+    dist = {}
+    for i, (key, level, _) in enumerate(outcomes):
+        if i == 0:
+            p = 1.0 - normal_cdf(level - 0.125, point, sigma)
+        elif i == len(outcomes) - 1:
+            p = normal_cdf(level + 0.125, point, sigma)
+        else:
+            p = (normal_cdf(level + 0.125, point, sigma)
+                 - normal_cdf(level - 0.125, point, sigma))
+        dist[key] = round(p, 3)
+    modal_key = max(dist.items(), key=lambda x: x[1])[0]
+    dist["modal"] = modal_key
+    return dist
+
+
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
                     anchor: float | None, used: list[str], lean: str) -> str:
@@ -197,11 +234,13 @@ def main() -> None:
 
     point, sigma, used = blend(consensus, anchor)
     lean = lean_vs_anchor(point, anchor)
+    outcome_dist = compute_outcome_distribution(point, sigma, anchor)
 
     print(f"[emit-ecb] ECB {release} T-{days_out}: {format_value(point)} "
           f"(sigma {sigma:.2f}pp, {lean}, used: {', '.join(used)})")
     if consensus is not None: print(f"  consensus: {consensus:.2f}%")
     if anchor    is not None: print(f"  anchor:    {anchor:.2f}%")
+    print(f"  outcome distribution: {outcome_dist}")
 
     prediction = {
         "eventSlug": f"ecb-{release}",
@@ -216,6 +255,7 @@ def main() -> None:
             "ci95": [round(point - 2 * sigma, 2), round(point + 2 * sigma, 2)],
             "publishedAt": datetime.now(timezone.utc).isoformat(),
             "model_version": model_version,
+            "outcomeDistribution": outcome_dist,
         },
         "grandMedian": None,
         "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/ecb-model-card.md",

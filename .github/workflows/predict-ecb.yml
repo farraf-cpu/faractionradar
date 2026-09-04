@@ -113,7 +113,7 @@ jobs:
           ECB_RELEASE_DATE: ${{ needs.gate.outputs.ecb_release_date }}
           ECB_DAYS_OUT: ${{ needs.gate.outputs.ecb_days_out }}
           ECB_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v2-outcome-distribution
         run: python emit_ecb.py
 
       - name: Commit report + ledger row
