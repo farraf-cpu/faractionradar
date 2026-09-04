@@ -1,22 +1,22 @@
 # BOE Bank Rate prediction - target 2026-09-17 (T-13)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-04T16:51:49.385830+00:00
+**Published:** 2026-09-04T17:03:48.206111+00:00
 
 ## Final pick
 
-**3.75%** BoE Bank Rate
+**3.73%** BoE Bank Rate
 
-- 68% CI: [3.69%, 3.81%]
-- 95% CI: [3.63%, 3.86%]
+- 68% CI: [3.48%, 3.98%]
+- 95% CI: [3.23%, 4.23%]
 - Lean vs anchor: hold expected
-- Sub-models used: consensus, anchor
+- Sub-models used: anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 3.75% | 0.05pp |
+| consensus | - | 0.05pp |
 | anchor | 3.73% | 0.25pp |
 
 ## Method
