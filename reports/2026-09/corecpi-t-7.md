@@ -1,7 +1,7 @@
 # Core CPI prediction — target 2026-09-11 (T-7)
 
-**Model version:** `v1-simple-blend`
-**Published:** 2026-09-04T08:35:50.008950+00:00
+**Model version:** `v1.1-simple-blend`
+**Published:** 2026-09-04T10:01:45.306929+00:00
 
 ## Final pick
 
@@ -18,12 +18,14 @@
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | — | 0.08pp |
+| cleveland_fed | — | 0.06pp |
 | trend | +0.20% | 0.15pp |
 
 ## Method
 
-`v1-simple-blend`: inverse-MAE-weighted mean of FF consensus + FRED
-CPILFESL 6-month m/m trend.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of FF consensus +
+Cleveland Fed daily nowcast (when CPI cycle active) + FRED CPILFESL
+6-month m/m trend.
 
 ## Positioning
 
