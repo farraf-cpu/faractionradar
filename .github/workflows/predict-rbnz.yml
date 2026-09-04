@@ -1,4 +1,4 @@
-name: Predict RBNZ Cash Rate
+name: Predict RBNZ OCR
 
 on:
   schedule:

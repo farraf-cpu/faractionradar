@@ -1,4 +1,4 @@
-name: Predict JP CPI
+name: Predict NZ CPI
 
 on:
   schedule:

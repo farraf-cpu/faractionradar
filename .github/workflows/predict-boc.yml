@@ -1,4 +1,4 @@
-name: Predict BOC Cash Rate
+name: Predict BOC Overnight Rate
 
 on:
   schedule:
