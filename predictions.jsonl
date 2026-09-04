@@ -48,3 +48,4 @@
 {"publishedAt":"2026-09-04T16:51:49.385813+00:00","eventSlug":"boe-2026-09-17","daysOut":13,"modelVersion":"v2-outcome-distribution","ourCall":"3.75%","ci68":[3.69,3.81],"grandMedian":null,"reportPath":"reports\\2026-09\\boe-t-13.md"}
 {"publishedAt":"2026-09-04T17:03:44.096703+00:00","eventSlug":"ukcpi-2026-09-17","daysOut":13,"modelVersion":"v1-simple-blend","ourCall":"+3.7%","ci68":[3.47,3.87],"grandMedian":null,"reportPath":"reports/2026-09/ukcpi-t-13.md"}
 {"publishedAt":"2026-09-04T17:03:48.206088+00:00","eventSlug":"boe-2026-09-17","daysOut":13,"modelVersion":"v2-outcome-distribution","ourCall":"3.73%","ci68":[3.48,3.98],"grandMedian":null,"reportPath":"reports/2026-09/boe-t-13.md"}
+{"publishedAt":"2026-09-04T17:16:47.545852+00:00","eventSlug":"credit-2026-09-08","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+$11.0B","ci68":[3.0,19.0],"grandMedian":null,"reportPath":"reports/2026-09/credit-t-4.md"}
