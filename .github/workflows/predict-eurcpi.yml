@@ -3,6 +3,7 @@ name: Predict Eurozone CPI
 on:
   schedule:
     - cron: '50 17 * * *'
+    - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:

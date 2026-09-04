@@ -3,6 +3,7 @@ name: Predict ECB Rate
 on:
   schedule:
     - cron: '45 17 * * *'
+    - cron: '15 11 * * *'
   workflow_dispatch:
     inputs:
       force_release_date:
