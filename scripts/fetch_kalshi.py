@@ -156,19 +156,6 @@ def fetch_series_snapshot(series_ticker: str) -> dict | None:
             return ev["close_time"]
         market_closes = [m.get("close_time") for m in (ev.get("markets") or []) if m.get("close_time")]
         return min(market_closes) if market_closes else None
-    # Debug: log ALL events + their derived_close so we can diagnose why
-    # focus is picking a resolved-cycle event (2026-09 investigation).
-    print(f"::group::{series_ticker} events ({len(events)} total)")
-    for ev in events[:15]:
-        ec = ev.get("close_time")
-        dc = derived_close(ev)
-        first_mkt_close = None
-        first_mkt_status = None
-        if ev.get("markets"):
-            first_mkt_close = ev["markets"][0].get("close_time")
-            first_mkt_status = ev["markets"][0].get("status")
-        print(f"  {ev.get('event_ticker')} | status={ev.get('status')} | close_time={ec} | derived={dc} | first_mkt_close={first_mkt_close} first_mkt_status={first_mkt_status}")
-    print("::endgroup::")
     with_close = []
     for ev in events:
         c = derived_close(ev)
@@ -179,10 +166,6 @@ def fetch_series_snapshot(series_ticker: str) -> dict | None:
         with_close.append((c, ev))
     with_close.sort(key=lambda x: x[0])
     focus_event = with_close[0][1] if with_close else None
-    if focus_event:
-        print(f"[fetch_kalshi] {series_ticker} focus: {focus_event.get('event_ticker')} (close={derived_close(focus_event)})")
-    else:
-        print(f"[fetch_kalshi] {series_ticker} NO future events found — all {len(events)} events filtered out")
 
     enriched = []
     for ev in events:
