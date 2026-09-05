@@ -1,16 +1,16 @@
-"""Swiss CPI predictor. v1-simple-blend.
+"""BR CPI (IPCA) predictor. v1.1-sidra.
 
-IBGE publishes monthly CPI y/y
-~1 week after reference month at 08:30 CET (07:30 UTC winter).
-BCB targets 3% CPI y/y (+/- 1.5pp) (+/- 1pp).
+IBGE publishes monthly IPCA ~9-11th of following month at 09:00 BRT
+(12:00 UTC). BCB targets 3% CPI y/y (+/- 1.5pp).
 
-Consensus-only for v1: FRED's CPALTT01BRM659N is stale (last obs
-2025-03, usable but slow-moving). IBGE Statistical Portal API
-integration deferred to v1.1.
+v1.1 adds IBGE SIDRA API trend anchor. SIDRA (apisidra.ibge.gov.br)
+is IBGE's public data API — **no auth required, no key needed**.
+Trend sub-model activates unconditionally.
 
-Value format: y/y %-change (e.g. "+2.9%").
+Value format: y/y %-change (e.g. "+4.4%").
 Sub-models:
-  - FF consensus (~0.15pp MAE - primary signal)
+  - FF consensus (~0.15pp MAE)
+  - SIDRA IPCA 12-mo y/y 3-mo mean (~0.20pp MAE) [always active]
 
 Env: UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      BRCPI_RELEASE_DATE, BRCPI_DAYS_OUT, BRCPI_CONSENSUS, MODEL_VERSION
@@ -32,7 +32,43 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
     "consensus": 0.15,
+    "trend":     0.20,   # SIDRA IPCA 12-mo y/y 3-mo mean
 }
+
+# IBGE SIDRA table 1737 = IPCA (Consumer Price Index).
+# Variable 2265 = "Variação acumulada em 12 meses" (12-mo rolling y/y).
+# Nivel 1 = Brasil (nationwide). Public API, no auth.
+SIDRA_TABLE = "1737"
+SIDRA_VAR_YY = "2265"
+
+
+def fetch_sidra_trend() -> float | None:
+    """3-mo mean of BR IPCA 12-mo y/y from SIDRA API.
+    No auth required. Returns None if API errors."""
+    url = (f"https://apisidra.ibge.gov.br/values/t/{SIDRA_TABLE}"
+           f"/n1/all/v/{SIDRA_VAR_YY}/p/last%203/d/v{SIDRA_VAR_YY}%202")
+    req = urllib.request.Request(url, headers={"user-agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit-brcpi] SIDRA fetch failed: {e}", file=sys.stderr)
+        return None
+    # SIDRA returns list with first element as header row, rest data
+    if not isinstance(data, list) or len(data) < 2:
+        return None
+    vals = []
+    for row in data[1:]:
+        v = row.get("V")
+        if v is None or v == "-" or v == "...":
+            continue
+        try:
+            vals.append(float(v))
+        except (ValueError, TypeError):
+            continue
+    if len(vals) < 2:
+        return None
+    return sum(vals) / len(vals)
 
 
 def require_env(key: str) -> str:
@@ -53,12 +89,14 @@ def parse_float(env_key: str) -> float | None:
         return None
 
 
-def blend(consensus: float | None) -> tuple[float, float, list[str]]:
+def blend(consensus: float | None, trend: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
+    if trend is not None:
+        parts.append(("trend", trend, MAE["trend"]))
     if not parts:
-        raise RuntimeError("blend called with no consensus")
+        raise RuntimeError("blend called with no sub-models")
     weights = [1.0 / m for (_, _, m) in parts]
     wsum = sum(weights)
     point = sum(w * v for (_, v, _), w in zip(parts, weights)) / wsum
@@ -91,16 +129,20 @@ def format_value(v: float) -> str:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
+                    trend: float | None,
                     used: list[str], lean: str) -> str:
-    parts_tbl = f"| consensus | {'-' if consensus is None else f'{consensus:+.2f}%'} | {MAE['consensus']:.2f}pp |"
-    return f"""# JP CPI prediction - target {release} (T-{days_out})
+    parts_tbl = "\n".join(
+        f"| {name} | {'-' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f}pp |"
+        for name, v in (("consensus", consensus), ("trend", trend))
+    )
+    return f"""# BR CPI (IPCA) prediction - target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
 **Published:** {datetime.now(timezone.utc).isoformat()}
 
 ## Final pick
 
-**{format_value(point)}** y/y NZ CPI CPI
+**{format_value(point)}** y/y IPCA (12-mo rolling)
 
 - Regime: {regime_annotation(point)}
 - 68% CI: [{point - sigma:+.2f}%, {point + sigma:+.2f}%]
@@ -116,15 +158,16 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: consensus-only. FRED Japan CPI series all
-discontinued 2022 with empty observations (JPNCPIALLMINMEI,
-CPALTT01JPM659N, JPNCPICORMINMEI). Soft-skips when consensus missing.
+`v1.1-sidra`: inverse-MAE-weighted blend of FF consensus + SIDRA
+IPCA 12-mo y/y 3-mo mean trend. SIDRA (apisidra.ibge.gov.br) is
+IBGE's public API — no authentication required, activates
+unconditionally when the API is reachable.
 
 ## Positioning
 
-Second Phase 15 (BRL expansion) predictor. National Core CPI y/y is
-RBNZ's preferred gauge. Released by IBGE ~19th-27th of
-following month at 10:45 BRLT.
+Second Phase 15 (BRL expansion) predictor. BCB targets 3% IPCA
+y/y (+/- 1.5pp). Released by IBGE ~9-11th of following month at
+09:00 BRT.
 
 ## Caveats
 
@@ -172,21 +215,23 @@ def main() -> None:
     model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
 
     consensus = parse_float("BRCPI_CONSENSUS")
+    trend = fetch_sidra_trend()
 
-    if consensus is None:
-        print("[emit-brcpi] consensus missing; nothing to blend - exit 0 (soft skip)")
+    if consensus is None and trend is None:
+        print("[emit-brcpi] all sub-models missing; nothing to blend - exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus)
+    point, sigma, used = blend(consensus, trend)
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-brcpi] BRCPI {release} T-{days_out}: {format_value(point)} y/y "
           f"(sigma {sigma:.2f}pp, {regime_annotation(point)}, used: {', '.join(used)})")
     if consensus is not None: print(f"  consensus: {consensus:+.2f}%")
+    if trend is not None:     print(f"  trend:     {trend:+.2f}%")
 
     prediction = {
         "eventSlug": f"brcpi-{release}",
-        "eventTitle": "NZ CPI CPI y/y",
+        "eventTitle": "BR IPCA y/y",
         "country": "BRL",
         "releaseDate": release,
         "daysOut": days_out,
@@ -203,7 +248,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, used, lean)
+                                consensus, trend, used, lean)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"brcpi-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)

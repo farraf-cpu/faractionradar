@@ -112,7 +112,7 @@ jobs:
           BRCPI_RELEASE_DATE: ${{ needs.gate.outputs.brcpi_release_date }}
           BRCPI_DAYS_OUT: ${{ needs.gate.outputs.brcpi_days_out }}
           BRCPI_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v1.1-sidra
         run: python emit_brcpi.py
 
       - name: Commit report + ledger row
