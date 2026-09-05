@@ -1,7 +1,7 @@
 # BCCH Policy Rate prediction - target 2026-09-09 (T-4)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-05T01:41:35.886863+00:00
+**Published:** 2026-09-05T18:36:28.144688+00:00
 
 ## Final pick
 
