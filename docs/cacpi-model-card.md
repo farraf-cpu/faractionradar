@@ -1,33 +1,29 @@
 # CA CPI Predictor - Model Card
 
-**Model version:** `v1-simple-blend`
+**Model version:** `v1.1-statcan`
 **Event:** CA CPI y/y (monthly, ~3 weeks after reference month, 13:30 UTC, StatCan)
-**Status:** Live - cadence T-7, T-4, T-3, T-2, T-1 + T-0 release-day refresh via `predict-cacpi.yml`
+**Status:** Live via `predict-cacpi.yml`. **StatCan trend anchor auto-active — no key required.**
 
-## What v1-simple-blend does
+## What v1.1-statcan does
 
-Inverse-MAE-weighted point estimate over up to 2 sub-models. Monthly
-cadence.
+Inverse-MAE-weighted blend of 2 sub-models.
 
 Sub-models:
-
 | Sub-model | Source | Historical MAE (pp) |
 |-----------|--------|---------------------|
 | Bloomberg / FF consensus | live from worker `?read` for "CPI y/y" CAD | ~0.15 |
-| FRED CPALTT01CAM659N 3-mo trend | mean of last 3 published y/y %-changes (OECD CA CPI) | ~0.30 |
+| StatCan WDS 3-mo trend | `www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorsAndLatestNPeriods` vector v108785713 | ~0.20 |
 
-## Positioning
-
-Second Phase 6 CAD predictor. StatCan publishes CPI y/y monthly ~3
-weeks after reference month. BOC target 2% CPI y/y (1-3% band).
-
-## What v1 does NOT do (yet)
-
-- **No CPI-trim / CPI-median / CPI-common** — BOC's preferred core
-  measures (three variants). Would give a more direct BOC-relevant
-  underlying signal. Phase 6.1.
-- **No StatCan API integration** for real-time index level tracking.
+Public no-auth API (Rule 39 exception, like brcpi SIDRA).
 
 ## Change log
 
+- **v1.1-statcan (2026-09-05)** - swapped stale FRED CPALTT01CAM659N
+  trend for live StatCan WDS API. Auto-active. Rule 39 fifth pattern
+  (second public no-auth after SIDRA).
 - **v1-simple-blend (2026-09-04)** - first ship. Phase 6 CAD expansion.
+
+## Phase 6.1+ target
+
+- CPI-trim / CPI-median / CPI-common (BOC's preferred core measures)
+- Same StatCan WDS API, different vector IDs

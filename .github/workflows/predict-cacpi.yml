@@ -109,11 +109,10 @@ jobs:
         env:
           UPLOAD_AUTH_KEY: ${{ secrets.UPLOAD_AUTH_KEY }}
           CALENDAR_WORKER_URL: https://faractionradar-calendar.faractionradar.workers.dev
-          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           CACPI_RELEASE_DATE: ${{ needs.gate.outputs.cacpi_release_date }}
           CACPI_DAYS_OUT: ${{ needs.gate.outputs.cacpi_days_out }}
           CACPI_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v1.1-statcan
         run: python emit_cacpi.py
 
       - name: Commit report + ledger row

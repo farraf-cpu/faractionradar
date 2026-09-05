@@ -1,16 +1,22 @@
-"""CA CPI predictor. v1-simple-blend.
+"""CA CPI predictor. v1.1-statcan.
 
 Statistics Canada (StatCan) publishes monthly CPI y/y ~3 weeks after
 reference month at 08:30 EST (13:30 UTC winter / 12:30 UTC summer).
-Big trader event on CAD; BOC targets 2% CPI y/y (1-3% band).
+BOC targets 2% CPI y/y (1-3% band).
 
-Value format: y/y %-change (e.g. "+2.3%").
+v1.1 swaps stale FRED CPALTT01CAM659N trend for live StatCan WDS
+API. StatCan Web Data Service (www150.statcan.gc.ca/t1/wds/rest)
+is public — no auth required. Vector v108785713 = CPI y/y all-items
+Canada.
+
+Value format: y/y %-change (e.g. "+2.7%").
 
 Sub-models:
   - FF consensus (~0.15pp MAE)
-  - FRED CPALTT01CAM659N 3-mo mean y/y anchor (~0.30pp MAE)
+  - StatCan WDS 3-mo mean y/y trend (~0.20pp MAE, tighter than
+    stale FRED because authoritative source)
 
-Env: FRED_API_KEY, UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
+Env: UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      CACPI_RELEASE_DATE, CACPI_DAYS_OUT, CACPI_CONSENSUS, MODEL_VERSION
 """
 from __future__ import annotations
@@ -30,8 +36,11 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
     "consensus": 0.15,
-    "trend":     0.30,
+    "trend":     0.20,   # StatCan WDS live y/y series, tighter than stale FRED
 }
+
+# StatCan WDS vector 108785713 = CPI y/y all-items Canada.
+STATCAN_VECTOR_YY = 108785713
 
 
 def require_env(key: str) -> str:
@@ -52,31 +61,34 @@ def parse_float(env_key: str) -> float | None:
         return None
 
 
-def fetch_fred_trend() -> float | None:
-    """3-mo mean CA CPI y/y from FRED CPALTT01CAM659N.
-    OECD monthly y/y series; anchor uses trailing 3 observations."""
-    api_key = os.environ.get("FRED_API_KEY")
-    if not api_key:
-        return None
-    url = ("https://api.stlouisfed.org/fred/series/observations?"
-           f"series_id=CPALTT01CAM659N&api_key={api_key}&file_type=json"
-           "&sort_order=desc&limit=3")
-    req = urllib.request.Request(url, headers={"user-agent": UA})
+def fetch_statcan_trend() -> float | None:
+    """3-mo mean CA CPI y/y from StatCan WDS vector 108785713.
+    Public API — no auth. Returns None if unreachable."""
+    url = "https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorsAndLatestNPeriods"
+    body = json.dumps([{"vectorId": STATCAN_VECTOR_YY, "latestN": 3}]).encode("utf-8")
+    req = urllib.request.Request(
+        url, data=body, method="POST",
+        headers={"content-type": "application/json", "user-agent": UA},
+    )
     try:
         with urllib.request.urlopen(req, timeout=20) as res:
             data = json.loads(res.read().decode("utf-8"))
     except Exception as e:
-        print(f"[emit-cacpi] FRED fetch failed: {e}", file=sys.stderr)
+        print(f"[emit-cacpi] StatCan fetch failed: {e}", file=sys.stderr)
         return None
-    obs = data.get("observations") or []
+    if not isinstance(data, list) or not data:
+        return None
+    obj = data[0].get("object", {})
+    pts = obj.get("vectorDataPoint") or []
     vals = []
-    for o in obs:
-        v = o.get("value")
-        if v and v != ".":
-            try:
-                vals.append(float(v))
-            except ValueError:
-                pass
+    for p in pts:
+        v = p.get("value")
+        if v is None:
+            continue
+        try:
+            vals.append(float(v))
+        except (ValueError, TypeError):
+            continue
     if len(vals) < 2:
         return None
     return sum(vals) / len(vals)
@@ -151,17 +163,20 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: inverse-MAE-weighted mean of FF consensus + FRED
-CPALTT01CAM659N 3-mo mean y/y anchor.
+`v1.1-statcan`: inverse-MAE-weighted mean of FF consensus + StatCan
+WDS API (apisidra-like: vector v108785713 for CPI y/y all-items).
+No key required — StatCan WDS is public.
 
 ## Positioning
 
-Second Phase 6 CAD predictor. CA CPI released quarterly by StatCan ~4-5
-weeks after quarter end at 08:30 EST. BOC target 2% CPI y/y (1-3% band) CPI y/y.
+Second Phase 6 CAD predictor. CA CPI released monthly by StatCan
+~3 weeks after reference month at 08:30 EST. BOC target 2% CPI y/y
+(1-3% band).
 
 ## Change log
 
-- **v1-simple-blend ({datetime.now(timezone.utc).strftime('%Y-%m-%d')})** - first ship. Phase 6 CAD expansion.
+- **v1.1-statcan ({datetime.now(timezone.utc).strftime('%Y-%m-%d')})** - swapped stale FRED trend for live StatCan WDS API. Auto-active.
+- **v1-simple-blend (2026-09-04)** - first ship. Phase 6 CAD expansion.
 """
 
 
@@ -199,7 +214,7 @@ def main() -> None:
     model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
 
     consensus = parse_float("CACPI_CONSENSUS")
-    trend = fetch_fred_trend()
+    trend = fetch_statcan_trend()
 
     if consensus is None and trend is None:
         print("[emit-cacpi] all sub-models missing; nothing to blend - exit 0 (soft skip)")
