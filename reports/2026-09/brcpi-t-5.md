@@ -1,35 +1,37 @@
-# JP CPI prediction - target 2026-09-10 (T-5)
+# BR CPI (IPCA) prediction - target 2026-09-10 (T-5)
 
-**Model version:** `v1-simple-blend`
-**Published:** 2026-09-04T21:22:51.282239+00:00
+**Model version:** `v1.1-sidra`
+**Published:** 2026-09-05T00:03:45.125583+00:00
 
 ## Final pick
 
-**+5.0%** y/y NZ CPI CPI
+**+4.6%** y/y IPCA (12-mo rolling)
 
 - Regime: hot JP inflation (RBNZ hawkish pressure)
-- 68% CI: [+4.85%, +5.15%]
-- 95% CI: [+4.70%, +5.30%]
-- Lean vs consensus: in line with consensus
-- Sub-models used: consensus
+- 68% CI: [+4.40%, +4.80%]
+- 95% CI: [+4.20%, +5.00%]
+- Lean vs consensus: no consensus
+- Sub-models used: trend
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | +5.00% | 0.15pp |
+| consensus | - | 0.15pp |
+| trend | +4.60% | 0.20pp |
 
 ## Method
 
-`v1-simple-blend`: consensus-only. FRED Japan CPI series all
-discontinued 2022 with empty observations (JPNCPIALLMINMEI,
-CPALTT01JPM659N, JPNCPICORMINMEI). Soft-skips when consensus missing.
+`v1.1-sidra`: inverse-MAE-weighted blend of FF consensus + SIDRA
+IPCA 12-mo y/y 3-mo mean trend. SIDRA (apisidra.ibge.gov.br) is
+IBGE's public API — no authentication required, activates
+unconditionally when the API is reachable.
 
 ## Positioning
 
-Second Phase 15 (BRL expansion) predictor. National Core CPI y/y is
-RBNZ's preferred gauge. Released by IBGE ~19th-27th of
-following month at 10:45 BRLT.
+Second Phase 15 (BRL expansion) predictor. BCB targets 3% IPCA
+y/y (+/- 1.5pp). Released by IBGE ~9-11th of following month at
+09:00 BRT.
 
 ## Caveats
 
@@ -39,4 +41,4 @@ anchor. Phase 15.1 target.
 
 ## Change log
 
-- **v1-simple-blend (2026-09-04)** - first ship. Phase 15 BRL expansion. Consensus-only pending IBGE IBGE Statistical Portal API.
+- **v1-simple-blend (2026-09-05)** - first ship. Phase 15 BRL expansion. Consensus-only pending IBGE IBGE Statistical Portal API.
