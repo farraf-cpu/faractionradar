@@ -42,11 +42,21 @@ empty and our sub-model soft-skips.
 This is the tightest sub-model in the blend when active (0.06pp MAE beats
 FF consensus at 0.08pp).
 
+## Empirical MAE + sigma auto-tune (2026-09-06)
+
+Each report fetches the worker's `/public/models` at run time and
+renders an "Empirical accuracy (live)" section showing prior MAE
+claim vs empirical MAE + hit-rate across resolved CPI predictions.
+Once resolved count >= 5 the CI sigma auto-switches from the
+inverse-MAE prior to the empirical value, so CIs reflect actual
+historical accuracy. First CPI resolution lands ~2026-09-11; threshold
+hit ~Q2 2027 given monthly cadence.
+
 ## What v1.2 does NOT do (yet)
 
 - **Not a full Bayesian model.** Weights are inverse-MAE priors from
-  benchmarks, not empirical variance from resolutions. True Bayesian
-  calibration blocked on live scoring accumulating.
+  benchmarks, not empirical variance from resolutions. Sigma auto-tune
+  (above) narrows this gap once N>=5.
 - **Not a core-CPI model.** Headline m/m only. Core CPI ships as a separate
   slug (`corecpi-<date>`, v1.2 with 4 sub-models).
 - **Not shelter-decomposed.** Shelter is ~1/3 of headline and drives most
@@ -58,8 +68,6 @@ FF consensus at 0.08pp).
 - **Shelter component tracker** — separately model the shelter sub-index
   (own release cycle + lag structure), reweight into headline. Cleveland
   Fed hints at owner's-equivalent-rent trajectory.
-- **True Bayesian calibration** — replace inverse-MAE proxy with empirical
-  posterior variance derived from resolutions.
 - **Cross-sub-model correlation handling** — Kalshi tracks futures which
   track consensus surveys; treating them independently over-weights info.
 

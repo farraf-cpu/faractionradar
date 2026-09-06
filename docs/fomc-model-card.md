@@ -62,11 +62,21 @@ Anchor + consensus provide fallback when markets are stale.
 - **Anchor only fallback:** if Kalshi + consensus both missing, anchor
   alone drives the distribution (typically peaks at hold with wide tails).
 
+## Empirical MAE + sigma auto-tune (2026-09-06)
+
+Each report fetches the worker's `/public/models` endpoint at run time
+and displays an "Empirical accuracy (live)" section showing the prior
+MAE claim alongside the empirical MAE + hit-rate across resolved
+predictions. Once the resolved count reaches 5, the CI sigma
+auto-switches from the inverse-MAE prior to the empirical MAE —
+making the confidence intervals reflect actual historical accuracy
+instead of theoretical sub-model priors.
+
+Threshold: `mae_utils.DEFAULT_THRESHOLD = 5`. At N < 5 the section
+still renders as transparency but sigma stays on the prior.
+
 ## What v2 does NOT do (yet)
 
-- **Empirical variance calibration** — sigma is derived from sub-model
-  MAE priors, not from historical resolutions. Blocked on live scoring
-  accumulating enough data to calibrate.
 - **Correlated-error handling** — sub-models draw from correlated data
   (Kalshi tracks futures which track SEP). Treating them independently
   over-weights information.

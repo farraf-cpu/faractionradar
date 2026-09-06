@@ -61,6 +61,8 @@ Each run POSTs to the calendar-worker `/upload` endpoint AND commits its full `.
 
 Every prediction gets scored against the actual print. Cumulative accuracy vs. Bloomberg consensus is published monthly on faractionradar.com/calendar/archive. Target: OUR CALL closer to actual than Bloomberg on ≥50% of prints over rolling 12 months. Baseline: our local predictor's historical hit rate matches or exceeds this.
 
+Each report also fetches the worker's `/public/models` at run time and displays an "Empirical accuracy (live)" section — prior MAE claim vs empirical MAE + hit-rate across resolved NFP predictions. Once resolved count reaches 5, the CI blended_rmse auto-switches from the bayesian-blend prior to the empirical MAE. Given NFP's monthly cadence and starting from N=0 as of 2026-09-06, the switch activates ~Q1 2027.
+
 ## Change log
 
 - **v1.1-bayesian-blend-ladder-dist (2026-09-06)** — adds an
