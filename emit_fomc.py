@@ -109,11 +109,7 @@ def blend(market: float | None,
         parts.append(("anchor", anchor, MAE["anchor"]))
     if not parts:
         raise RuntimeError("blend called with all sub-models missing")
-    weights = [1.0 / m for (_, _, m) in parts]
-    wsum = sum(weights)
-    point = sum(w * v for (_, v, _), w in zip(parts, weights)) / wsum
-    var = sum((w * m) ** 2 for (_, _, m), w in zip(parts, weights)) / (wsum ** 2)
-    return point, math.sqrt(var), [p[0] for p in parts]
+    return inverse_variance_combine(parts)
 
 
 def format_rate(pct: float) -> str:
@@ -122,6 +118,7 @@ def format_rate(pct: float) -> str:
 
 
 from mae_utils import (
+    inverse_variance_combine,
     fetch_empirical_mae as _fetch_empirical_mae,
     build_empirical_mae_section,
     auto_tune_sigma,

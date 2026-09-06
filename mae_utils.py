@@ -32,9 +32,33 @@ __all__ = [
     "build_rate_outcome_dist_table",
     "compute_rate_outcome_distribution",
     "fetch_empirical_mae",
+    "inverse_variance_combine",
     "parse_market_ladder_env",
     "survival_from_ladder",
 ]
+
+
+def inverse_variance_combine(
+    parts: list[tuple[str, float, float]],
+) -> tuple[float, float, list[str]]:
+    """Inverse-MAE-weighted blend. `parts` is a list of
+    (name, value, mae) tuples — one per sub-model — with all None
+    entries already filtered out by the caller. Returns
+    (point, sigma, used_labels).
+
+    Weights are 1/MAE (proxy for 1/sigma^2). Blended sigma is the
+    inverse-variance combination sqrt(sum((w*mae)^2)) / sum(w).
+
+    Raises RuntimeError when parts is empty — callers should
+    soft-skip in that case rather than call with all-None inputs.
+    """
+    if not parts:
+        raise RuntimeError("inverse_variance_combine called with no parts")
+    weights = [1.0 / m for (_, _, m) in parts]
+    wsum = sum(weights)
+    point = sum(w * v for (_, v, _), w in zip(parts, weights)) / wsum
+    var = sum((w * m) ** 2 for (_, _, m), w in zip(parts, weights)) / (wsum ** 2)
+    return point, math.sqrt(var), [p[0] for p in parts]
 
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 DEFAULT_THRESHOLD = 5
