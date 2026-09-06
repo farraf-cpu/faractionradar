@@ -52,11 +52,17 @@ MAE = {
     "trend":     0.25,   # INEGI INPC y/y 3-mo mean
 }
 
-# INEGI BIE indicator ID 628194 = INPC general y/y variation, monthly.
-# BIE (Banco de Información Económica) catalog reference:
-# https://www.inegi.org.mx/temas/inpc/
-# Path: /INDICATOR/es/0700/false/BIE/2.0/{TOKEN}?type=json
-# 0700 = last observations; BIE = source; 2.0 = API version.
+# INEGI catalog: data source is BISE (Banco de Información Estadística),
+# not BIE — verified 2026-09-06 against api.inegi.org.mx (sample
+# indicator 1002000009 returns data with BISE, 400 with BIE).
+# Geo code: 00 = national. 0700/99/999 = state/muni.
+# DEFERRED 2026-09-06: INEGI Banco de Indicadores API does NOT
+# expose INPC time series (verified via /app/indicadores search
+# for "precios al consumidor" — 3 results, all UMA denomination
+# only). CPI data lives on a dedicated INPC-only portal, not the
+# general Bank of Indicators API. Placeholder 628194 kept so any
+# future indicator wiring is one-line. Emitter soft-skips on empty
+# response so consensus-only fallback stays healthy.
 INEGI_INDICATOR_INPC_YOY = "628194"
 
 
@@ -69,7 +75,7 @@ def fetch_inegi_trend() -> float | None:
         return None
     url = (
         "https://www.inegi.org.mx/app/api/indicadores/desarrolladores/jsonxml/INDICATOR/"
-        f"{INEGI_INDICATOR_INPC_YOY}/es/0700/false/BIE/2.0/{token}?type=json"
+        f"{INEGI_INDICATOR_INPC_YOY}/es/00/false/BISE/2.0/{token}?type=json"
     )
     req = urllib.request.Request(url, headers={"user-agent": UA, "accept": "application/json"})
     try:
@@ -78,7 +84,11 @@ def fetch_inegi_trend() -> float | None:
     except Exception as e:
         print(f"[emit-mxcpi] INEGI fetch failed: {e}", file=sys.stderr)
         return None
-    # INEGI JSON shape: { "Series": [ { "OBSERVATIONS": [ {"TIME_PERIOD": "...", "OBS_VALUE": "..."}, ... ] } ] }
+    # INEGI JSON shape: { "Header": {...}, "Series": [ { "OBSERVATIONS": [ {"TIME_PERIOD": "...", "OBS_VALUE": "..."}, ... ] } ] }
+    # Error shape (list): ["ErrorInfo:...","ErrorDetails:...","ErrorCode:100"]
+    if isinstance(data, list):
+        print(f"[emit-mxcpi] INEGI returned error list: {data[:1]}", file=sys.stderr)
+        return None
     try:
         series = data.get("Series") or []
         if not series:
