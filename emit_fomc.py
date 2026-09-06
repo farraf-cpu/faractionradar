@@ -122,6 +122,7 @@ from mae_utils import (
     fetch_empirical_mae as _fetch_empirical_mae,
     build_empirical_mae_section,
     auto_tune_sigma,
+    compute_rate_outcome_distribution,
 )
 
 
@@ -174,68 +175,53 @@ def compute_outcome_distribution(point: float, sigma: float,
                                   anchor: float | None,
                                   ladder: list[tuple[float, float]] | None = None
                                   ) -> dict:
-    """v2 upgrade: discretize into probabilities over standard FOMC
-    outcomes at 25bp intervals around the current rate.
+    """Discretize into probabilities over standard FOMC 25bp outcomes.
 
-    v2.1 (ladder mode): when a Kalshi ladder is available, derive
-    per-bucket probs directly from market survival P(rate > x) by
-    differencing adjacent bucket edges. This replaces the normal-CDF
-    approximation and lets the market's actual per-outcome pricing
-    drive the distribution.
+    - Ladder mode (v2.1): when a Kalshi ladder is available, per-bucket
+      probs = P(rate > lower_edge) - P(rate > upper_edge), derived from
+      market survival differences. Tail buckets clamp at +/- infinity.
+      Renormalized to sum 1.
+    - Gaussian fallback: delegates to mae_utils.compute_rate_outcome_
+      distribution (25bp buckets on N(point, sigma^2) centered on anchor).
 
-    Buckets (relative to current anchor rate):
-      hike50: current + 0.50%
-      hike25: current + 0.25%
-      hold:   current + 0.00%
-      cut25:  current - 0.25%
-      cut50:  current - 0.50%
-      cut75+: current - 0.75% and below
+    Buckets (relative to anchor):
+      hike50 / hike25 / hold / cut25 / cut50 / cut75_plus
     """
     if anchor is None:
         return {"note": "no anchor; distribution not discretized"}
 
-    outcomes = [
-        ("hike50", anchor + 0.50, "+50bp hike"),
-        ("hike25", anchor + 0.25, "+25bp hike"),
-        ("hold",   anchor + 0.00, "hold"),
-        ("cut25",  anchor - 0.25, "-25bp cut"),
-        ("cut50",  anchor - 0.50, "-50bp cut"),
-        ("cut75_plus", anchor - 0.75, "-75bp or deeper"),
-    ]
-
-    dist: dict = {}
-    if ladder is not None:
-        # Kalshi ladder path: per-bucket = P(rate > lower_edge) - P(rate > upper_edge).
-        # Tail buckets extend one edge to +/- infinity (clamped by survival_from_ladder).
-        for i, (key, level, _) in enumerate(outcomes):
-            if i == 0:
-                p = survival_from_ladder(level - 0.125, ladder)
-            elif i == len(outcomes) - 1:
-                p = 1.0 - survival_from_ladder(level + 0.125, ladder)
-            else:
-                p = (survival_from_ladder(level - 0.125, ladder)
-                     - survival_from_ladder(level + 0.125, ladder))
-            dist[key] = round(max(0.0, min(1.0, p)), 3)
-        # Renormalize in case interpolation nudged the sum off 1.0 by a bit.
-        total = sum(dist[k] for k, _, _ in outcomes)
-        if total > 0:
-            for key, _, _ in outcomes:
-                dist[key] = round(dist[key] / total, 3)
-        dist["source"] = "kalshi-ladder"
-    else:
-        for i, (key, level, _) in enumerate(outcomes):
-            if i == 0:
-                p = 1.0 - normal_cdf(level - 0.125, point, sigma)
-            elif i == len(outcomes) - 1:
-                p = normal_cdf(level + 0.125, point, sigma)
-            else:
-                p = (normal_cdf(level + 0.125, point, sigma)
-                     - normal_cdf(level - 0.125, point, sigma))
-            dist[key] = round(p, 3)
+    if ladder is None:
+        # Delegate Gaussian path to the shared helper — same math, same output shape.
+        dist = compute_rate_outcome_distribution(point, sigma, anchor, bucket_bp=25)
         dist["source"] = "gaussian-approx"
+        return dist
 
+    outcomes = [
+        ("hike50",     anchor + 0.50),
+        ("hike25",     anchor + 0.25),
+        ("hold",       anchor + 0.00),
+        ("cut25",      anchor - 0.25),
+        ("cut50",      anchor - 0.50),
+        ("cut75_plus", anchor - 0.75),
+    ]
+    dist: dict = {}
+    for i, (key, level) in enumerate(outcomes):
+        if i == 0:
+            p = survival_from_ladder(level - 0.125, ladder)
+        elif i == len(outcomes) - 1:
+            p = 1.0 - survival_from_ladder(level + 0.125, ladder)
+        else:
+            p = (survival_from_ladder(level - 0.125, ladder)
+                 - survival_from_ladder(level + 0.125, ladder))
+        dist[key] = round(max(0.0, min(1.0, p)), 3)
+    # Renormalize in case rounding nudged the sum off 1.0 by a bit.
+    total = sum(dist[k] for k, _ in outcomes)
+    if total > 0:
+        for key, _ in outcomes:
+            dist[key] = round(dist[key] / total, 3)
+    dist["source"] = "kalshi-ladder"
     modal_key = max(
-        ((k, dist[k]) for k, _, _ in outcomes),
+        ((k, dist[k]) for k, _ in outcomes),
         key=lambda x: x[1],
     )[0]
     dist["modal"] = modal_key
