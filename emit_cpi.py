@@ -156,6 +156,68 @@ def fetch_fred_trimmed_mean(api_key: str) -> float | None:
         return None
 
 
+def fetch_empirical_mae(slug_prefix: str) -> dict | None:
+    """Read the worker's /public/models endpoint and return the empirical
+    MAE + hit-rate for our slug_prefix. Returns None on any failure so
+    callers degrade to prior-MAE-only reporting."""
+    base = os.environ.get("CALENDAR_WORKER_URL", "").rstrip("/")
+    if not base:
+        return None
+    url = f"{base}/public/models"
+    req = urllib.request.Request(url, headers={"user-agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit-cpi] empirical MAE fetch failed: {e}", file=sys.stderr)
+        return None
+    for m in data.get("models") or []:
+        if m.get("slug_prefix") == slug_prefix:
+            obs = m.get("mae_observed") or {}
+            if isinstance(obs, dict):
+                return obs
+    return None
+
+
+def build_empirical_mae_section(obs: dict | None, prior_mae_str: str) -> str:
+    """Show empirical accuracy alongside the prior MAE claim."""
+    if not obs or not isinstance(obs, dict):
+        return ""
+    count = obs.get("count", 0)
+    mae = obs.get("mae")
+    hit_rate = obs.get("hit_rate")
+    if count == 0:
+        return f"""
+
+## Empirical accuracy (live)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | {prior_mae_str} |
+| Resolved predictions | 0 (first resolution pending) |
+| Empirical MAE | — |
+| Hit rate vs consensus | — |
+
+Empirical MAE + hit-rate auto-populate as predictions resolve. Once
+count >= 5 the CI sigma will switch from the inverse-MAE-derived prior
+to the empirical value.
+"""
+    hits = obs.get("hits", 0)
+    empirical_mae_str = f"{mae:.3f} pp" if isinstance(mae, (int, float)) else "—"
+    hit_pct = f"{hit_rate*100:.0f}%" if isinstance(hit_rate, (int, float)) else "—"
+    return f"""
+
+## Empirical accuracy (live, from resolved predictions)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | {prior_mae_str} |
+| Resolved predictions | {count} |
+| Empirical MAE | {empirical_mae_str} |
+| Hit rate vs consensus | {hit_pct} ({hits}/{count}) |
+"""
+
+
 def parse_market_ladder() -> list[tuple[float, float]] | None:
     """CPI_MARKET_LADDER = JSON list of {threshold, probability} rungs
     representing P(cpi_mm >= threshold) from Kalshi's KXCPI series.
@@ -307,7 +369,8 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     cleveland_fed: float | None,
                     market: float | None, trimmed_mean: float | None,
                     trend: float | None, used: list[str], lean: str,
-                    market_dist: dict | None = None) -> str:
+                    market_dist: dict | None = None,
+                    empirical_mae: dict | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f} pp |"
         for name, v in (("consensus", consensus), ("cleveland_fed", cleveland_fed),
@@ -315,6 +378,8 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
                         ("trimmed_mean", trimmed_mean), ("trend", trend))
     )
     dist_section = build_market_dist_table(market_dist)
+    prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
+    empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp")
     return f"""# CPI prediction — target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -328,7 +393,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 - 95% CI: [{point - 2*sigma:+.2f}%, {point + 2*sigma:+.2f}%]
 - Lean vs consensus: {lean}
 - Sub-models used: {', '.join(used)}
-{dist_section}
+{dist_section}{empirical_section}
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
@@ -429,9 +494,11 @@ def main() -> None:
         "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/cpi-model-card.md",
     }
 
+    empirical_mae = fetch_empirical_mae("cpi")
     report_md = build_report_md(point, sigma, release, days_out, model_version,
                                 consensus, cleveland_fed, market, trimmed_mean, trend, used, lean,
-                                market_dist=market_dist)
+                                market_dist=market_dist,
+                                empirical_mae=empirical_mae)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"cpi-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)

@@ -118,6 +118,32 @@ def normal_cdf(x: float, mu: float, sigma: float) -> float:
     return 0.5 * (1.0 + math.erf((x - mu) / (sigma * math.sqrt(2))))
 
 
+def fetch_empirical_mae(slug_prefix: str) -> dict | None:
+    """Read the worker's /public/models endpoint and return the empirical
+    MAE + hit-rate for our slug_prefix. Returns None on any failure so
+    callers degrade to prior-MAE-only reporting.
+
+    Shape: {"count": int, "mae": float|None, "hits": int, "hit_rate": float|None}
+    """
+    base = os.environ.get("CALENDAR_WORKER_URL", "").rstrip("/")
+    if not base:
+        return None
+    url = f"{base}/public/models"
+    req = urllib.request.Request(url, headers={"user-agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit-fomc] empirical MAE fetch failed: {e}", file=sys.stderr)
+        return None
+    for m in data.get("models") or []:
+        if m.get("slug_prefix") == slug_prefix:
+            obs = m.get("mae_observed") or {}
+            if isinstance(obs, dict):
+                return obs
+    return None
+
+
 def parse_market_ladder() -> list[tuple[float, float]] | None:
     """FOMC_MARKET_LADDER = JSON list of {threshold, probability} rungs
     representing P(target_rate > threshold) from Kalshi's FED-DECISION
@@ -243,6 +269,49 @@ def lean_vs_current(point: float, anchor: float | None) -> str:
     return f"{delta_bp:+d}bp move vs current expected"
 
 
+def build_empirical_mae_section(obs: dict | None, prior_mae_str: str) -> str:
+    """Show empirical accuracy alongside the prior MAE claim. Renders
+    a compact table so readers can compare 'what we said our MAE would
+    be' vs 'what it actually is on resolved predictions'."""
+    if not obs or not isinstance(obs, dict):
+        return ""
+    count = obs.get("count", 0)
+    mae = obs.get("mae")
+    hit_rate = obs.get("hit_rate")
+    if count == 0:
+        # Pre-resolution: still show the section so readers see the promise
+        # of transparency even when N=0.
+        return f"""
+
+## Empirical accuracy (live)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | {prior_mae_str} |
+| Resolved predictions | 0 (first FOMC print pending) |
+| Empirical MAE | — |
+| Hit rate vs consensus | — |
+
+Empirical MAE + hit-rate auto-populate as predictions resolve. Once
+count >= 5 the CI sigma will switch from the inverse-MAE-derived prior
+to the empirical value.
+"""
+    hits = obs.get("hits", 0)
+    empirical_mae_str = f"{mae:.3f} pp" if isinstance(mae, (int, float)) else "—"
+    hit_pct = f"{hit_rate*100:.0f}%" if isinstance(hit_rate, (int, float)) else "—"
+    return f"""
+
+## Empirical accuracy (live, from resolved predictions)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | {prior_mae_str} |
+| Resolved predictions | {count} |
+| Empirical MAE | {empirical_mae_str} |
+| Hit rate vs consensus | {hit_pct} ({hits}/{count}) |
+"""
+
+
 def build_outcome_dist_table(dist: dict | None) -> str:
     """Render the outcome distribution as a compact markdown table.
     Returns empty string when the distribution is missing so callers
@@ -284,12 +353,17 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, market: float | None,
                     consensus: float | None, anchor: float | None,
                     used: list[str], lean: str,
-                    outcome_dist: dict | None = None) -> str:
+                    outcome_dist: dict | None = None,
+                    empirical_mae: dict | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else format_rate(v)} | {MAE[name]:.2f} pp |"
         for name, v in (("market", market), ("consensus", consensus), ("anchor", anchor))
     )
     dist_section = build_outcome_dist_table(outcome_dist)
+    # Prior MAE claim = the tightest sub-model MAE currently in the blend
+    # (market at 0.05pp when Kalshi is available, else consensus 0.07pp).
+    prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
+    empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp")
     return f"""# FOMC prediction — target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -303,7 +377,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 - 95% CI: [{point - 2*sigma:.2f}%, {point + 2*sigma:.2f}%]
 - Direction: {lean}
 - Sub-models used: {', '.join(used)}
-{dist_section}
+{dist_section}{empirical_section}
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
@@ -399,9 +473,11 @@ def main() -> None:
         "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/fomc-model-card.md",
     }
 
+    empirical_mae = fetch_empirical_mae("fomc")
     report_md = build_report_md(point, sigma, release, days_out, model_version,
                                 market, consensus, anchor, used, lean,
-                                outcome_dist=outcome_dist)
+                                outcome_dist=outcome_dist,
+                                empirical_mae=empirical_mae)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"fomc-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
