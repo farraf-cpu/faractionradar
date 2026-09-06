@@ -106,6 +106,57 @@ empirical value.
 """
 
 
+import math
+
+
+def _normal_cdf(x: float, mu: float, sigma: float) -> float:
+    if sigma <= 0:
+        return 1.0 if x >= mu else 0.0
+    return 0.5 * (1.0 + math.erf((x - mu) / (sigma * math.sqrt(2))))
+
+
+def compute_rate_outcome_distribution(
+    point: float,
+    sigma: float,
+    anchor: float | None,
+    bucket_bp: int = 25,
+) -> dict:
+    """Discretize N(point, sigma^2) posterior over 6 rate-decision buckets
+    centered on `anchor` (current policy rate). Bucket width = bucket_bp/100.
+    Return {'note': ...} when anchor is missing.
+
+    Bucket size variants (per Rule 36 tuning):
+    - 25bp default: DM central banks (ECB, BOE, BOJ, most G10 + EMs)
+    - 50bp: high-cadence movers (BCB Selic — Rule 26)
+    - 100bp: high-volatility EMs (CBRT — Rule 26)
+    """
+    if anchor is None:
+        return {"note": "no anchor; distribution not discretized"}
+    step = bucket_bp / 100.0
+    half = step / 2.0
+    outcomes = [
+        ("hike50",     anchor + 2 * step),
+        ("hike25",     anchor + 1 * step),
+        ("hold",       anchor + 0 * step),
+        ("cut25",      anchor - 1 * step),
+        ("cut50",      anchor - 2 * step),
+        ("cut75_plus", anchor - 3 * step),
+    ]
+    dist: dict = {}
+    for i, (key, level) in enumerate(outcomes):
+        if i == 0:
+            p = 1.0 - _normal_cdf(level - half, point, sigma)
+        elif i == len(outcomes) - 1:
+            p = _normal_cdf(level + half, point, sigma)
+        else:
+            p = (_normal_cdf(level + half, point, sigma)
+                 - _normal_cdf(level - half, point, sigma))
+        dist[key] = round(p, 3)
+    modal_key = max(dist.items(), key=lambda x: x[1])[0]
+    dist["modal"] = modal_key
+    return dist
+
+
 RATE_OUTCOME_LABELS = {
     "hike50": "+50bp hike",
     "hike25": "+25bp hike",

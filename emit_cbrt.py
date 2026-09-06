@@ -113,44 +113,7 @@ def format_value(v: float) -> str:
     return f"{v:.2f}%"
 
 
-def normal_cdf(x: float, mu: float, sigma: float) -> float:
-    if sigma <= 0:
-        return 1.0 if x >= mu else 0.0
-    return 0.5 * (1.0 + math.erf((x - mu) / (sigma * math.sqrt(2))))
-
-
-def compute_outcome_distribution(point: float, sigma: float,
-                                  anchor: float | None) -> dict:
-    """v2.1 outcome-distribution over 100bp buckets — CBRT typically
-    moves in 100-250bp increments, standard 25bp buckets misrepresent
-    magnitudes (Rule 36)."""
-    if anchor is None:
-        return {"note": "no anchor; distribution not discretized"}
-    half = 0.50  # 100bp bucket half-width
-    outcomes = [
-        ("hike200",     anchor + 2.00, "+200bp or larger hike"),
-        ("hike100",     anchor + 1.00, "+100bp hike"),
-        ("hold",        anchor + 0.00, "hold"),
-        ("cut100",      anchor - 1.00, "-100bp cut"),
-        ("cut200",      anchor - 2.00, "-200bp cut"),
-        ("cut300_plus", anchor - 3.00, "-300bp or deeper"),
-    ]
-    dist = {}
-    for i, (key, level, _) in enumerate(outcomes):
-        if i == 0:
-            p = 1.0 - normal_cdf(level - half, point, sigma)
-        elif i == len(outcomes) - 1:
-            p = normal_cdf(level + half, point, sigma)
-        else:
-            p = (normal_cdf(level + half, point, sigma)
-                 - normal_cdf(level - half, point, sigma))
-        dist[key] = round(p, 3)
-    modal_key = max(dist.items(), key=lambda x: x[1])[0]
-    dist["modal"] = modal_key
-    return dist
-
-
-from mae_utils import fetch_empirical_mae as _fetch_empirical_mae, build_empirical_mae_section, auto_tune_sigma, build_rate_outcome_dist_table
+from mae_utils import fetch_empirical_mae as _fetch_empirical_mae, build_empirical_mae_section, auto_tune_sigma, build_rate_outcome_dist_table, compute_rate_outcome_distribution
 
 
 def fetch_empirical_mae(slug_prefix: str) -> dict | None:
@@ -256,7 +219,7 @@ def main() -> None:
     if sigma_source.startswith("empirical"):
         print(f"[emit-cbrt] sigma auto-tuned: prior={prior_sigma:.3f} -> empirical={sigma:.3f}")
     lean = lean_vs_anchor(point, anchor)
-    outcome_dist = compute_outcome_distribution(point, sigma, anchor)
+    outcome_dist = compute_rate_outcome_distribution(point, sigma, anchor, bucket_bp=100)
 
     print(f"[emit-cbrt] CBRT {release} T-{days_out}: {format_value(point)} "
           f"(sigma {sigma:.2f}pp, {lean}, used: {', '.join(used)})")
