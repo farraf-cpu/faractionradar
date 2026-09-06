@@ -9,11 +9,17 @@ Kept dependency-free (stdlib only) so any predictor can import.
 Public API:
 - fetch_empirical_mae(slug_prefix, tag) -> dict | None
 - build_empirical_mae_section(obs, prior_mae_str, first_release_hint, unit) -> str
-- auto_tune_sigma(prior, obs, threshold=5) -> (sigma, source, prior_sigma)
+- auto_tune_sigma(prior, obs, threshold=5) -> (sigma, source)
+- parse_market_ladder_env(env_var, tag) -> list[(threshold, probability)] | None
+- survival_from_ladder(x, rungs) -> float
+- compute_rate_outcome_distribution(point, sigma, anchor, bucket_bp=25) -> dict
+- build_rate_outcome_dist_table(dist) -> str
+- isKalshiSnapshotStale — worker-side only (see prediction-markets.ts)
 """
 from __future__ import annotations
 
 import json
+import math
 import os
 import sys
 import urllib.request
@@ -104,10 +110,6 @@ empirical value.
 | Hit rate (ourCall closest) | {hit_pct} ({hits}/{count}) |
 
 """
-
-
-import json
-import math
 
 
 def parse_market_ladder_env(env_var: str, tag: str = "emit") -> list[tuple[float, float]] | None:
