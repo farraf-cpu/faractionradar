@@ -29,6 +29,17 @@ def all_emitters() -> list[str]:
     return names
 
 
+# Rate-decision emitters need outcome_dist wired through build_report_md
+# so the per-outcome table renders in the .md report.
+RATE_DECISION_MODULES = {
+    "emit_fomc", "emit_ecb", "emit_boe", "emit_boj", "emit_boc", "emit_rba",
+    "emit_rbnz", "emit_snb", "emit_pboc", "emit_riksbank", "emit_norges",
+    "emit_bok", "emit_rbi", "emit_mnb", "emit_cnb", "emit_nbp", "emit_bcb",
+    "emit_banxico", "emit_bcch", "emit_bi", "emit_boi", "emit_sarb",
+    "emit_cbrt", "emit_nb", "emit_cbi",
+}
+
+
 def check_module(name: str) -> tuple[bool, str]:
     """Return (ok, reason). ok=True means the emitter has full wiring."""
     try:
@@ -47,6 +58,9 @@ def check_module(name: str) -> tuple[bool, str]:
 
     if not hasattr(mod, "fetch_empirical_mae"):
         return False, "missing fetch_empirical_mae"
+
+    if name in RATE_DECISION_MODULES and "outcome_dist" not in sig_vars:
+        return False, "rate-decision build_report_md missing outcome_dist kwarg"
 
     return True, "ok"
 
