@@ -217,7 +217,9 @@ def build_market_dist_section(dist: dict | None) -> str:
 
 def build_report_md(result: dict, release_date: str, days_out: int, model_version: str,
                     market_dist: dict | None = None,
-                    empirical_mae: dict | None = None) -> str:
+                    empirical_mae: dict | None = None,
+                    sigma_source: str = "prior (blended RMSE)",
+                    prior_rmse: float | None = None) -> str:
     b = result["blended"]
     r = result["blended_rmse"]
     pm_note = " (stale, see caveat)" if result.get("pred_markets_stale") else ""
@@ -243,7 +245,7 @@ def build_report_md(result: dict, release_date: str, days_out: int, model_versio
 
 **{b:+.0f}K jobs**
 
-- 68% CI: [{b-r:+.0f}, {b+r:+.0f}] K
+- 68% CI: [{b-r:+.0f}, {b+r:+.0f}] K · sigma source: {sigma_source}{f" (prior was {prior_rmse:.0f}K)" if prior_rmse is not None and sigma_source.startswith("empirical") else ""}
 - 95% CI: [{b-2*r:+.0f}, {b+2*r:+.0f}] K
 - Lean vs consensus: {result['lean']}
 {caveat_section}{dist_section}{empirical_section}## Sub-model breakdown
@@ -302,6 +304,18 @@ def main() -> None:
     from run import main as run_predictor
     result = run_predictor(refresh_data=True)
 
+    # Empirical MAE auto-tune: override blended_rmse with observed MAE
+    # once N>=5. Mirrors emit_cpi / emit_fomc pattern.
+    empirical_mae = fetch_empirical_mae("nfp")
+    prior_rmse = float(result.get("blended_rmse") or 0)
+    sigma_source = "prior (blended RMSE)"
+    if empirical_mae and isinstance(empirical_mae.get("count"), int) and empirical_mae["count"] >= 5:
+        emp_val = empirical_mae.get("mae")
+        if isinstance(emp_val, (int, float)) and emp_val > 0:
+            result["blended_rmse"] = float(emp_val)
+            sigma_source = f"empirical (n={empirical_mae['count']})"
+            print(f"[emit] sigma auto-tuned: prior={prior_rmse:.1f}K -> empirical={emp_val:.1f}K (n={empirical_mae['count']})")
+
     our_call = format_our_call(result, release_date, model_version)
     ladder = parse_market_ladder()
     market_dist: dict | None = None
@@ -326,10 +340,11 @@ def main() -> None:
             " ticker verification (Phase 1.5). Consensus is live from ForexFactory."
         )
 
-    empirical_mae = fetch_empirical_mae("nfp")
     report_md = build_report_md(result, release_date, days_out, model_version,
                                 market_dist=market_dist,
-                                empirical_mae=empirical_mae)
+                                empirical_mae=empirical_mae,
+                                sigma_source=sigma_source,
+                                prior_rmse=prior_rmse)
     year_month = release_date[:7]
     report_path = ROOT / "reports" / year_month / f"nfp-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
