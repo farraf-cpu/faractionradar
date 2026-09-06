@@ -129,6 +129,47 @@ def test_malformed_ladder_returns_none():
     os.environ.pop("FOMC_MARKET_LADDER", None)
 
 
+def test_empirical_mae_section_renders_for_zero_and_populated():
+    """Section renders placeholder at N=0 and stats at N>=1."""
+    import emit_fomc
+    empty_section = emit_fomc.build_empirical_mae_section({"count": 0, "mae": None, "hits": 0, "hit_rate": None}, "0.05 pp")
+    assert "Prior MAE claim | 0.05 pp" in empty_section
+    assert "Resolved predictions | 0" in empty_section
+    populated = emit_fomc.build_empirical_mae_section({"count": 8, "mae": 0.062, "hits": 5, "hit_rate": 0.625}, "0.05 pp")
+    assert "Resolved predictions | 8" in populated
+    assert "Empirical MAE | 0.062 pp" in populated
+    assert "62% (5/8)" in populated
+
+
+def test_empirical_mae_section_empty_when_no_data():
+    """None input returns empty string so caller can concat safely."""
+    import emit_cpi
+    assert emit_cpi.build_empirical_mae_section(None, "0.08 pp") == ""
+    assert emit_cpi.build_empirical_mae_section({}, "0.08 pp") == ""
+
+
+def test_sigma_autotune_threshold_gates_switch():
+    """The N>=5 threshold rule from emit_cpi / emit_fomc / emit — under
+    threshold the prior sigma stays, at/above it the empirical takes
+    over. Simulated inline since main() reads env + fetches network."""
+    threshold = 5
+    prior = 0.05
+    empirical = 0.062
+    # Below threshold: use prior
+    def _effective(prior_sigma, empirical_obs):
+        if empirical_obs and empirical_obs.get("count", 0) >= threshold:
+            emp = empirical_obs.get("mae")
+            if isinstance(emp, (int, float)) and emp > 0:
+                return emp, "empirical"
+        return prior_sigma, "prior"
+    for count in (0, 1, 2, 3, 4):
+        sigma, src = _effective(prior, {"count": count, "mae": empirical})
+        assert (sigma, src) == (prior, "prior"), f"N={count} should use prior"
+    for count in (5, 6, 10, 100):
+        sigma, src = _effective(prior, {"count": count, "mae": empirical})
+        assert (sigma, src) == (empirical, "empirical"), f"N={count} should use empirical"
+
+
 if __name__ == "__main__":
     tests = [
         test_fomc_ladder_recovers_discrete_pmf,
@@ -137,6 +178,9 @@ if __name__ == "__main__":
         test_nfp_ladder_bucket_labels,
         test_survival_step_function_at_boundary,
         test_malformed_ladder_returns_none,
+        test_empirical_mae_section_renders_for_zero_and_populated,
+        test_empirical_mae_section_empty_when_no_data,
+        test_sigma_autotune_threshold_gates_switch,
     ]
     failed = 0
     for t in tests:
