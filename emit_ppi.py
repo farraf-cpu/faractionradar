@@ -32,6 +32,17 @@ import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
+from io_utils import append_ledger as _append_ledger, post_to_worker as _post_to_worker
+
+
+def append_ledger(payload: dict) -> None:
+    _append_ledger(ROOT / "predictions.jsonl", payload)
+
+
+def post_to_worker(url: str, auth_key: str, payload: dict) -> None:
+    _post_to_worker(url, auth_key, payload, tag="emit-ppi")
+
+
 from fred_utils import fetch_fred_observations as _fetch_fred_observations_raw
 
 
@@ -166,31 +177,6 @@ sub-model — this makes v1 simpler than CPI. Phase 2 target adds a
 sector-decomposition sub-model (energy / food / trade services) since PPI
 is more sector-heterogeneous than CPI headline.
 """
-
-
-def append_ledger(payload: dict) -> None:
-    ledger = ROOT / "predictions.jsonl"
-    with ledger.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(payload, separators=(",", ":")) + "\n")
-
-
-def post_to_worker(url: str, auth_key: str, payload: dict) -> None:
-    body = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url, data=body, method="POST",
-        headers={
-            "content-type": "application/json",
-            "x-upload-auth": auth_key,
-            "user-agent": UA,
-        },
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as res:
-            print(f"[emit-ppi] worker → {res.status} {res.reason}")
-    except urllib.error.HTTPError as e:
-        print(f"[emit-ppi] worker rejected: {e.code} {e.reason}", file=sys.stderr)
-        print(e.read().decode("utf-8", errors="replace"), file=sys.stderr)
-        sys.exit(3)
 
 
 def main() -> None:

@@ -26,6 +26,17 @@ import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
+from io_utils import append_ledger as _append_ledger, post_to_worker as _post_to_worker
+
+
+def append_ledger(payload: dict) -> None:
+    _append_ledger(ROOT / "predictions.jsonl", payload)
+
+
+def post_to_worker(url: str, auth_key: str, payload: dict) -> None:
+    _post_to_worker(url, auth_key, payload, tag="emit")
+
+
 
 from mae_utils import (
     fetch_empirical_mae as _fetch_empirical_mae,
@@ -192,34 +203,6 @@ def build_report_md(result: dict, release_date: str, days_out: int, model_versio
 | Grand median (all models) | {result['grand_median']:+7.0f} K | — |
 | **Blended (Bayesian)**    | **{b:+7.0f} K** | — |
 """
-
-
-def append_ledger(payload: dict) -> None:
-    """One JSON line per prediction. Append-only. Never rewrite."""
-    ledger = ROOT / "predictions.jsonl"
-    with ledger.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(payload, separators=(",", ":")) + "\n")
-
-
-def post_to_worker(url: str, auth_key: str, payload: dict) -> None:
-    body = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=body,
-        method="POST",
-        headers={
-            "content-type": "application/json",
-            "x-upload-auth": auth_key,
-            "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
-        },
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as res:
-            print(f"[emit] worker → {res.status} {res.reason}")
-    except urllib.error.HTTPError as e:
-        print(f"[emit] worker rejected: {e.code} {e.reason}", file=sys.stderr)
-        print(e.read().decode("utf-8", errors="replace"), file=sys.stderr)
-        sys.exit(3)
 
 
 def main() -> None:

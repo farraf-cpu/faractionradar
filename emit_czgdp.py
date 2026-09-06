@@ -24,6 +24,17 @@ import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
+from io_utils import append_ledger as _append_ledger, post_to_worker as _post_to_worker
+
+
+def append_ledger(payload: dict) -> None:
+    _append_ledger(ROOT / "predictions.jsonl", payload)
+
+
+def post_to_worker(url: str, auth_key: str, payload: dict) -> None:
+    _post_to_worker(url, auth_key, payload, tag="emit-czgdp")
+
+
 ROOT = Path(__file__).parent
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
@@ -146,31 +157,6 @@ is the only reliable signal for v1. Phase 19.1 target: integrate CZSO
 
 - **v1-simple-blend ({datetime.now(timezone.utc).strftime('%Y-%m-%d')})** - first ship. Third Phase 19 CZK predictor. Consensus-only pending CZSO API integration.
 """
-
-
-def append_ledger(payload: dict) -> None:
-    ledger = ROOT / "predictions.jsonl"
-    with ledger.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(payload, separators=(",", ":")) + "\n")
-
-
-def post_to_worker(url: str, auth_key: str, payload: dict) -> None:
-    body = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url, data=body, method="POST",
-        headers={
-            "content-type": "application/json",
-            "x-upload-auth": auth_key,
-            "user-agent": UA,
-        },
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as res:
-            print(f"[emit-czgdp] worker -> {res.status} {res.reason}")
-    except urllib.error.HTTPError as e:
-        print(f"[emit-czgdp] worker rejected: {e.code} {e.reason}", file=sys.stderr)
-        print(e.read().decode("utf-8", errors="replace"), file=sys.stderr)
-        sys.exit(3)
 
 
 def main() -> None:
