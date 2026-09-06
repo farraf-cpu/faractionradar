@@ -156,66 +156,17 @@ def fetch_fred_trimmed_mean(api_key: str) -> float | None:
         return None
 
 
+from mae_utils import (
+    fetch_empirical_mae as _fetch_empirical_mae,
+    build_empirical_mae_section,
+    auto_tune_sigma,
+)
+
+
 def fetch_empirical_mae(slug_prefix: str) -> dict | None:
-    """Read the worker's /public/models endpoint and return the empirical
-    MAE + hit-rate for our slug_prefix. Returns None on any failure so
-    callers degrade to prior-MAE-only reporting."""
-    base = os.environ.get("CALENDAR_WORKER_URL", "").rstrip("/")
-    if not base:
-        return None
-    url = f"{base}/public/models"
-    req = urllib.request.Request(url, headers={"user-agent": UA})
-    try:
-        with urllib.request.urlopen(req, timeout=15) as res:
-            data = json.loads(res.read().decode("utf-8"))
-    except Exception as e:
-        print(f"[emit-cpi] empirical MAE fetch failed: {e}", file=sys.stderr)
-        return None
-    for m in data.get("models") or []:
-        if m.get("slug_prefix") == slug_prefix:
-            obs = m.get("mae_observed") or {}
-            if isinstance(obs, dict):
-                return obs
-    return None
-
-
-def build_empirical_mae_section(obs: dict | None, prior_mae_str: str) -> str:
-    """Show empirical accuracy alongside the prior MAE claim."""
-    if not obs or not isinstance(obs, dict):
-        return ""
-    count = obs.get("count", 0)
-    mae = obs.get("mae")
-    hit_rate = obs.get("hit_rate")
-    if count == 0:
-        return f"""
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | {prior_mae_str} |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate vs consensus | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the inverse-MAE-derived prior
-to the empirical value.
-"""
-    hits = obs.get("hits", 0)
-    empirical_mae_str = f"{mae:.3f} pp" if isinstance(mae, (int, float)) else "—"
-    hit_pct = f"{hit_rate*100:.0f}%" if isinstance(hit_rate, (int, float)) else "—"
-    return f"""
-
-## Empirical accuracy (live, from resolved predictions)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | {prior_mae_str} |
-| Resolved predictions | {count} |
-| Empirical MAE | {empirical_mae_str} |
-| Hit rate vs consensus | {hit_pct} ({hits}/{count}) |
-"""
+    """Thin wrapper around mae_utils.fetch_empirical_mae so existing
+    test imports and call sites keep working."""
+    return _fetch_empirical_mae(slug_prefix, tag="emit-cpi")
 
 
 def parse_market_ladder() -> list[tuple[float, float]] | None:
@@ -468,19 +419,12 @@ def main() -> None:
     ladder = parse_market_ladder()
     market_dist = compute_market_outcome_distribution(ladder) if ladder else None
 
-    # Empirical MAE auto-tune: when >=5 resolved predictions exist, swap
-    # the inverse-variance-derived prior sigma for the observed MAE.
-    # This makes CI reflect actual historical accuracy rather than
-    # theoretical MAE priors. Prior remains recorded in the report for
-    # comparison; below threshold we keep the prior.
+    # Empirical MAE auto-tune (shared via mae_utils.auto_tune_sigma):
+    # swap prior sigma for observed MAE when N>=5.
     empirical_mae = fetch_empirical_mae("cpi")
-    sigma_source = "prior (inverse-MAE)"
-    if empirical_mae and isinstance(empirical_mae.get("count"), int) and empirical_mae["count"] >= 5:
-        emp_val = empirical_mae.get("mae")
-        if isinstance(emp_val, (int, float)) and emp_val > 0:
-            sigma = float(emp_val)
-            sigma_source = f"empirical (n={empirical_mae['count']})"
-            print(f"[emit-cpi] sigma auto-tuned: prior={prior_sigma:.3f}pp -> empirical={sigma:.3f}pp (n={empirical_mae['count']})")
+    sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
+    if sigma_source.startswith("empirical"):
+        print(f"[emit-cpi] sigma auto-tuned: prior={prior_sigma:.3f}pp -> empirical={sigma:.3f}pp")
 
     print(f"[emit-cpi] CPI {release} T-{days_out}: {format_value(point)} m/m "
           f"(sigma {sigma:.2f}pp, used: {', '.join(used)})")

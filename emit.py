@@ -27,67 +27,21 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+from mae_utils import (
+    fetch_empirical_mae as _fetch_empirical_mae,
+    build_empirical_mae_section as _build_empirical_mae_section,
+    auto_tune_sigma,
+)
+
+
 def fetch_empirical_mae(slug_prefix: str) -> dict | None:
-    """Read the worker's /public/models endpoint and return the empirical
-    MAE + hit-rate for our slug_prefix. Returns None on any failure so
-    callers degrade to prior-MAE-only reporting."""
-    base = os.environ.get("CALENDAR_WORKER_URL", "").rstrip("/")
-    if not base:
-        return None
-    url = f"{base}/public/models"
-    ua = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
-    req = urllib.request.Request(url, headers={"user-agent": ua})
-    try:
-        with urllib.request.urlopen(req, timeout=15) as res:
-            data = json.loads(res.read().decode("utf-8"))
-    except Exception as e:
-        print(f"[emit] empirical MAE fetch failed: {e}", file=sys.stderr)
-        return None
-    for m in data.get("models") or []:
-        if m.get("slug_prefix") == slug_prefix:
-            obs = m.get("mae_observed") or {}
-            if isinstance(obs, dict):
-                return obs
-    return None
+    """Thin wrapper — keeps existing tests + call sites working."""
+    return _fetch_empirical_mae(slug_prefix, tag="emit")
 
 
 def build_empirical_mae_section(obs: dict | None, prior_mae_str: str) -> str:
-    """Show empirical accuracy alongside the prior MAE claim."""
-    if not obs or not isinstance(obs, dict):
-        return ""
-    count = obs.get("count", 0)
-    mae = obs.get("mae")
-    hit_rate = obs.get("hit_rate")
-    if count == 0:
-        return f"""
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | {prior_mae_str} |
-| Resolved predictions | 0 (first NFP resolution pending) |
-| Empirical MAE | — |
-| Hit rate vs consensus | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the model's blended_rmse
-prior to the empirical value.
-
-"""
-    hits = obs.get("hits", 0)
-    empirical_mae_str = f"{mae:.1f} K" if isinstance(mae, (int, float)) else "—"
-    hit_pct = f"{hit_rate*100:.0f}%" if isinstance(hit_rate, (int, float)) else "—"
-    return f"""
-## Empirical accuracy (live, from resolved predictions)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | {prior_mae_str} |
-| Resolved predictions | {count} |
-| Empirical MAE | {empirical_mae_str} |
-| Hit rate vs consensus | {hit_pct} ({hits}/{count}) |
-
-"""
+    """NFP uses jobs-count units ('K') for empirical MAE display."""
+    return _build_empirical_mae_section(obs, prior_mae_str, unit="K")
 
 
 def parse_market_ladder() -> list[tuple[float, float]] | None:
@@ -304,17 +258,18 @@ def main() -> None:
     from run import main as run_predictor
     result = run_predictor(refresh_data=True)
 
-    # Empirical MAE auto-tune: override blended_rmse with observed MAE
-    # once N>=5. Mirrors emit_cpi / emit_fomc pattern.
+    # Empirical MAE auto-tune (shared via mae_utils.auto_tune_sigma).
     empirical_mae = fetch_empirical_mae("nfp")
     prior_rmse = float(result.get("blended_rmse") or 0)
-    sigma_source = "prior (blended RMSE)"
-    if empirical_mae and isinstance(empirical_mae.get("count"), int) and empirical_mae["count"] >= 5:
-        emp_val = empirical_mae.get("mae")
-        if isinstance(emp_val, (int, float)) and emp_val > 0:
-            result["blended_rmse"] = float(emp_val)
-            sigma_source = f"empirical (n={empirical_mae['count']})"
-            print(f"[emit] sigma auto-tuned: prior={prior_rmse:.1f}K -> empirical={emp_val:.1f}K (n={empirical_mae['count']})")
+    new_sigma, sigma_source = auto_tune_sigma(prior_rmse, empirical_mae)
+    if sigma_source.startswith("empirical"):
+        result["blended_rmse"] = new_sigma
+        # NFP-specific label — auto_tune_sigma returns "prior (inverse-MAE)"
+        # by default which reads awkwardly on NFP where the prior is the
+        # bayesian blend's RMSE. No-op when threshold not met.
+        print(f"[emit] sigma auto-tuned: prior={prior_rmse:.1f}K -> empirical={new_sigma:.1f}K")
+    elif sigma_source == "prior (inverse-MAE)":
+        sigma_source = "prior (blended RMSE)"
 
     our_call = format_our_call(result, release_date, model_version)
     ladder = parse_market_ladder()

@@ -118,30 +118,16 @@ def normal_cdf(x: float, mu: float, sigma: float) -> float:
     return 0.5 * (1.0 + math.erf((x - mu) / (sigma * math.sqrt(2))))
 
 
-def fetch_empirical_mae(slug_prefix: str) -> dict | None:
-    """Read the worker's /public/models endpoint and return the empirical
-    MAE + hit-rate for our slug_prefix. Returns None on any failure so
-    callers degrade to prior-MAE-only reporting.
+from mae_utils import (
+    fetch_empirical_mae as _fetch_empirical_mae,
+    build_empirical_mae_section,
+    auto_tune_sigma,
+)
 
-    Shape: {"count": int, "mae": float|None, "hits": int, "hit_rate": float|None}
-    """
-    base = os.environ.get("CALENDAR_WORKER_URL", "").rstrip("/")
-    if not base:
-        return None
-    url = f"{base}/public/models"
-    req = urllib.request.Request(url, headers={"user-agent": UA})
-    try:
-        with urllib.request.urlopen(req, timeout=15) as res:
-            data = json.loads(res.read().decode("utf-8"))
-    except Exception as e:
-        print(f"[emit-fomc] empirical MAE fetch failed: {e}", file=sys.stderr)
-        return None
-    for m in data.get("models") or []:
-        if m.get("slug_prefix") == slug_prefix:
-            obs = m.get("mae_observed") or {}
-            if isinstance(obs, dict):
-                return obs
-    return None
+
+def fetch_empirical_mae(slug_prefix: str) -> dict | None:
+    """Thin wrapper — keeps existing tests + call sites working."""
+    return _fetch_empirical_mae(slug_prefix, tag="emit-fomc")
 
 
 def parse_market_ladder() -> list[tuple[float, float]] | None:
@@ -267,49 +253,6 @@ def lean_vs_current(point: float, anchor: float | None) -> str:
     if delta_bp >= 25:
         return f"hike of ~{delta_bp}bp expected"
     return f"{delta_bp:+d}bp move vs current expected"
-
-
-def build_empirical_mae_section(obs: dict | None, prior_mae_str: str) -> str:
-    """Show empirical accuracy alongside the prior MAE claim. Renders
-    a compact table so readers can compare 'what we said our MAE would
-    be' vs 'what it actually is on resolved predictions'."""
-    if not obs or not isinstance(obs, dict):
-        return ""
-    count = obs.get("count", 0)
-    mae = obs.get("mae")
-    hit_rate = obs.get("hit_rate")
-    if count == 0:
-        # Pre-resolution: still show the section so readers see the promise
-        # of transparency even when N=0.
-        return f"""
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | {prior_mae_str} |
-| Resolved predictions | 0 (first FOMC print pending) |
-| Empirical MAE | — |
-| Hit rate vs consensus | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the inverse-MAE-derived prior
-to the empirical value.
-"""
-    hits = obs.get("hits", 0)
-    empirical_mae_str = f"{mae:.3f} pp" if isinstance(mae, (int, float)) else "—"
-    hit_pct = f"{hit_rate*100:.0f}%" if isinstance(hit_rate, (int, float)) else "—"
-    return f"""
-
-## Empirical accuracy (live, from resolved predictions)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | {prior_mae_str} |
-| Resolved predictions | {count} |
-| Empirical MAE | {empirical_mae_str} |
-| Hit rate vs consensus | {hit_pct} ({hits}/{count}) |
-"""
 
 
 def build_outcome_dist_table(dist: dict | None) -> str:
@@ -450,17 +393,11 @@ def main() -> None:
     ladder = parse_market_ladder()
     outcome_dist = compute_outcome_distribution(point, sigma, anchor, ladder=ladder)
 
-    # Empirical MAE auto-tune: same pattern as emit_cpi. When >=5 resolved
-    # FOMC predictions exist, swap prior sigma for observed MAE so the CI
-    # reflects real accuracy. Below threshold we keep the prior.
+    # Empirical MAE auto-tune (shared via mae_utils.auto_tune_sigma).
     empirical_mae = fetch_empirical_mae("fomc")
-    sigma_source = "prior (inverse-MAE)"
-    if empirical_mae and isinstance(empirical_mae.get("count"), int) and empirical_mae["count"] >= 5:
-        emp_val = empirical_mae.get("mae")
-        if isinstance(emp_val, (int, float)) and emp_val > 0:
-            sigma = float(emp_val)
-            sigma_source = f"empirical (n={empirical_mae['count']})"
-            print(f"[emit-fomc] sigma auto-tuned: prior={prior_sigma:.3f}pp -> empirical={sigma:.3f}pp (n={empirical_mae['count']})")
+    sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
+    if sigma_source.startswith("empirical"):
+        print(f"[emit-fomc] sigma auto-tuned: prior={prior_sigma:.3f}pp -> empirical={sigma:.3f}pp")
 
     print(f"[emit-fomc] FOMC {release} T-{days_out}: {format_rate(point)} "
           f"(sigma {sigma:.3f}pp, used: {', '.join(used)})")
