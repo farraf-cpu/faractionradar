@@ -20,6 +20,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+# Expose for check_module to grep source files.
+
 
 def all_emitters() -> list[str]:
     """Every emit_*.py module name in the repo, minus emit.py (NFP orchestrator)."""
@@ -37,6 +39,17 @@ RATE_DECISION_MODULES = {
     "emit_bok", "emit_rbi", "emit_mnb", "emit_cnb", "emit_nbp", "emit_bcb",
     "emit_banxico", "emit_bcch", "emit_bi", "emit_boi", "emit_sarb",
     "emit_cbrt", "emit_nb", "emit_cbi",
+}
+
+# Wide-bucket variants (Rule 26): CBRT uses 100bp (turkish lira very high vol),
+# BCB uses 50bp (selic typical move). Default 25bp for the other 22.
+# Guard: emitter source must pass bucket_bp=N explicitly to
+# compute_rate_outcome_distribution so silent default-bucket fallback
+# can't ship. Grepped from source text since bucket_bp is not exposed
+# on any function signature.
+WIDE_BUCKET_MODULES = {
+    "emit_bcb": 50,
+    "emit_cbrt": 100,
 }
 
 
@@ -61,6 +74,15 @@ def check_module(name: str) -> tuple[bool, str]:
 
     if name in RATE_DECISION_MODULES and "outcome_dist" not in sig_vars:
         return False, "rate-decision build_report_md missing outcome_dist kwarg"
+
+    # Wide-bucket variant guard — source must call compute_rate_outcome_distribution
+    # with bucket_bp=N (not the 25bp default).
+    if name in WIDE_BUCKET_MODULES:
+        expected_bp = WIDE_BUCKET_MODULES[name]
+        src = (ROOT / f"{name}.py").read_text(encoding="utf-8")
+        expected_call = f"bucket_bp={expected_bp}"
+        if expected_call not in src:
+            return False, f"{name} must pass {expected_call} to compute_rate_outcome_distribution"
 
     return True, "ok"
 
