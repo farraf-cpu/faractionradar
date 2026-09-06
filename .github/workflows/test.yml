@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "emit*.py"
+      - "mae_utils.py"
+      - "scripts/**"
+      - "tests/**"
+      - ".github/workflows/test.yml"
+  pull_request:
+    paths:
+      - "emit*.py"
+      - "mae_utils.py"
+      - "scripts/**"
+      - "tests/**"
+      - ".github/workflows/test.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  # Coalesce rapid-fire pushes on main — no point running 5 in parallel.
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+      - name: Ladder + MAE math tests
+        run: python tests/test_ladder_distribution.py
+      - name: Fleet MAE wiring sanity
+        run: python tests/test_all_emitters_have_mae.py
+      - name: Fleet consistency (cards + workflows + gates)
+        run: python tests/test_fleet_consistency.py
