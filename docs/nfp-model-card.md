@@ -1,8 +1,9 @@
 # NFP Predictor — Model Card
 
-**Model version:** `v1-bayesian-blend`
+**Model version:** `v1.1-bayesian-blend-ladder-dist`
 **Event:** US Non-Farm Payrolls (monthly, first Friday, 08:30 ET)
-**Output:** point estimate + 68%/95% CI, in thousands of jobs
+**Output:** point estimate + 68%/95% CI (thousands of jobs) + optional
+`outcomeDistribution` over 6 jobs-count buckets from Kalshi KXUSNFP ladder
 
 ## What this model does
 
@@ -62,4 +63,10 @@ Every prediction gets scored against the actual print. Cumulative accuracy vs. B
 
 ## Change log
 
+- **v1.1-bayesian-blend-ladder-dist (2026-09-06)** — adds an
+  `outcomeDistribution` field on `ourCall` when the Kalshi KXUSNFP
+  ladder is available in `/public/kalshi-implied`. Six buckets:
+  `<=25K`, `25-75K`, `75-125K`, `125-175K`, `175-225K`, `225K+`.
+  Bucket probs = step-below survival differences across ladder rungs,
+  renormalized. Point estimate + CI + 7-sub-model blend unchanged.
 - **v1-bayesian-blend (2026-09-01)** — initial version. 7 sub-models, MAE-weighted blend.

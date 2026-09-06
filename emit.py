@@ -26,6 +26,68 @@ import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
+
+def parse_market_ladder() -> list[tuple[float, float]] | None:
+    """NFP_MARKET_LADDER = JSON list of {threshold, probability} rungs
+    representing P(nfp_jobs > threshold) from Kalshi's KXUSNFP series.
+    Threshold is in RAW jobs (not K units). Returns sorted (threshold_asc)
+    tuples, or None if unset/malformed."""
+    raw = os.environ.get("NFP_MARKET_LADDER")
+    if not raw:
+        return None
+    try:
+        arr = json.loads(raw)
+    except Exception as e:
+        print(f"[emit] NFP_MARKET_LADDER parse failed: {e}", file=sys.stderr)
+        return None
+    rungs: list[tuple[float, float]] = []
+    for r in arr if isinstance(arr, list) else []:
+        try:
+            t = float(r["threshold"])
+            p = float(r["probability"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if 0.0 <= p <= 1.0:
+            rungs.append((t, p))
+    if len(rungs) < 2:
+        return None
+    rungs.sort(key=lambda x: x[0])
+    return rungs
+
+
+def survival_from_ladder(x: float, rungs: list[tuple[float, float]]) -> float:
+    """P(nfp_jobs > x) via step-below function over discrete Kalshi rungs.
+    Same shape as emit_fomc / emit_cpi survival helpers."""
+    for t, p in rungs:
+        if x < t:
+            return p
+    return 0.0
+
+
+def compute_market_outcome_distribution(ladder: list[tuple[float, float]]) -> dict:
+    """Discretize the KXUSNFP ladder into 6 jobs-count buckets covering
+    the typical NFP range. Ladder thresholds arrive in RAW jobs (not K),
+    so bucket edges are in raw jobs too. Renormalized to sum 1."""
+    # Bucket edges in raw jobs: <=25K, 25-75, 75-125, 125-175, 175-225, 225K+
+    edges = [25_000, 75_000, 125_000, 175_000, 225_000]
+    keys = ["<=25K", "25-75K", "75-125K", "125-175K", "175-225K", "225K+"]
+    dist: dict = {}
+    dist[keys[0]] = 1.0 - survival_from_ladder(edges[0], ladder)
+    for i in range(len(edges) - 1):
+        dist[keys[i + 1]] = (survival_from_ladder(edges[i], ladder)
+                             - survival_from_ladder(edges[i + 1], ladder))
+    dist[keys[-1]] = survival_from_ladder(edges[-1], ladder)
+    for k in list(dist.keys()):
+        dist[k] = round(max(0.0, min(1.0, dist[k])), 3)
+    total = sum(dist.values())
+    if total > 0:
+        for k in dist:
+            dist[k] = round(dist[k] / total, 3)
+    modal = max(dist.items(), key=lambda x: x[1])[0]
+    dist["modal"] = modal
+    dist["source"] = "kalshi-ladder"
+    return dist
+
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT))
 
@@ -146,13 +208,20 @@ def main() -> None:
     from run import main as run_predictor
     result = run_predictor(refresh_data=True)
 
+    our_call = format_our_call(result, release_date, model_version)
+    ladder = parse_market_ladder()
+    if ladder:
+        market_dist = compute_market_outcome_distribution(ladder)
+        our_call["outcomeDistribution"] = market_dist
+        print(f"[emit] kalshi ladder outcome dist: {market_dist}")
+
     prediction = {
         "eventSlug": f"nfp-{release_date}",
         "eventTitle": "US Non-Farm Payrolls",
         "country": "USD",
         "releaseDate": release_date,
         "daysOut": days_out,
-        "ourCall": format_our_call(result, release_date, model_version),
+        "ourCall": our_call,
         "grandMedian": format_grand_median(result),
         "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/nfp-model-card.md",
     }

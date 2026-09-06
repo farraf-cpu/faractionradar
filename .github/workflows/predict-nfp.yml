@@ -102,6 +102,17 @@ jobs:
                   with open(os.environ["GITHUB_OUTPUT"], "a") as f:
                       f.write(f"pm_value_k={as_k}\n")
                       f.write("pm_available=true\n")
+                  ladder = nfp.get("ladder")
+                  if isinstance(ladder, list) and len(ladder) >= 2:
+                      ladder_json = json.dumps([
+                          {"threshold": float(r["threshold"]), "probability": float(r["probability"])}
+                          for r in ladder if "threshold" in r and "probability" in r
+                      ], separators=(",", ":"))
+                      print(f"kalshi ladder: {len(ladder)} rungs")
+                      with open(os.environ["GITHUB_ENV"], "a") as f:
+                          f.write(f"NFP_MARKET_LADDER={ladder_json}\n")
+                  else:
+                      print("kalshi ladder missing/short — outcome distribution will be omitted")
               else:
                   print("kalshi implied NFP not available — falling back to hardcode")
                   with open(os.environ["GITHUB_OUTPUT"], "a") as f:
@@ -173,7 +184,7 @@ jobs:
           NFP_DAYS_OUT: ${{ needs.gate.outputs.nfp_days_out }}
           NFP_CONSENSUS_K: ${{ steps.consensus.outputs.consensus_k }}
           NFP_PREDICTION_MARKET_K: ${{ steps.market.outputs.pm_value_k }}
-          MODEL_VERSION: v1-bayesian-blend
+          MODEL_VERSION: v1.1-bayesian-blend-ladder-dist
         run: python emit.py
 
       - name: Commit report + ledger row
