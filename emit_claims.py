@@ -122,13 +122,25 @@ def format_value(k: float) -> str:
     return f"{round(k)}K"
 
 
+from mae_utils import fetch_empirical_mae as _fetch_empirical_mae, build_empirical_mae_section, auto_tune_sigma
+
+
+def fetch_empirical_mae(slug_prefix: str) -> dict | None:
+    return _fetch_empirical_mae(slug_prefix, tag="emit-claims")
+
+
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    trend: float | None, used: list[str], lean: str) -> str:
+                    trend: float | None, used: list[str], lean: str,
+                    empirical_mae: dict | None = None,
+                    sigma_source: str = "prior (inverse-MAE)",
+                    prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:.0f}K'} | {MAE[name]:.0f}K |"
         for name, v in (("consensus", consensus), ("trend", trend))
     )
+    prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
+    empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp")
     return f"""# Initial Jobless Claims prediction — target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -143,7 +155,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 - 95% CI: [{round(point - 2*sigma)}K, {round(point + 2*sigma)}K]
 - Lean vs consensus: {lean}
 - Sub-models used: {', '.join(used)}
-
+{empirical_section}
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
@@ -205,6 +217,11 @@ def main() -> None:
         return
 
     point, sigma, used = blend(consensus, trend)
+    prior_sigma = sigma
+    empirical_mae = fetch_empirical_mae("claims")
+    sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
+    if sigma_source.startswith("empirical"):
+        print(f"[emit-claims] sigma auto-tuned: prior={prior_sigma:.3f}pp -> empirical={sigma:.3f}pp")
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-claims] Claims {release} T-{days_out}: {format_value(point)} "
@@ -231,7 +248,10 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, used, lean)
+                                consensus, trend, used, lean,
+                                empirical_mae=empirical_mae,
+                                sigma_source=sigma_source,
+                                prior_sigma=prior_sigma)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"claims-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
