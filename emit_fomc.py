@@ -354,7 +354,9 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     consensus: float | None, anchor: float | None,
                     used: list[str], lean: str,
                     outcome_dist: dict | None = None,
-                    empirical_mae: dict | None = None) -> str:
+                    empirical_mae: dict | None = None,
+                    sigma_source: str = "prior (inverse-MAE)",
+                    prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else format_rate(v)} | {MAE[name]:.2f} pp |"
         for name, v in (("market", market), ("consensus", consensus), ("anchor", anchor))
@@ -373,7 +375,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 **{format_rate(point)}** target fed funds rate
 
-- 68% CI: [{point - sigma:.2f}%, {point + sigma:.2f}%]
+- 68% CI: [{point - sigma:.2f}%, {point + sigma:.2f}%] · sigma source: {sigma_source}{f" (prior was {prior_sigma:.2f}pp)" if prior_sigma is not None and sigma_source.startswith("empirical") else ""}
 - 95% CI: [{point - 2*sigma:.2f}%, {point + 2*sigma:.2f}%]
 - Direction: {lean}
 - Sub-models used: {', '.join(used)}
@@ -443,9 +445,22 @@ def main() -> None:
         return
 
     point, sigma, used = blend(market, consensus, anchor)
+    prior_sigma = sigma
     lean = lean_vs_current(point, anchor)
     ladder = parse_market_ladder()
     outcome_dist = compute_outcome_distribution(point, sigma, anchor, ladder=ladder)
+
+    # Empirical MAE auto-tune: same pattern as emit_cpi. When >=5 resolved
+    # FOMC predictions exist, swap prior sigma for observed MAE so the CI
+    # reflects real accuracy. Below threshold we keep the prior.
+    empirical_mae = fetch_empirical_mae("fomc")
+    sigma_source = "prior (inverse-MAE)"
+    if empirical_mae and isinstance(empirical_mae.get("count"), int) and empirical_mae["count"] >= 5:
+        emp_val = empirical_mae.get("mae")
+        if isinstance(emp_val, (int, float)) and emp_val > 0:
+            sigma = float(emp_val)
+            sigma_source = f"empirical (n={empirical_mae['count']})"
+            print(f"[emit-fomc] sigma auto-tuned: prior={prior_sigma:.3f}pp -> empirical={sigma:.3f}pp (n={empirical_mae['count']})")
 
     print(f"[emit-fomc] FOMC {release} T-{days_out}: {format_rate(point)} "
           f"(sigma {sigma:.3f}pp, used: {', '.join(used)})")
@@ -473,11 +488,12 @@ def main() -> None:
         "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/fomc-model-card.md",
     }
 
-    empirical_mae = fetch_empirical_mae("fomc")
     report_md = build_report_md(point, sigma, release, days_out, model_version,
                                 market, consensus, anchor, used, lean,
                                 outcome_dist=outcome_dist,
-                                empirical_mae=empirical_mae)
+                                empirical_mae=empirical_mae,
+                                sigma_source=sigma_source,
+                                prior_sigma=prior_sigma)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"fomc-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)

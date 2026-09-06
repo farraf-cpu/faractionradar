@@ -370,7 +370,9 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     market: float | None, trimmed_mean: float | None,
                     trend: float | None, used: list[str], lean: str,
                     market_dist: dict | None = None,
-                    empirical_mae: dict | None = None) -> str:
+                    empirical_mae: dict | None = None,
+                    sigma_source: str = "prior (inverse-MAE)",
+                    prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f} pp |"
         for name, v in (("consensus", consensus), ("cleveland_fed", cleveland_fed),
@@ -389,7 +391,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 **{format_value(point)} m/m**
 
-- 68% CI: [{point - sigma:+.2f}%, {point + sigma:+.2f}%]
+- 68% CI: [{point - sigma:+.2f}%, {point + sigma:+.2f}%] · sigma source: {sigma_source}{f" (prior was {prior_sigma:.2f}pp)" if prior_sigma is not None and sigma_source.startswith("empirical") else ""}
 - 95% CI: [{point - 2*sigma:+.2f}%, {point + 2*sigma:+.2f}%]
 - Lean vs consensus: {lean}
 - Sub-models used: {', '.join(used)}
@@ -461,9 +463,24 @@ def main() -> None:
         return
 
     point, sigma, used = blend(consensus, cleveland_fed, market, trimmed_mean, trend)
+    prior_sigma = sigma
     lean = lean_vs_consensus(point, consensus)
     ladder = parse_market_ladder()
     market_dist = compute_market_outcome_distribution(ladder) if ladder else None
+
+    # Empirical MAE auto-tune: when >=5 resolved predictions exist, swap
+    # the inverse-variance-derived prior sigma for the observed MAE.
+    # This makes CI reflect actual historical accuracy rather than
+    # theoretical MAE priors. Prior remains recorded in the report for
+    # comparison; below threshold we keep the prior.
+    empirical_mae = fetch_empirical_mae("cpi")
+    sigma_source = "prior (inverse-MAE)"
+    if empirical_mae and isinstance(empirical_mae.get("count"), int) and empirical_mae["count"] >= 5:
+        emp_val = empirical_mae.get("mae")
+        if isinstance(emp_val, (int, float)) and emp_val > 0:
+            sigma = float(emp_val)
+            sigma_source = f"empirical (n={empirical_mae['count']})"
+            print(f"[emit-cpi] sigma auto-tuned: prior={prior_sigma:.3f}pp -> empirical={sigma:.3f}pp (n={empirical_mae['count']})")
 
     print(f"[emit-cpi] CPI {release} T-{days_out}: {format_value(point)} m/m "
           f"(sigma {sigma:.2f}pp, used: {', '.join(used)})")
@@ -494,11 +511,12 @@ def main() -> None:
         "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/cpi-model-card.md",
     }
 
-    empirical_mae = fetch_empirical_mae("cpi")
     report_md = build_report_md(point, sigma, release, days_out, model_version,
                                 consensus, cleveland_fed, market, trimmed_mean, trend, used, lean,
                                 market_dist=market_dist,
-                                empirical_mae=empirical_mae)
+                                empirical_mae=empirical_mae,
+                                sigma_source=sigma_source,
+                                prior_sigma=prior_sigma)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"cpi-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
