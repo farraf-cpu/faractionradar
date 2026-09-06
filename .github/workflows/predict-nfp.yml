@@ -92,6 +92,10 @@ jobs:
           try:
               with open("/tmp/kalshi-implied.json") as f:
                   data = json.load(f)
+              # Surface staleness reason so operators can distinguish
+              # 'kalshi feed dead' from 'no matching series yet'.
+              if data.get("stale"):
+                  print(f"::warning::kalshi snapshot is stale (fetchedAt={data.get('snapshotFetchedAt')}) — fetch-kalshi.yml may be failing")
               nfp = (data.get("implied") or {}).get("nfp")
               # Worker now normalizes: value_k is already in K units for NFP
               # (unit="jobs" with kUnitsPerRaw=1/1000 applied worker-side).

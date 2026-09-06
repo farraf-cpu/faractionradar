@@ -81,6 +81,10 @@ jobs:
           try:
               with open("/tmp/kalshi-implied.json") as f:
                   data = json.load(f)
+              # Surface staleness reason so operators can distinguish
+              # 'kalshi feed dead' from 'no matching series yet'.
+              if data.get("stale"):
+                  print(f"::warning::kalshi snapshot is stale (fetchedAt={data.get('snapshotFetchedAt')}) — fetch-kalshi.yml may be failing")
               fomc = (data.get("implied") or {}).get("fomc")
               # Worker returns value_k = rate as percent (unit="rate_%") for FOMC.
               if fomc and isinstance(fomc.get("value_k"), (int, float)) and fomc.get("unit") == "rate_%":

@@ -82,6 +82,10 @@ jobs:
           try:
               with open("/tmp/kalshi-implied.json") as f:
                   data = json.load(f)
+              # Surface staleness reason so operators can distinguish
+              # 'kalshi feed dead' from 'no matching series yet'.
+              if data.get("stale"):
+                  print(f"::warning::kalshi snapshot is stale (fetchedAt={data.get('snapshotFetchedAt')}) — fetch-kalshi.yml may be failing")
               cpi = (data.get("implied") or {}).get("cpi")
               # For CPI the worker returns value_k as the m/m %-point value
               # directly (unit="%_mom", no scaling). Guard the branch anyway
