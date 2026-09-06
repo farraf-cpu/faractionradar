@@ -270,17 +270,51 @@ def format_value(pct: float) -> str:
     return f"{pct:+.1f}%"
 
 
+def build_market_dist_table(dist: dict | None) -> str:
+    """Render the market outcome distribution as a compact markdown table."""
+    if not dist:
+        return ""
+    modal = dist.get("modal")
+    src = dist.get("source", "unknown")
+    numeric = [(k, v) for k, v in dist.items() if isinstance(v, (int, float))]
+    # Sort by parsed leading number so display is monotonic regardless of
+    # dict insertion order (defensive).
+    def _key(kv):
+        try:
+            return float(kv[0].rstrip("%"))
+        except ValueError:
+            return 0.0
+    numeric.sort(key=_key)
+    rows = []
+    for k, v in numeric:
+        marker = " **(modal)**" if k == modal else ""
+        rows.append(f"| {k} | {v*100:.1f}%{marker} |")
+    if not rows:
+        return ""
+    body = "\n".join(rows)
+    return f"""
+
+## Market outcome distribution (source: `{src}`)
+
+| CPI m/m | Probability |
+|---------|-------------|
+{body}
+"""
+
+
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
                     cleveland_fed: float | None,
                     market: float | None, trimmed_mean: float | None,
-                    trend: float | None, used: list[str], lean: str) -> str:
+                    trend: float | None, used: list[str], lean: str,
+                    market_dist: dict | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f} pp |"
         for name, v in (("consensus", consensus), ("cleveland_fed", cleveland_fed),
                         ("market", market),
                         ("trimmed_mean", trimmed_mean), ("trend", trend))
     )
+    dist_section = build_market_dist_table(market_dist)
     return f"""# CPI prediction — target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -294,7 +328,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 - 95% CI: [{point - 2*sigma:+.2f}%, {point + 2*sigma:+.2f}%]
 - Lean vs consensus: {lean}
 - Sub-models used: {', '.join(used)}
-
+{dist_section}
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
@@ -396,7 +430,8 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, cleveland_fed, market, trimmed_mean, trend, used, lean)
+                                consensus, cleveland_fed, market, trimmed_mean, trend, used, lean,
+                                market_dist=market_dist)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"cpi-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)

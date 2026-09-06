@@ -125,7 +125,35 @@ def format_grand_median(result: dict) -> dict:
     }
 
 
-def build_report_md(result: dict, release_date: str, days_out: int, model_version: str) -> str:
+def build_market_dist_section(dist: dict | None) -> str:
+    """Render the market outcome distribution over the 6 jobs-count buckets."""
+    if not dist:
+        return ""
+    modal = dist.get("modal")
+    src = dist.get("source", "unknown")
+    order = ["<=25K", "25-75K", "75-125K", "125-175K", "175-225K", "225K+"]
+    rows = []
+    for k in order:
+        v = dist.get(k)
+        if not isinstance(v, (int, float)):
+            continue
+        marker = " **(modal)**" if k == modal else ""
+        rows.append(f"| {k} | {v*100:.1f}%{marker} |")
+    if not rows:
+        return ""
+    body = "\n".join(rows)
+    return f"""
+## Market outcome distribution (source: `{src}`)
+
+| Jobs count | Probability |
+|------------|-------------|
+{body}
+
+"""
+
+
+def build_report_md(result: dict, release_date: str, days_out: int, model_version: str,
+                    market_dist: dict | None = None) -> str:
     b = result["blended"]
     r = result["blended_rmse"]
     pm_note = " (stale, see caveat)" if result.get("pred_markets_stale") else ""
@@ -139,6 +167,7 @@ def build_report_md(result: dict, release_date: str, days_out: int, model_versio
             " consensus + first-print model output. The markets weight will"
             " refresh once real ticker mapping lands.\n"
         )
+    dist_section = build_market_dist_section(market_dist)
     return f"""# NFP prediction — target {release_date} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -151,8 +180,7 @@ def build_report_md(result: dict, release_date: str, days_out: int, model_versio
 - 68% CI: [{b-r:+.0f}, {b+r:+.0f}] K
 - 95% CI: [{b-2*r:+.0f}, {b+2*r:+.0f}] K
 - Lean vs consensus: {result['lean']}
-{caveat_section}
-## Sub-model breakdown
+{caveat_section}{dist_section}## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
@@ -210,6 +238,7 @@ def main() -> None:
 
     our_call = format_our_call(result, release_date, model_version)
     ladder = parse_market_ladder()
+    market_dist: dict | None = None
     if ladder:
         market_dist = compute_market_outcome_distribution(ladder)
         our_call["outcomeDistribution"] = market_dist
@@ -231,7 +260,8 @@ def main() -> None:
             " ticker verification (Phase 1.5). Consensus is live from ForexFactory."
         )
 
-    report_md = build_report_md(result, release_date, days_out, model_version)
+    report_md = build_report_md(result, release_date, days_out, model_version,
+                                market_dist=market_dist)
     year_month = release_date[:7]
     report_path = ROOT / "reports" / year_month / f"nfp-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)

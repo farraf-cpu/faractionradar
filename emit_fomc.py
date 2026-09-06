@@ -243,14 +243,53 @@ def lean_vs_current(point: float, anchor: float | None) -> str:
     return f"{delta_bp:+d}bp move vs current expected"
 
 
+def build_outcome_dist_table(dist: dict | None) -> str:
+    """Render the outcome distribution as a compact markdown table.
+    Returns empty string when the distribution is missing so callers
+    can concatenate unconditionally."""
+    if not dist:
+        return ""
+    labels = {
+        "hike50": "+50bp hike",
+        "hike25": "+25bp hike",
+        "hold":   "hold",
+        "cut25":  "-25bp cut",
+        "cut50":  "-50bp cut",
+        "cut75_plus": "-75bp or deeper",
+    }
+    order = ["hike50", "hike25", "hold", "cut25", "cut50", "cut75_plus"]
+    modal = dist.get("modal")
+    src = dist.get("source", "unknown")
+    rows = []
+    for k in order:
+        v = dist.get(k)
+        if not isinstance(v, (int, float)):
+            continue
+        marker = " **(modal)**" if k == modal else ""
+        rows.append(f"| {labels[k]} | {v*100:.1f}%{marker} |")
+    if not rows:
+        return ""
+    body = "\n".join(rows)
+    return f"""
+
+## Outcome distribution (source: `{src}`)
+
+| Outcome | Probability |
+|---------|-------------|
+{body}
+"""
+
+
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, market: float | None,
                     consensus: float | None, anchor: float | None,
-                    used: list[str], lean: str) -> str:
+                    used: list[str], lean: str,
+                    outcome_dist: dict | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else format_rate(v)} | {MAE[name]:.2f} pp |"
         for name, v in (("market", market), ("consensus", consensus), ("anchor", anchor))
     )
+    dist_section = build_outcome_dist_table(outcome_dist)
     return f"""# FOMC prediction — target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -264,7 +303,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 - 95% CI: [{point - 2*sigma:.2f}%, {point + 2*sigma:.2f}%]
 - Direction: {lean}
 - Sub-models used: {', '.join(used)}
-
+{dist_section}
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
@@ -361,7 +400,8 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                market, consensus, anchor, used, lean)
+                                market, consensus, anchor, used, lean,
+                                outcome_dist=outcome_dist)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"fomc-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
