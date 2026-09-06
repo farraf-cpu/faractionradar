@@ -156,6 +156,73 @@ def fetch_fred_trimmed_mean(api_key: str) -> float | None:
         return None
 
 
+def parse_market_ladder() -> list[tuple[float, float]] | None:
+    """CPI_MARKET_LADDER = JSON list of {threshold, probability} rungs
+    representing P(cpi_mm >= threshold) from Kalshi's KXCPI series.
+    Returns sorted (threshold_asc) tuples, or None if unset/malformed."""
+    raw = os.environ.get("CPI_MARKET_LADDER")
+    if not raw:
+        return None
+    try:
+        arr = json.loads(raw)
+    except Exception as e:
+        print(f"[emit-cpi] CPI_MARKET_LADDER parse failed: {e}", file=sys.stderr)
+        return None
+    rungs: list[tuple[float, float]] = []
+    for r in arr if isinstance(arr, list) else []:
+        try:
+            t = float(r["threshold"])
+            p = float(r["probability"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if 0.0 <= p <= 1.0:
+            rungs.append((t, p))
+    if len(rungs) < 2:
+        return None
+    rungs.sort(key=lambda x: x[0])
+    return rungs
+
+
+def survival_from_ladder(x: float, rungs: list[tuple[float, float]]) -> float:
+    """P(cpi_mm > x) via step-below function over discrete ladder rungs.
+    Same shape as emit_fomc.survival_from_ladder — Kalshi lists rungs at
+    Bloomberg-consensus granularity (0.1pp for CPI m/m)."""
+    for t, p in rungs:
+        if x < t:
+            return p
+    return 0.0
+
+
+def compute_market_outcome_distribution(ladder: list[tuple[float, float]]
+                                        ) -> dict:
+    """Discretize the Kalshi ladder into per-bucket probabilities at 0.1pp
+    granularity across a fixed CPI m/m range (-0.2% to +0.7%, plus tails).
+    Buckets are labeled by their level so renderers don't need extra
+    metadata. Renormalized to sum 1."""
+    # Bucket levels centered on Bloomberg-typical CPI m/m outcomes.
+    # Edges are +/- 0.05pp around each level (half of 0.1pp grid).
+    levels = [-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    dist: dict = {}
+    for i, lvl in enumerate(levels):
+        if i == 0:
+            p = 1.0 - survival_from_ladder(lvl + 0.05, ladder)
+        elif i == len(levels) - 1:
+            p = survival_from_ladder(lvl - 0.05, ladder)
+        else:
+            p = (survival_from_ladder(lvl - 0.05, ladder)
+                 - survival_from_ladder(lvl + 0.05, ladder))
+        key = f"{lvl:+.1f}%" if lvl != 0 else "0.0%"
+        dist[key] = round(max(0.0, min(1.0, p)), 3)
+    total = sum(dist.values())
+    if total > 0:
+        for k in dist:
+            dist[k] = round(dist[k] / total, 3)
+    modal = max(dist.items(), key=lambda x: x[1])[0]
+    dist["modal"] = modal
+    dist["source"] = "kalshi-ladder"
+    return dist
+
+
 def blend(consensus: float | None,
           cleveland_fed: float | None,
           market: float | None,
@@ -296,9 +363,13 @@ def main() -> None:
 
     point, sigma, used = blend(consensus, cleveland_fed, market, trimmed_mean, trend)
     lean = lean_vs_consensus(point, consensus)
+    ladder = parse_market_ladder()
+    market_dist = compute_market_outcome_distribution(ladder) if ladder else None
 
     print(f"[emit-cpi] CPI {release} T-{days_out}: {format_value(point)} m/m "
           f"(sigma {sigma:.2f}pp, used: {', '.join(used)})")
+    if market_dist:
+        print(f"  kalshi ladder outcome dist: {market_dist}")
     if consensus     is not None: print(f"  consensus:      {consensus:+.2f}%")
     if cleveland_fed is not None: print(f"  cleveland_fed:  {cleveland_fed:+.2f}%")
     if market        is not None: print(f"  market:         {market:+.2f}%")
@@ -318,6 +389,7 @@ def main() -> None:
             "ci95": [round(point - 2 * sigma, 2), round(point + 2 * sigma, 2)],
             "publishedAt": datetime.now(timezone.utc).isoformat(),
             "model_version": model_version,
+            **({"outcomeDistribution": market_dist} if market_dist else {}),
         },
         "grandMedian": None,
         "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/cpi-model-card.md",

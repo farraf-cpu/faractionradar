@@ -92,6 +92,17 @@ jobs:
                   with open(os.environ["GITHUB_OUTPUT"], "a") as f:
                       f.write(f"pm_value_pct={v}\n")
                       f.write("pm_available=true\n")
+                  ladder = cpi.get("ladder")
+                  if isinstance(ladder, list) and len(ladder) >= 2:
+                      ladder_json = json.dumps([
+                          {"threshold": float(r["threshold"]), "probability": float(r["probability"])}
+                          for r in ladder if "threshold" in r and "probability" in r
+                      ], separators=(",", ":"))
+                      print(f"kalshi ladder: {len(ladder)} rungs")
+                      with open(os.environ["GITHUB_ENV"], "a") as f:
+                          f.write(f"CPI_MARKET_LADDER={ladder_json}\n")
+                  else:
+                      print("kalshi ladder missing/short — outcome distribution will be omitted")
               else:
                   print("kalshi implied CPI not available — will proceed without market input")
                   with open(os.environ["GITHUB_OUTPUT"], "a") as f:
@@ -178,7 +189,7 @@ jobs:
           CPI_DAYS_OUT: ${{ needs.gate.outputs.cpi_days_out }}
           CPI_CONSENSUS_PCT: ${{ steps.consensus.outputs.consensus_pct }}
           CPI_MARKET_PCT: ${{ steps.market.outputs.pm_value_pct }}
-          MODEL_VERSION: v1.2-simple-blend
+          MODEL_VERSION: v1.3-kalshi-ladder-dist
         run: python emit_cpi.py
 
       - name: Commit report + ledger row

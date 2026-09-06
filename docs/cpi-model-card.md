@@ -1,6 +1,6 @@
 # CPI Predictor — Model Card
 
-**Model version:** `v1.2-simple-blend`
+**Model version:** `v1.3-kalshi-ladder-dist`
 **Event:** US Consumer Price Index headline m/m (monthly, mid-month, 08:30 ET)
 **Status:** Live — cadence T-7, T-4, T-3, T-2, T-1 + T-0 release-day refresh via `predict-cpi.yml`
 
@@ -65,6 +65,12 @@ FF consensus at 0.08pp).
 
 ## Change log
 
+- **v1.3-kalshi-ladder-dist (2026-09-06)** — publishes a
+  `outcomeDistribution` field derived directly from the Kalshi KXCPI
+  contract ladder (buckets at 0.1pp granularity from -0.1% to +0.5%,
+  step-below survival function over discrete rungs, renormalized).
+  Point estimate blend is unchanged; the distribution is an additional
+  output for renderers.
 - **v1.2-simple-blend (2026-09-04)** — added Cleveland Fed inflation
   nowcast as 5th sub-model (0.06pp MAE, tightest in blend). Live during
   CPI cycle, soft-skips during PCE cycle.
