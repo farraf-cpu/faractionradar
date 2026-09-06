@@ -148,6 +148,44 @@ def test_empirical_mae_section_empty_when_no_data():
     assert emit_cpi.build_empirical_mae_section({}, "0.08 pp") == ""
 
 
+def test_rate_outcome_distribution_25bp_default():
+    """25bp buckets: default variant used by 22 of 25 rate-decision predictors."""
+    from mae_utils import compute_rate_outcome_distribution
+    # Sharp posterior centered on anchor -> hold ~= 1.0
+    d = compute_rate_outcome_distribution(4.25, 0.01, anchor=4.25, bucket_bp=25)
+    assert d["modal"] == "hold"
+    assert d["hold"] > 0.99
+    # Wider posterior -> mass spreads to adjacent buckets
+    d = compute_rate_outcome_distribution(4.25, 0.15, anchor=4.25, bucket_bp=25)
+    assert d["modal"] == "hold"
+    assert 0.4 < d["hold"] < 0.8
+    assert d["hike25"] > 0.05 and d["cut25"] > 0.05
+
+
+def test_rate_outcome_distribution_50bp_bcb():
+    """BCB uses 50bp buckets — Selic typical move size."""
+    from mae_utils import compute_rate_outcome_distribution
+    # Point 50bp above anchor with narrow sigma -> hike25 modal (hike25 = anchor + 50bp @ 50bp step)
+    d = compute_rate_outcome_distribution(15.5, 0.05, anchor=15.0, bucket_bp=50)
+    assert d["modal"] == "hike25"
+
+
+def test_rate_outcome_distribution_100bp_cbrt():
+    """CBRT uses 100bp buckets — high-vol EM rate typical move."""
+    from mae_utils import compute_rate_outcome_distribution
+    # Point 200bp above anchor -> hike50 modal (hike50 = anchor + 200bp @ 100bp step)
+    d = compute_rate_outcome_distribution(40.0, 0.3, anchor=38.0, bucket_bp=100)
+    assert d["modal"] == "hike50"
+
+
+def test_rate_outcome_distribution_no_anchor():
+    """Missing anchor returns a note instead of a distribution."""
+    from mae_utils import compute_rate_outcome_distribution
+    d = compute_rate_outcome_distribution(4.25, 0.05, anchor=None)
+    assert "note" in d
+    assert "modal" not in d
+
+
 def test_sigma_autotune_threshold_gates_switch():
     """The N>=5 threshold rule from emit_cpi / emit_fomc / emit — under
     threshold the prior sigma stays, at/above it the empirical takes
@@ -180,6 +218,10 @@ if __name__ == "__main__":
         test_malformed_ladder_returns_none,
         test_empirical_mae_section_renders_for_zero_and_populated,
         test_empirical_mae_section_empty_when_no_data,
+        test_rate_outcome_distribution_25bp_default,
+        test_rate_outcome_distribution_50bp_bcb,
+        test_rate_outcome_distribution_100bp_cbrt,
+        test_rate_outcome_distribution_no_anchor,
         test_sigma_autotune_threshold_gates_switch,
     ]
     failed = 0
