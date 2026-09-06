@@ -110,7 +110,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
         for name, v in (("consensus", consensus), ("anchor", anchor))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
-    empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f}")
+    empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pts", unit="pts")
     return f"""# ISM Services PMI prediction — target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -121,7 +121,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 **{format_value(point)}** (diffusion index; 50 = expansion threshold)
 
 - Regime: {regime_annotation(point)}
-- 68% CI: [{point - sigma:.1f}, {point + sigma:.1f}] · sigma source: {sigma_source}{f" (prior was {prior_sigma:.2f})" if prior_sigma is not None and sigma_source.startswith("empirical") else ""}
+- 68% CI: [{point - sigma:.1f}, {point + sigma:.1f}] · sigma source: {sigma_source}{f" (prior was {prior_sigma:.2f} pts)" if prior_sigma is not None and sigma_source.startswith("empirical") else ""}
 - 95% CI: [{point - 2*sigma:.1f}, {point + 2*sigma:.1f}]
 - Lean vs consensus: {lean}
 - Sub-models used: {', '.join(used)}

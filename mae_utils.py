@@ -76,7 +76,7 @@ def build_empirical_mae_section(
 | Prior MAE claim | {prior_mae_str} |
 | Resolved predictions | 0 ({first_release_hint}) |
 | Empirical MAE | — |
-| Hit rate vs consensus | — |
+| Hit rate (ourCall closest) | — |
 
 Empirical MAE + hit-rate auto-populate as predictions resolve. Once
 count >= {threshold} the CI sigma will switch from the prior to the
@@ -98,7 +98,7 @@ empirical value.
 | Prior MAE claim | {prior_mae_str} |
 | Resolved predictions | {count} |
 | Empirical MAE | {empirical_mae_str} |
-| Hit rate vs consensus | {hit_pct} ({hits}/{count}) |
+| Hit rate (ourCall closest) | {hit_pct} ({hits}/{count}) |
 """
 
 

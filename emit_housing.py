@@ -140,7 +140,9 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
         for name, v in (("consensus", consensus), ("trend", trend))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
-    empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp")
+    # Housing MAE dict stores values in M-units (0.04 = 40K/month). Convert
+    # to K for display so both prior + empirical read on the same scale.
+    empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used*1000:.0f} K", unit="K")
     return f"""# Housing Starts prediction — target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -151,7 +153,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 **{format_value(point)}** annualized starts (SA)
 
 - Regime: {regime_annotation(point)}
-- 68% CI: [{point - sigma:.2f}M, {point + sigma:.2f}M]
+- 68% CI: [{point - sigma:.2f}M, {point + sigma:.2f}M] · sigma source: {sigma_source}{f" (prior was {prior_sigma:.1f}K)" if prior_sigma is not None and sigma_source.startswith("empirical") else ""}
 - 95% CI: [{point - 2*sigma:.2f}M, {point + 2*sigma:.2f}M]
 - Lean vs consensus: {lean}
 - Sub-models used: {', '.join(used)}
