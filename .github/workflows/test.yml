@@ -37,3 +37,5 @@ jobs:
         run: python tests/test_all_emitters_have_mae.py
       - name: Fleet consistency (cards + workflows + gates)
         run: python tests/test_fleet_consistency.py
+      - name: All emitters render (smoke build_report_md)
+        run: python tests/test_all_emitters_render.py
