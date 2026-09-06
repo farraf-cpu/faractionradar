@@ -1,4 +1,4 @@
-"""GDP Advance predictor + emitter. `v1-simple-blend`.
+"""GDP Advance predictor + emitter. `v1.1-simple-blend`.
 
 GDP Advance is the first estimate of quarterly GDP growth, released by BEA
 ~30 days after quarter-end (e.g. Q3 2026 GDP Advance releases late Oct 2026).
@@ -6,12 +6,14 @@ Value format: %-change SAAR (seasonally adjusted annualized rate), e.g. `+2.5%`.
 
 Sub-models:
   - Bloomberg / FF consensus (~0.3pp historical MAE on Advance q/q SAAR)
+  - Atlanta Fed GDPNow via FRED GDPNOW (~0.35pp MAE close to release —
+    gold-standard nowcast; updates ~3 days as component data prints)
   - FRED GDP 4-quarter trend (~0.5pp — mean of last 4 published q/q SAAR
     values; captures secular growth pace but slow to recognize turns)
 
-Phase 2 target: Atlanta Fed GDPNow (published every ~3 days from ~1 month
-before release; MAE ~0.3-0.4pp when read close to release). GDPNow is the
-gold-standard nowcast — Phase 2 wires it via Atlanta Fed's public JSON.
+GDPNow soft-skips when FRED returns no fresh observation for the current
+quarter (typical between quarters). Blend degrades gracefully to
+consensus + trend when GDPNow absent.
 
 Env: FRED_API_KEY, UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      GDP_RELEASE_DATE, GDP_DAYS_OUT, GDP_CONSENSUS_PCT, MODEL_VERSION
@@ -52,6 +54,7 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 # MAE in percentage points on the annualized rate.
 MAE = {
     "consensus": 0.3,
+    "gdpnow":    0.35,  # Atlanta Fed nowcast final-week MAE (industry-reported)
     "trend":     0.5,
 }
 
@@ -84,11 +87,31 @@ def fetch_fred_gdp_trend(api_key: str) -> float | None:
     return sum(vals) / len(vals)
 
 
+def fetch_atlanta_gdpnow(api_key: str) -> float | None:
+    """Latest Atlanta Fed GDPNow nowcast for the current-quarter (via FRED
+    series GDPNOW). Returns the most recent non-empty value; None if the
+    latest observation is empty (typical when a new quarter just started
+    and the Atlanta Fed hasn't published the first tracker for it yet)."""
+    obs = _fetch_fred_observations(api_key, "GDPNOW", 1)
+    if not obs:
+        return None
+    v = obs[0].get("value")
+    if not v or v == ".":
+        return None
+    try:
+        return float(v)
+    except (ValueError, TypeError):
+        return None
+
+
 def blend(consensus: float | None,
+          gdpnow: float | None,
           trend: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
+    if gdpnow is not None:
+        parts.append(("gdpnow", gdpnow, MAE["gdpnow"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
     if not parts:
@@ -130,13 +153,14 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
+                    gdpnow: float | None,
                     trend: float | None, used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
                     prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
-        f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.1f} pp |"
-        for name, v in (("consensus", consensus), ("trend", trend))
+        f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f} pp |"
+        for name, v in (("consensus", consensus), ("gdpnow", gdpnow), ("trend", trend))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp")
@@ -163,24 +187,18 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: inverse-MAE-weighted mean of consensus (~0.3pp MAE) +
-FRED A191RL1Q225SBEA 4-quarter trend (~0.5pp MAE). Quarterly cadence means
-only 4 releases per year — every prediction is high-stakes for the
-public track record.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of consensus (~0.3pp MAE) +
+Atlanta Fed GDPNow via FRED GDPNOW (~0.35pp MAE — gold-standard nowcast,
+updates ~3 days as component data prints) + FRED A191RL1Q225SBEA
+4-quarter trend (~0.5pp MAE). Quarterly cadence — only 4 releases per year
+so every prediction is high-stakes for the public track record. GDPNow
+soft-skips when FRED returns no fresh current-quarter observation (typical
+between quarter-end and Atlanta Fed's first tracker for the new quarter).
 
-## Why simple v1
-
-Atlanta Fed GDPNow is the gold-standard leading indicator (~0.3-0.4pp MAE
-in the final week before release). Phase 2 target adds it as a 3rd sub-model
-via Atlanta Fed's public JSON. Their tracker updates ~3 days as new
-component data (Retail, Housing, ISM, Trade, etc.) prints — folding it in
-would tighten our blend materially, but v1 ships without it to prove the
-pipeline first.
-
-Other Phase 2 candidates:
+## Phase 2 candidates
 - **NY Fed Nowcasting Report** (weekly) — independent 2nd nowcast for cross-check
 - **BEA Advance vs Second Estimate revision history** — quantify how much
-  Advance typically gets revised, and by how much, for CI calibration
+  Advance typically gets revised for CI calibration
 """
 
 
@@ -190,17 +208,18 @@ def main() -> None:
 
     release = os.environ["GDP_RELEASE_DATE"]
     days_out = int(os.environ["GDP_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
 
     consensus = parse_pct("GDP_CONSENSUS_PCT")
     fred_key = os.environ.get("FRED_API_KEY")
     trend = fetch_fred_gdp_trend(fred_key) if fred_key else None
+    gdpnow = fetch_atlanta_gdpnow(fred_key) if fred_key else None
 
-    if consensus is None and trend is None:
+    if consensus is None and trend is None and gdpnow is None:
         print("[emit-gdp] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, trend)
+    point, sigma, used = blend(consensus, gdpnow, trend)
     prior_sigma = sigma
     empirical_mae = fetch_empirical_mae("gdp")
     sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
@@ -211,6 +230,7 @@ def main() -> None:
     print(f"[emit-gdp] GDP Adv {release} T-{days_out}: {format_value(point)} SAAR "
           f"(sigma {sigma:.2f}pp, {regime_annotation(point)}, used: {', '.join(used)})")
     if consensus is not None: print(f"  consensus:  {consensus:+.2f}%")
+    if gdpnow    is not None: print(f"  gdpnow:     {gdpnow:+.2f}%")
     if trend     is not None: print(f"  trend(4Q):  {trend:+.2f}%")
 
     prediction = {
@@ -232,7 +252,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, used, lean,
+                                consensus, gdpnow, trend, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
                                 prior_sigma=prior_sigma)
