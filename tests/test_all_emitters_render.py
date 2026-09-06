@@ -46,9 +46,27 @@ def build_fake_args(fn) -> list:
     return args
 
 
+def smoke_nfp_orchestrator() -> tuple[bool, str]:
+    """emit.py (NFP) takes a result dict, not the standard positional args."""
+    try:
+        import emit
+        result = {
+            "blended": 165.0, "blended_rmse": 45.0, "pred_markets_stale": False,
+            "consensus": 170.0, "pred_markets": 160.0, "ml_ensemble": 165.0,
+            "first_print_ensemble": 155.0, "bridge_median": 168.0,
+            "sector_pred": 170.0, "grand_median": 165.0, "lean": "in line",
+        }
+        md = emit.build_report_md(result, "2026-10-02", 4, "v1-test")
+        if not isinstance(md, str) or len(md) < 100:
+            return False, "output too short or wrong type"
+        return True, "ok"
+    except Exception as e:
+        return False, f"{type(e).__name__}: {e}"
+
+
 def main() -> int:
     emitters = sorted(glob.glob(str(ROOT / "emit_*.py")))
-    print(f"rendering {len(emitters)} emitters...")
+    print(f"rendering {len(emitters)} emitters + 1 orchestrator (emit.py)...")
     failed: list[str] = []
     for path in emitters:
         name = Path(path).stem
@@ -61,14 +79,21 @@ def main() -> int:
                 failed.append(f"{name}: output too short or wrong type")
         except Exception as e:
             failed.append(f"{name}: {type(e).__name__}: {e}")
+
+    # NFP orchestrator has a different signature — smoke it separately.
+    ok, reason = smoke_nfp_orchestrator()
+    if not ok:
+        failed.append(f"emit (NFP): {reason}")
+
+    total = len(emitters) + 1
     if failed:
         for f in failed[:20]:
             print(f"FAIL {f}")
         if len(failed) > 20:
             print(f"...+{len(failed)-20} more")
-        print(f"{len(failed)}/{len(emitters)} failures")
+        print(f"{len(failed)}/{total} failures")
         return 1
-    print(f"{len(emitters)}/{len(emitters)} render clean")
+    print(f"{total}/{total} render clean")
     return 0
 
 
