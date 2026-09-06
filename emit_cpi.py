@@ -477,6 +477,15 @@ def main() -> None:
         "grandMedian": None,
         "reportPath": str(report_path.relative_to(ROOT)),
     }
+    if isinstance(market_dist, dict):
+        modal = market_dist.get("modal")
+        source = market_dist.get("source")
+        if modal:
+            ledger_row["modalOutcome"] = modal
+        if source:
+            ledger_row["outcomeSource"] = source
+    if sigma_source.startswith("empirical"):
+        ledger_row["sigmaSource"] = sigma_source
     append_ledger(ledger_row)
     print(f"[emit-cpi] appended predictions.jsonl")
 
