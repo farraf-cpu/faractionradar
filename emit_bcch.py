@@ -146,7 +146,7 @@ def compute_outcome_distribution(point: float, sigma: float,
     return dist
 
 
-from mae_utils import fetch_empirical_mae as _fetch_empirical_mae, build_empirical_mae_section, auto_tune_sigma
+from mae_utils import fetch_empirical_mae as _fetch_empirical_mae, build_empirical_mae_section, auto_tune_sigma, build_rate_outcome_dist_table
 
 
 def fetch_empirical_mae(slug_prefix: str) -> dict | None:
@@ -158,13 +158,15 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     anchor: float | None, used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
-                    prior_sigma: float | None = None) -> str:
+                    prior_sigma: float | None = None,
+                    outcome_dist: dict | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'-' if v is None else f'{v:.2f}%'} | {MAE[name]:.2f}pp |"
         for name, v in (("consensus", consensus), ("anchor", anchor))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp", unit="pp")
+    dist_section = build_rate_outcome_dist_table(outcome_dist)
     return f"""# BCCH Policy Rate prediction - target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -178,7 +180,7 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 - 95% CI: [{point - 2*sigma:.2f}%, {point + 2*sigma:.2f}%]
 - Lean vs anchor: {lean}
 - Sub-models used: {', '.join(used)}
-{empirical_section}
+{dist_section}{empirical_section}
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
@@ -288,7 +290,8 @@ def main() -> None:
                                 consensus, anchor, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
-                                prior_sigma=prior_sigma)
+                                prior_sigma=prior_sigma,
+                                outcome_dist=outcome_dist)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"bcch-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)

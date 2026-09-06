@@ -106,6 +106,47 @@ empirical value.
 """
 
 
+RATE_OUTCOME_LABELS = {
+    "hike50": "+50bp hike",
+    "hike25": "+25bp hike",
+    "hold":   "hold",
+    "cut25":  "-25bp cut",
+    "cut50":  "-50bp cut",
+    "cut75_plus": "-75bp or deeper",
+}
+_RATE_OUTCOME_ORDER = ["hike50", "hike25", "hold", "cut25", "cut50", "cut75_plus"]
+
+
+def build_rate_outcome_dist_table(dist: dict | None) -> str:
+    """Compact markdown section for a rate-decision outcome distribution.
+    Returns empty string when the distribution is missing so callers can
+    concatenate unconditionally. Shared by every rate-decision emitter
+    (fomc has its own copy that predates this helper)."""
+    if not dist or not isinstance(dist, dict):
+        return ""
+    modal = dist.get("modal")
+    src = dist.get("source", "unknown")
+    rows: list[str] = []
+    for k in _RATE_OUTCOME_ORDER:
+        v = dist.get(k)
+        if not isinstance(v, (int, float)):
+            continue
+        marker = " **(modal)**" if k == modal else ""
+        rows.append(f"| {RATE_OUTCOME_LABELS.get(k, k)} | {v*100:.1f}%{marker} |")
+    if not rows:
+        return ""
+    body = "\n".join(rows)
+    return f"""
+
+## Outcome distribution (source: `{src}`)
+
+| Outcome | Probability |
+|---------|-------------|
+{body}
+
+"""
+
+
 def auto_tune_sigma(
     prior_sigma: float,
     obs: dict | None,
