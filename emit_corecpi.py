@@ -184,15 +184,27 @@ def format_value(v: float) -> str:
     return f"{v:+.1f}%"
 
 
+from mae_utils import fetch_empirical_mae as _fetch_empirical_mae, build_empirical_mae_section, auto_tune_sigma
+
+
+def fetch_empirical_mae(slug_prefix: str) -> dict | None:
+    return _fetch_empirical_mae(slug_prefix, tag="emit-corecpi")
+
+
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
                     cleveland_fed: float | None,
                     trimmed_mean: float | None,
-                    trend: float | None, used: list[str], lean: str) -> str:
+                    trend: float | None, used: list[str], lean: str,
+                    empirical_mae: dict | None = None,
+                    sigma_source: str = "prior (inverse-MAE)",
+                    prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'-' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f}pp |"
         for name, v in (("consensus", consensus), ("cleveland_fed", cleveland_fed), ("trimmed_mean", trimmed_mean), ("trend", trend))
     )
+    prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
+    empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp", unit="pp")
     return f"""# Core CPI prediction — target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -203,11 +215,11 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 **{format_value(point)}** m/m Core CPI (ex food + energy)
 
 - Regime: {regime_annotation(point)}
-- 68% CI: [{point - sigma:+.2f}%, {point + sigma:+.2f}%]
+- 68% CI: [{point - sigma:+.2f}%, {point + sigma:+.2f}%] · sigma source: {sigma_source}{f" (prior was {prior_sigma:.2f} pp)" if prior_sigma is not None and sigma_source.startswith("empirical") else ""}
 - 95% CI: [{point - 2*sigma:+.2f}%, {point + 2*sigma:+.2f}%]
 - Lean vs consensus: {lean}
 - Sub-models used: {', '.join(used)}
-
+{empirical_section}
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
