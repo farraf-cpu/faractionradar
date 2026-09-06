@@ -93,6 +93,18 @@ def main() -> int:
         if t not in ci:
             failed.append(f"ci/test.yml doesn't reference {t}")
 
+    # 6. Every predict-*.yml has:
+    # - a concurrency block (prevents overlapping runs during 5-run cadence)
+    # - a git pull --rebase retry after failed push (worker upload storms
+    #   sometimes race the ledger commit; retry unblocks)
+    # Codifies invariants that prevent flaky deploys.
+    for wf in sorted(wf_dir.glob("predict-*.yml")):
+        text = wf.read_text(encoding="utf-8")
+        if "\nconcurrency:" not in text:
+            failed.append(f"{wf.name}: missing concurrency block")
+        if "git pull --rebase" not in text:
+            failed.append(f"{wf.name}: missing git pull --rebase retry")
+
     if failed:
         for f in failed:
             print(f"FAIL {f}")
