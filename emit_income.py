@@ -272,6 +272,8 @@ def main() -> None:
         "grandMedian": None,
         "reportPath": str(report_path.relative_to(ROOT)),
     }
+    if sigma_source.startswith("empirical"):
+        ledger_row["sigmaSource"] = sigma_source
     append_ledger(ledger_row)
     print(f"[emit-income] appended predictions.jsonl")
 
