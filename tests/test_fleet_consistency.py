@@ -65,12 +65,23 @@ def main() -> int:
         if not gate.exists():
             failed.append(f"{e.name}: no gate script ({gate.name})")
 
+    # 4. Every workflow uses .python-version instead of hardcoded version.
+    # (Consistency guard added after fetch-kalshi.yml drifted to '3.13'.)
+    wf_dir = ROOT / ".github" / "workflows"
+    for wf in sorted(wf_dir.glob("*.yml")):
+        text = wf.read_text(encoding="utf-8")
+        # Skip files that don't set up Python at all
+        if "actions/setup-python" not in text:
+            continue
+        if "python-version-file" not in text:
+            failed.append(f"{wf.name}: sets up python without .python-version file")
+
     if failed:
         for f in failed:
             print(f"FAIL {f}")
-        print(f"{len(failed)} failures / {len(emitters)} emitters checked")
+        print(f"{len(failed)} failures / {len(emitters)} emitters + workflows checked")
         return 1
-    print(f"{len(emitters)}/{len(emitters)} pass — fleet naming consistent")
+    print(f"{len(emitters)}/{len(emitters)} pass — fleet naming + python-version consistent")
     return 0
 
 
