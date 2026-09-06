@@ -160,6 +160,8 @@ from mae_utils import (
     fetch_empirical_mae as _fetch_empirical_mae,
     build_empirical_mae_section,
     auto_tune_sigma,
+    parse_market_ladder_env,
+    survival_from_ladder as _shared_survival,
 )
 
 
@@ -170,40 +172,11 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 
 def parse_market_ladder() -> list[tuple[float, float]] | None:
-    """CPI_MARKET_LADDER = JSON list of {threshold, probability} rungs
-    representing P(cpi_mm >= threshold) from Kalshi's KXCPI series.
-    Returns sorted (threshold_asc) tuples, or None if unset/malformed."""
-    raw = os.environ.get("CPI_MARKET_LADDER")
-    if not raw:
-        return None
-    try:
-        arr = json.loads(raw)
-    except Exception as e:
-        print(f"[emit-cpi] CPI_MARKET_LADDER parse failed: {e}", file=sys.stderr)
-        return None
-    rungs: list[tuple[float, float]] = []
-    for r in arr if isinstance(arr, list) else []:
-        try:
-            t = float(r["threshold"])
-            p = float(r["probability"])
-        except (KeyError, TypeError, ValueError):
-            continue
-        if 0.0 <= p <= 1.0:
-            rungs.append((t, p))
-    if len(rungs) < 2:
-        return None
-    rungs.sort(key=lambda x: x[0])
-    return rungs
+    return parse_market_ladder_env("CPI_MARKET_LADDER", tag="emit-cpi")
 
 
 def survival_from_ladder(x: float, rungs: list[tuple[float, float]]) -> float:
-    """P(cpi_mm > x) via step-below function over discrete ladder rungs.
-    Same shape as emit_fomc.survival_from_ladder — Kalshi lists rungs at
-    Bloomberg-consensus granularity (0.1pp for CPI m/m)."""
-    for t, p in rungs:
-        if x < t:
-            return p
-    return 0.0
+    return _shared_survival(x, rungs)
 
 
 def compute_market_outcome_distribution(ladder: list[tuple[float, float]]

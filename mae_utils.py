@@ -106,7 +106,47 @@ empirical value.
 """
 
 
+import json
 import math
+
+
+def parse_market_ladder_env(env_var: str, tag: str = "emit") -> list[tuple[float, float]] | None:
+    """Parse a JSON list of {threshold, probability} rungs from an env var
+    (FOMC_MARKET_LADDER, CPI_MARKET_LADDER, NFP_MARKET_LADDER). Returns
+    sorted (threshold_asc) tuples with valid probabilities in [0, 1], or
+    None if unset/malformed/under 2 rungs."""
+    raw = os.environ.get(env_var)
+    if not raw:
+        return None
+    try:
+        arr = json.loads(raw)
+    except Exception as e:
+        print(f"[{tag}] {env_var} parse failed: {e}", file=sys.stderr)
+        return None
+    rungs: list[tuple[float, float]] = []
+    for r in arr if isinstance(arr, list) else []:
+        try:
+            t = float(r["threshold"])
+            p = float(r["probability"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if 0.0 <= p <= 1.0:
+            rungs.append((t, p))
+    if len(rungs) < 2:
+        return None
+    rungs.sort(key=lambda x: x[0])
+    return rungs
+
+
+def survival_from_ladder(x: float, rungs: list[tuple[float, float]]) -> float:
+    """P(actual > x) via step-below function over discrete ladder rungs.
+    Rungs are sorted (threshold_asc, P(actual >= threshold)). At x below
+    the lowest rung, returns the highest probability (P >= lowest); at or
+    above the top rung, returns 0."""
+    for t, p in rungs:
+        if x < t:
+            return p
+    return 0.0
 
 
 def _normal_cdf(x: float, mu: float, sigma: float) -> float:

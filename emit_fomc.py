@@ -110,65 +110,27 @@ def format_rate(pct: float) -> str:
     return f"{pct:.2f}%"
 
 
-def normal_cdf(x: float, mu: float, sigma: float) -> float:
-    """Cumulative distribution function of normal distribution. Pure Python
-    (no scipy dep needed) using math.erf."""
-    if sigma <= 0:
-        return 1.0 if x >= mu else 0.0
-    return 0.5 * (1.0 + math.erf((x - mu) / (sigma * math.sqrt(2))))
-
-
 from mae_utils import (
     fetch_empirical_mae as _fetch_empirical_mae,
     build_empirical_mae_section,
     auto_tune_sigma,
     compute_rate_outcome_distribution,
+    parse_market_ladder_env,
+    survival_from_ladder as _shared_survival,
 )
+
+
+def parse_market_ladder() -> list[tuple[float, float]] | None:
+    return parse_market_ladder_env("FOMC_MARKET_LADDER", tag="emit-fomc")
+
+
+def survival_from_ladder(x: float, rungs: list[tuple[float, float]]) -> float:
+    return _shared_survival(x, rungs)
 
 
 def fetch_empirical_mae(slug_prefix: str) -> dict | None:
     """Thin wrapper — keeps existing tests + call sites working."""
     return _fetch_empirical_mae(slug_prefix, tag="emit-fomc")
-
-
-def parse_market_ladder() -> list[tuple[float, float]] | None:
-    """FOMC_MARKET_LADDER = JSON list of {threshold, probability} rungs
-    representing P(target_rate > threshold) from Kalshi's FED-DECISION
-    series. Returns sorted (threshold_asc) tuples, or None if unset or
-    malformed."""
-    raw = os.environ.get("FOMC_MARKET_LADDER")
-    if not raw:
-        return None
-    try:
-        arr = json.loads(raw)
-    except Exception as e:
-        print(f"[emit-fomc] FOMC_MARKET_LADDER parse failed: {e}", file=sys.stderr)
-        return None
-    rungs: list[tuple[float, float]] = []
-    for r in arr if isinstance(arr, list) else []:
-        try:
-            t = float(r["threshold"])
-            p = float(r["probability"])
-        except (KeyError, TypeError, ValueError):
-            continue
-        if 0.0 <= p <= 1.0:
-            rungs.append((t, p))
-    if len(rungs) < 2:
-        return None
-    rungs.sort(key=lambda x: x[0])
-    return rungs
-
-
-def survival_from_ladder(x: float, rungs: list[tuple[float, float]]) -> float:
-    """P(rate > x) under the discrete-support assumption that all mass lives
-    at Fed target rungs (25bp grid). Step-below function: for r_i <= x < r_{i+1}
-    the survival at x = P(rate >= r_{i+1}) = rungs[i+1].p. Below the lowest
-    rung we return the highest probability (P >= lowest_rung); at or above
-    the top rung we return 0 (assume no tail above the top contract)."""
-    for t, p in rungs:
-        if x < t:
-            return p
-    return 0.0
 
 
 def compute_outcome_distribution(point: float, sigma: float,

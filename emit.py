@@ -44,41 +44,18 @@ def build_empirical_mae_section(obs: dict | None, prior_mae_str: str) -> str:
     return _build_empirical_mae_section(obs, prior_mae_str, unit="K")
 
 
+from mae_utils import (
+    parse_market_ladder_env,
+    survival_from_ladder as _shared_survival,
+)
+
+
 def parse_market_ladder() -> list[tuple[float, float]] | None:
-    """NFP_MARKET_LADDER = JSON list of {threshold, probability} rungs
-    representing P(nfp_jobs > threshold) from Kalshi's KXUSNFP series.
-    Threshold is in RAW jobs (not K units). Returns sorted (threshold_asc)
-    tuples, or None if unset/malformed."""
-    raw = os.environ.get("NFP_MARKET_LADDER")
-    if not raw:
-        return None
-    try:
-        arr = json.loads(raw)
-    except Exception as e:
-        print(f"[emit] NFP_MARKET_LADDER parse failed: {e}", file=sys.stderr)
-        return None
-    rungs: list[tuple[float, float]] = []
-    for r in arr if isinstance(arr, list) else []:
-        try:
-            t = float(r["threshold"])
-            p = float(r["probability"])
-        except (KeyError, TypeError, ValueError):
-            continue
-        if 0.0 <= p <= 1.0:
-            rungs.append((t, p))
-    if len(rungs) < 2:
-        return None
-    rungs.sort(key=lambda x: x[0])
-    return rungs
+    return parse_market_ladder_env("NFP_MARKET_LADDER", tag="emit")
 
 
 def survival_from_ladder(x: float, rungs: list[tuple[float, float]]) -> float:
-    """P(nfp_jobs > x) via step-below function over discrete Kalshi rungs.
-    Same shape as emit_fomc / emit_cpi survival helpers."""
-    for t, p in rungs:
-        if x < t:
-            return p
-    return 0.0
+    return _shared_survival(x, rungs)
 
 
 def compute_market_outcome_distribution(ladder: list[tuple[float, float]]) -> dict:
