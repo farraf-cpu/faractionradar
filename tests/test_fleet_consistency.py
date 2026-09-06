@@ -97,6 +97,9 @@ def main() -> int:
     # - a concurrency block (prevents overlapping runs during 5-run cadence)
     # - a git pull --rebase retry after failed push (worker upload storms
     #   sometimes race the ledger commit; retry unblocks)
+    # - workflow_dispatch trigger (ops can force a run without waiting for cron)
+    # - fetch-depth: 0 on checkout (needed for git push to work against
+    #   diverged main after a race)
     # Codifies invariants that prevent flaky deploys.
     for wf in sorted(wf_dir.glob("predict-*.yml")):
         text = wf.read_text(encoding="utf-8")
@@ -104,6 +107,10 @@ def main() -> int:
             failed.append(f"{wf.name}: missing concurrency block")
         if "git pull --rebase" not in text:
             failed.append(f"{wf.name}: missing git pull --rebase retry")
+        if "workflow_dispatch" not in text:
+            failed.append(f"{wf.name}: missing workflow_dispatch trigger")
+        if "fetch-depth" not in text:
+            failed.append(f"{wf.name}: missing fetch-depth on checkout")
 
     if failed:
         for f in failed:
