@@ -81,6 +81,7 @@ def build_empirical_mae_section(
 Empirical MAE + hit-rate auto-populate as predictions resolve. Once
 count >= {threshold} the CI sigma will switch from the prior to the
 empirical value.
+
 """
     hits = obs.get("hits", 0)
     empirical_mae_str = (
@@ -89,6 +90,8 @@ empirical value.
         else "—"
     )
     hit_pct = f"{hit_rate*100:.0f}%" if isinstance(hit_rate, (int, float)) else "—"
+    # Trailing blank line matters — markdown tables merge with the next
+    # header if no gap separates them. Bit us on 2026-09-06 smoke.
     return f"""
 
 ## Empirical accuracy (live, from resolved predictions)
@@ -99,6 +102,7 @@ empirical value.
 | Resolved predictions | {count} |
 | Empirical MAE | {empirical_mae_str} |
 | Hit rate (ourCall closest) | {hit_pct} ({hits}/{count}) |
+
 """
 
 
