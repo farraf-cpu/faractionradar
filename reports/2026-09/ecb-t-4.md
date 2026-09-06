@@ -1,7 +1,7 @@
 # ECB Rate prediction - target 2026-09-10 (T-4)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-06T11:25:31.079348+00:00
+**Published:** 2026-09-06T17:53:16.691928+00:00
 
 ## Final pick
 
