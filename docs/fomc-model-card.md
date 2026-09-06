@@ -1,18 +1,26 @@
 # FOMC Predictor — Model Card
 
-**Model version:** `v2-outcome-distribution`
+**Model version:** `v2.1-kalshi-ladder`
 **Event:** FOMC federal funds target rate decision (~8 meetings/year)
 **Status:** Live — cadence T-7, T-4, T-3, T-2, T-1 + T-0 release-day refresh via `predict-fomc.yml`
 
-## What v2-outcome-distribution does
+## What v2.1-kalshi-ladder does
 
 Emits both:
 1. A scalar point estimate (backward compat with v1)
-2. A **probability distribution over discrete rate outcomes** (the primary v2 upgrade)
+2. A **probability distribution over discrete rate outcomes**, sourced
+   from the Kalshi FED-DECISION contract ladder when available and
+   falling back to a normal-CDF discretization otherwise.
 
-Discretization: the posterior point + sigma is integrated over standard
-25bp buckets centered on outcome levels. Each 25bp bucket is +/- 0.125%
-wide relative to its target level. Tail buckets extend to +/- infinity.
+Ladder mode: each 25bp bucket prob = `P(rate > lower_edge) - P(rate > upper_edge)`
+computed via a step-below survival function over the ladder rungs
+(rungs come in as `[(threshold, P(rate ≥ threshold))]`). Buckets are
+renormalized to sum 1. The `source` field on the output distribution
+indicates which path fired (`kalshi-ladder` or `gaussian-approx`).
+
+Gaussian fallback (when ladder missing): posterior point + sigma is
+integrated over standard 25bp buckets assuming N(point, sigma^2).
+Same shape as pre-v2.1.
 
 Output shape (`ourCall.outcomeDistribution`):
 ```json
@@ -68,6 +76,11 @@ Anchor + consensus provide fallback when markets are stale.
 
 ## Change log
 
+- **v2.1-kalshi-ladder (2026-09-06)** — outcome distribution now sourced
+  from the Kalshi ladder directly (step-below survival function over
+  discrete rungs) when the ladder is present in `/public/kalshi-implied`.
+  Falls back to Gaussian discretization when it isn't. Point estimate
+  blend unchanged.
 - **v2-outcome-distribution (2026-09-04)** — adds discrete outcome
   probability distribution over 25bp buckets. Same underlying blend as
   v1 for the point estimate; discretization is the upgrade.

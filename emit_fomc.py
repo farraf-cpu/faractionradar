@@ -118,14 +118,58 @@ def normal_cdf(x: float, mu: float, sigma: float) -> float:
     return 0.5 * (1.0 + math.erf((x - mu) / (sigma * math.sqrt(2))))
 
 
-def compute_outcome_distribution(point: float, sigma: float,
-                                  anchor: float | None) -> dict:
-    """v2 upgrade: discretize the point + sigma into probabilities over
-    standard FOMC outcomes at 25bp intervals around the current rate.
+def parse_market_ladder() -> list[tuple[float, float]] | None:
+    """FOMC_MARKET_LADDER = JSON list of {threshold, probability} rungs
+    representing P(target_rate > threshold) from Kalshi's FED-DECISION
+    series. Returns sorted (threshold_asc) tuples, or None if unset or
+    malformed."""
+    raw = os.environ.get("FOMC_MARKET_LADDER")
+    if not raw:
+        return None
+    try:
+        arr = json.loads(raw)
+    except Exception as e:
+        print(f"[emit-fomc] FOMC_MARKET_LADDER parse failed: {e}", file=sys.stderr)
+        return None
+    rungs: list[tuple[float, float]] = []
+    for r in arr if isinstance(arr, list) else []:
+        try:
+            t = float(r["threshold"])
+            p = float(r["probability"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if 0.0 <= p <= 1.0:
+            rungs.append((t, p))
+    if len(rungs) < 2:
+        return None
+    rungs.sort(key=lambda x: x[0])
+    return rungs
 
-    Fed target rate ranges are 25bp wide; each outcome corresponds to a
-    specific target range. We assign each 25bp bucket a probability by
-    integrating the assumed-normal posterior over that bucket.
+
+def survival_from_ladder(x: float, rungs: list[tuple[float, float]]) -> float:
+    """P(rate > x) under the discrete-support assumption that all mass lives
+    at Fed target rungs (25bp grid). Step-below function: for r_i <= x < r_{i+1}
+    the survival at x = P(rate >= r_{i+1}) = rungs[i+1].p. Below the lowest
+    rung we return the highest probability (P >= lowest_rung); at or above
+    the top rung we return 0 (assume no tail above the top contract)."""
+    for t, p in rungs:
+        if x < t:
+            return p
+    return 0.0
+
+
+def compute_outcome_distribution(point: float, sigma: float,
+                                  anchor: float | None,
+                                  ladder: list[tuple[float, float]] | None = None
+                                  ) -> dict:
+    """v2 upgrade: discretize into probabilities over standard FOMC
+    outcomes at 25bp intervals around the current rate.
+
+    v2.1 (ladder mode): when a Kalshi ladder is available, derive
+    per-bucket probs directly from market survival P(rate > x) by
+    differencing adjacent bucket edges. This replaces the normal-CDF
+    approximation and lets the market's actual per-outcome pricing
+    drive the distribution.
 
     Buckets (relative to current anchor rate):
       hike50: current + 0.50%
@@ -136,7 +180,6 @@ def compute_outcome_distribution(point: float, sigma: float,
       cut75+: current - 0.75% and below
     """
     if anchor is None:
-        # Without anchor we can't name buckets; fall back to unnamed distribution
         return {"note": "no anchor; distribution not discretized"}
 
     outcomes = [
@@ -147,20 +190,42 @@ def compute_outcome_distribution(point: float, sigma: float,
         ("cut50",  anchor - 0.50, "-50bp cut"),
         ("cut75_plus", anchor - 0.75, "-75bp or deeper"),
     ]
-    # Each bucket is +/- 0.125 (half of 25bp) wide, centered on outcome level.
-    # Endpoints extend the tail buckets to +/- infinity.
-    dist = {}
-    for i, (key, level, _) in enumerate(outcomes):
-        if i == 0:  # top bucket: hike50 or higher
-            p = 1.0 - normal_cdf(level - 0.125, point, sigma)
-        elif i == len(outcomes) - 1:  # bottom bucket: cut75 or deeper
-            p = normal_cdf(level + 0.125, point, sigma)
-        else:
-            p = (normal_cdf(level + 0.125, point, sigma)
-                 - normal_cdf(level - 0.125, point, sigma))
-        dist[key] = round(p, 3)
-    # Modal outcome
-    modal_key = max(dist.items(), key=lambda x: x[1])[0]
+
+    dist: dict = {}
+    if ladder is not None:
+        # Kalshi ladder path: per-bucket = P(rate > lower_edge) - P(rate > upper_edge).
+        # Tail buckets extend one edge to +/- infinity (clamped by survival_from_ladder).
+        for i, (key, level, _) in enumerate(outcomes):
+            if i == 0:
+                p = survival_from_ladder(level - 0.125, ladder)
+            elif i == len(outcomes) - 1:
+                p = 1.0 - survival_from_ladder(level + 0.125, ladder)
+            else:
+                p = (survival_from_ladder(level - 0.125, ladder)
+                     - survival_from_ladder(level + 0.125, ladder))
+            dist[key] = round(max(0.0, min(1.0, p)), 3)
+        # Renormalize in case interpolation nudged the sum off 1.0 by a bit.
+        total = sum(dist[k] for k, _, _ in outcomes)
+        if total > 0:
+            for key, _, _ in outcomes:
+                dist[key] = round(dist[key] / total, 3)
+        dist["source"] = "kalshi-ladder"
+    else:
+        for i, (key, level, _) in enumerate(outcomes):
+            if i == 0:
+                p = 1.0 - normal_cdf(level - 0.125, point, sigma)
+            elif i == len(outcomes) - 1:
+                p = normal_cdf(level + 0.125, point, sigma)
+            else:
+                p = (normal_cdf(level + 0.125, point, sigma)
+                     - normal_cdf(level - 0.125, point, sigma))
+            dist[key] = round(p, 3)
+        dist["source"] = "gaussian-approx"
+
+    modal_key = max(
+        ((k, dist[k]) for k, _, _ in outcomes),
+        key=lambda x: x[1],
+    )[0]
     dist["modal"] = modal_key
     return dist
 
@@ -208,15 +273,17 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-v1-simple-blend: inverse-MAE-weighted mean of the sub-models above. Markets
-carry ~10x the weight of the current-rate anchor because prediction markets
-have historically led Fed rate calls. Phase 2 target is a proper discrete-
-outcome model (probability distribution over hold / cut25 / cut50 / hike25)
-using fed funds futures + SEP dot-plot + speaker-hawkishness index.
+v2.1-kalshi-ladder: point estimate is an inverse-MAE-weighted mean of
+market + consensus + anchor sub-models. The outcome distribution over
+hike50 / hike25 / hold / cut25 / cut50 / cut75+ is derived directly from
+the Kalshi FED-DECISION contract ladder when available (source =
+kalshi-ladder), falling back to a normal-CDF approximation of the point
++ sigma when no ladder is present (source = gaussian-approx).
 
-Point estimate is a scalar rate (e.g. "4.25%") not a discrete outcome.
-That's a simplification — the true prediction is a distribution over
-outcomes. Phase 2 will publish the full distribution.
+Ladder path: each bucket prob = P(rate > lower_edge) - P(rate > upper_edge)
+via a step-below survival function over discrete ladder rungs, then
+renormalized to sum 1. This gives the market's actual per-outcome pricing
+instead of assuming Gaussian residuals — meaningful for rate-cut skew events.
 """
 
 
@@ -264,7 +331,8 @@ def main() -> None:
 
     point, sigma, used = blend(market, consensus, anchor)
     lean = lean_vs_current(point, anchor)
-    outcome_dist = compute_outcome_distribution(point, sigma, anchor)
+    ladder = parse_market_ladder()
+    outcome_dist = compute_outcome_distribution(point, sigma, anchor, ladder=ladder)
 
     print(f"[emit-fomc] FOMC {release} T-{days_out}: {format_rate(point)} "
           f"(sigma {sigma:.3f}pp, used: {', '.join(used)})")

@@ -69,7 +69,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Fetch live prediction-market implied FOMC rate
+      - name: Fetch live prediction-market implied FOMC rate + ladder
         id: market
         run: |
           curl -sSL -A "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0" \
@@ -89,6 +89,18 @@ jobs:
                   with open(os.environ["GITHUB_OUTPUT"], "a") as f:
                       f.write(f"pm_rate={v}\n")
                       f.write("pm_available=true\n")
+                  ladder = fomc.get("ladder")
+                  if isinstance(ladder, list) and len(ladder) >= 2:
+                      # Serialize to a single line JSON string for env-var pass-through.
+                      ladder_json = json.dumps([
+                          {"threshold": float(r["threshold"]), "probability": float(r["probability"])}
+                          for r in ladder if "threshold" in r and "probability" in r
+                      ], separators=(",", ":"))
+                      print(f"kalshi ladder: {len(ladder)} rungs")
+                      with open(os.environ["GITHUB_ENV"], "a") as f:
+                          f.write(f"FOMC_MARKET_LADDER={ladder_json}\n")
+                  else:
+                      print("kalshi ladder missing/short — will use Gaussian bucket approx")
               else:
                   print("kalshi implied FOMC not available — will proceed with current-rate anchor only")
                   with open(os.environ["GITHUB_OUTPUT"], "a") as f:
@@ -107,7 +119,7 @@ jobs:
           FOMC_RELEASE_DATE: ${{ needs.gate.outputs.fomc_release_date }}
           FOMC_DAYS_OUT: ${{ needs.gate.outputs.fomc_days_out }}
           FOMC_MARKET_RATE: ${{ steps.market.outputs.pm_rate }}
-          MODEL_VERSION: v2-outcome-distribution
+          MODEL_VERSION: v2.1-kalshi-ladder
         run: python emit_fomc.py
 
       - name: Commit report + ledger row
