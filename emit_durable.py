@@ -23,6 +23,13 @@ import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
+from fred_utils import fetch_fred_observations as _fetch_fred_observations_raw
+
+
+def _fetch_fred_observations(api_key: str, series_id: str, limit: int) -> list[dict] | None:
+    return _fetch_fred_observations_raw(api_key, series_id, limit, tag="emit-durable")
+
+
 ROOT = Path(__file__).parent
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
@@ -48,23 +55,6 @@ def parse_pct(env_key: str) -> float | None:
         return float(v)
     except ValueError:
         return None
-
-
-def _fetch_fred_observations(api_key: str, series_id: str, limit: int) -> list[dict] | None:
-    url = ("https://api.stlouisfed.org/fred/series/observations"
-           f"?series_id={urllib.parse.quote(series_id)}"
-           f"&api_key={urllib.parse.quote(api_key)}"
-           f"&file_type=json&sort_order=desc&limit={limit}")
-    req = urllib.request.Request(url, headers={"user-agent": UA})
-    try:
-        with urllib.request.urlopen(req, timeout=20) as res:
-            data = json.loads(res.read().decode("utf-8"))
-    except Exception as e:
-        print(f"[emit-durable] FRED {series_id} fetch failed: {e}", file=sys.stderr)
-        return None
-    obs = [o for o in (data.get("observations") or [])
-           if o.get("value") not in (None, ".", "")]
-    return obs or None
 
 
 def fetch_fred_durable_trend(api_key: str) -> float | None:
