@@ -1,19 +1,25 @@
-"""Swiss CPI predictor. v1-simple-blend.
+"""MX CPI predictor. v1.1-inegi.
 
-INEGI publishes monthly CPI y/y
-~1 week after reference month at 08:30 CET (07:30 UTC winter).
+INEGI publishes monthly INPC (Índice Nacional de Precios al Consumidor)
+y/y ~2nd week of following month at 06:00 CST (12:00 UTC winter).
 Banxico targets 3% CPI y/y (+/- 1pp).
 
-Consensus-only for v1: FRED's CPALTT01MXM659N is stale (last obs
-2025-03, usable but slow-moving). INEGI Statistical Portal API
-integration deferred to v1.1.
+v1.1 adds INEGI BIE trend anchor sub-model. FRED's CPALTT01MXM659N is
+stale (last obs 2025-03); INEGI is the authoritative Mexican
+statistics portal (inegi.org.mx/servicios/api_indicadores.html).
 
-Value format: y/y %-change (e.g. "+2.9%").
+Activate: set INEGI_TOKEN env var to a free INEGI API token
+(register at https://www.inegi.org.mx/app/api/indicadores/interfaz.html).
+When token absent, falls back to consensus-only (v1 behavior).
+
+Value format: y/y %-change (e.g. "+3.5%").
 Sub-models:
-  - FF consensus (~0.15pp MAE - primary signal)
+  - FF consensus (~0.15pp MAE)
+  - INEGI INPC y/y 3-mo mean (~0.25pp MAE) [opt-in]
 
 Env: UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      MXCPI_RELEASE_DATE, MXCPI_DAYS_OUT, MXCPI_CONSENSUS, MODEL_VERSION
+     INEGI_TOKEN (optional, activates INEGI trend anchor)
 """
 from __future__ import annotations
 
@@ -43,7 +49,53 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
     "consensus": 0.15,
+    "trend":     0.25,   # INEGI INPC y/y 3-mo mean
 }
+
+# INEGI BIE indicator ID 628194 = INPC general y/y variation, monthly.
+# BIE (Banco de Información Económica) catalog reference:
+# https://www.inegi.org.mx/temas/inpc/
+# Path: /INDICATOR/es/0700/false/BIE/2.0/{TOKEN}?type=json
+# 0700 = last observations; BIE = source; 2.0 = API version.
+INEGI_INDICATOR_INPC_YOY = "628194"
+
+
+def fetch_inegi_trend() -> float | None:
+    """3-mo mean of MX INPC y/y from INEGI BIE.
+    Returns None if INEGI_TOKEN env not set or API errors.
+    Requires free API token registered at inegi.org.mx."""
+    token = os.environ.get("INEGI_TOKEN")
+    if not token:
+        return None
+    url = (
+        "https://www.inegi.org.mx/app/api/indicadores/desarrolladores/jsonxml/INDICATOR/"
+        f"{INEGI_INDICATOR_INPC_YOY}/es/0700/false/BIE/2.0/{token}?type=json"
+    )
+    req = urllib.request.Request(url, headers={"user-agent": UA, "accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit-mxcpi] INEGI fetch failed: {e}", file=sys.stderr)
+        return None
+    # INEGI JSON shape: { "Series": [ { "OBSERVATIONS": [ {"TIME_PERIOD": "...", "OBS_VALUE": "..."}, ... ] } ] }
+    try:
+        series = data.get("Series") or []
+        if not series:
+            return None
+        obs = series[0].get("OBSERVATIONS") or []
+    except (AttributeError, TypeError):
+        print(f"[emit-mxcpi] INEGI response unexpected shape", file=sys.stderr)
+        return None
+    vals: list[float] = []
+    for row in obs[:3]:
+        try:
+            vals.append(float(row.get("OBS_VALUE", "")))
+        except (ValueError, TypeError):
+            continue
+    if len(vals) < 2:
+        return None
+    return sum(vals) / len(vals)
 
 
 def require_env(key: str) -> str:
@@ -64,10 +116,12 @@ def parse_float(env_key: str) -> float | None:
         return None
 
 
-def blend(consensus: float | None) -> tuple[float, float, list[str]]:
+def blend(consensus: float | None, trend: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
+    if trend is not None:
+        parts.append(("trend", trend, MAE["trend"]))
     if not parts:
         raise RuntimeError("blend called with all sub-models missing")
     return inverse_variance_combine(parts)
@@ -85,11 +139,11 @@ def lean_vs_consensus(point: float, consensus: float | None) -> str:
 
 
 def regime_annotation(value: float) -> str:
-    if value >= 3.0:  return "hot JP inflation (RBNZ hawkish pressure)"
-    if value >= 2.0:  return "above RBNZ target"
-    if value >= 1.5:  return "near RBNZ target"
-    if value >= 0.5:  return "below target"
-    return "deflationary / disinflation"
+    if value >= 5.0:  return "hot MX inflation (Banxico hawkish pressure)"
+    if value >= 4.0:  return "above Banxico target band (3% +/- 1pp)"
+    if value >= 3.0:  return "upper half of Banxico band"
+    if value >= 2.0:  return "lower half of Banxico band"
+    return "below Banxico target / disinflation"
 
 
 def format_value(v: float) -> str:
@@ -105,21 +159,25 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
+                    trend: float | None,
                     used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
                     prior_sigma: float | None = None) -> str:
-    parts_tbl = f"| consensus | {'-' if consensus is None else f'{consensus:+.2f}%'} | {MAE['consensus']:.2f}pp |"
-    prior_mae_used = MAE.get('consensus', min(MAE.values()))
+    parts_tbl = "\n".join(
+        f"| {name} | {'-' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f}pp |"
+        for name, v in (("consensus", consensus), ("trend", trend))
+    )
+    prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp", unit="pp")
-    return f"""# JP CPI prediction - target {release} (T-{days_out})
+    return f"""# MX CPI prediction - target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
 **Published:** {datetime.now(timezone.utc).isoformat()}
 
 ## Final pick
 
-**{format_value(point)}** y/y NZ CPI CPI
+**{format_value(point)}** y/y MX INPC
 
 - Regime: {regime_annotation(point)}
 - 68% CI: [{point - sigma:+.2f}%, {point + sigma:+.2f}%] · sigma source: {sigma_source}{f" (prior was {prior_sigma:.2f} pp)" if prior_sigma is not None and sigma_source.startswith("empirical") else ""}
@@ -135,25 +193,29 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: consensus-only. FRED Japan CPI series all
-discontinued 2022 with empty observations (JPNCPIALLMINMEI,
-CPALTT01JPM659N, JPNCPICORMINMEI). Soft-skips when consensus missing.
+`v1.1-inegi`: inverse-MAE-weighted blend of FF consensus + INEGI BIE
+INPC y/y 3-mo mean trend. INEGI trend fetched from
+inegi.org.mx/app/api/indicadores (indicator 628194, BIE source, last
+3 observations). Trend sub-model soft-skips when INEGI_TOKEN env not
+set; predictor degrades to consensus-only.
 
 ## Positioning
 
-Second Phase 13 (MXN expansion) predictor. National Core CPI y/y is
-RBNZ's preferred gauge. Released by INEGI ~19th-27th of
-following month at 10:45 MXNT.
+Phase 13 MXN expansion CPI predictor. Banxico targets 3% CPI y/y
+(+/- 1pp band). Released monthly by INEGI ~2nd week of following month
+at 06:00 CST (12:00 UTC winter).
 
 ## Caveats
 
-FRED coverage for Japan CPI is dead — an INEGI INEGI Statistical Portal API integration
-(inegi.org.mx, free with registration) would give a real trend
-anchor. Phase 13.1 target.
+FRED coverage for Mexico CPI is stale (CPALTT01MXM659N last obs
+2025-03). INEGI is the authoritative source but requires a free
+account token. Once INEGI_TOKEN is set on the farraf-cpu repo, the
+trend anchor activates automatically.
 
 ## Change log
 
-- **v1-simple-blend ({datetime.now(timezone.utc).strftime('%Y-%m-%d')})** - first ship. Phase 13 MXN expansion. Consensus-only pending INEGI INEGI Statistical Portal API.
+- **v1.1-inegi ({datetime.now(timezone.utc).strftime('%Y-%m-%d')})** - added INEGI BIE trend anchor (opt-in via INEGI_TOKEN). Same pattern as KOSIS/MOSPI/ESTAT.
+- **v1-simple-blend (2026-09-03)** - first ship. Phase 13 MXN expansion. Consensus-only pending INEGI API integration.
 """
 
 
@@ -163,15 +225,16 @@ def main() -> None:
 
     release = os.environ["MXCPI_RELEASE_DATE"]
     days_out = int(os.environ["MXCPI_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1.1-inegi")
 
     consensus = parse_float("MXCPI_CONSENSUS")
+    trend = fetch_inegi_trend()
 
-    if consensus is None:
-        print("[emit-mxcpi] consensus missing; nothing to blend - exit 0 (soft skip)")
+    if consensus is None and trend is None:
+        print("[emit-mxcpi] all sub-models missing; nothing to blend - exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus)
+    point, sigma, used = blend(consensus, trend)
     prior_sigma = sigma
     empirical_mae = fetch_empirical_mae("mxcpi")
     sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
@@ -182,10 +245,11 @@ def main() -> None:
     print(f"[emit-mxcpi] MXCPI {release} T-{days_out}: {format_value(point)} y/y "
           f"(sigma {sigma:.2f}pp, {regime_annotation(point)}, used: {', '.join(used)})")
     if consensus is not None: print(f"  consensus: {consensus:+.2f}%")
+    if trend     is not None: print(f"  trend:     {trend:+.2f}%")
 
     prediction = {
         "eventSlug": f"mxcpi-{release}",
-        "eventTitle": "NZ CPI CPI y/y",
+        "eventTitle": "MX INPC y/y",
         "country": "MXN",
         "releaseDate": release,
         "daysOut": days_out,
@@ -202,7 +266,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, used, lean,
+                                consensus, trend, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
                                 prior_sigma=prior_sigma)
