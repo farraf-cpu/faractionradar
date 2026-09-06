@@ -94,13 +94,25 @@ def format_value(v: float) -> str:
     return f"{v:+.1f}"
 
 
+from mae_utils import fetch_empirical_mae as _fetch_empirical_mae, build_empirical_mae_section, auto_tune_sigma
+
+
+def fetch_empirical_mae(slug_prefix: str) -> dict | None:
+    return _fetch_empirical_mae(slug_prefix, tag="emit-dallas")
+
+
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    anchor: float | None, used: list[str], lean: str) -> str:
+                    anchor: float | None, used: list[str], lean: str,
+                    empirical_mae: dict | None = None,
+                    sigma_source: str = "prior (inverse-MAE)",
+                    prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.1f}'} | {MAE[name]:.1f} pts |"
         for name, v in (("consensus", consensus), ("anchor", anchor))
     )
+    prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
+    empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pts", unit="pts")
     return f"""# Dallas Fed Manufacturing prediction — target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -111,11 +123,11 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 **{format_value(point)}** Dallas Fed General Business Activity
 
 - Regime: {regime_annotation(point)}
-- 68% CI: [{point - sigma:+.1f}, {point + sigma:+.1f}]
+- 68% CI: [{point - sigma:+.1f}, {point + sigma:+.1f}] · sigma source: {sigma_source}{f" (prior was {prior_sigma:.2f} pts)" if prior_sigma is not None and sigma_source.startswith("empirical") else ""}
 - 95% CI: [{point - 2*sigma:+.1f}, {point + 2*sigma:+.1f}]
 - Lean vs consensus: {lean}
 - Sub-models used: {', '.join(used)}
-
+{empirical_section}
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
@@ -187,6 +199,11 @@ def main() -> None:
         return
 
     point, sigma, used = blend(consensus, anchor)
+    prior_sigma = sigma
+    empirical_mae = fetch_empirical_mae("dallas")
+    sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
+    if sigma_source.startswith("empirical"):
+        print(f"[emit-dallas] sigma auto-tuned: prior={prior_sigma:.3f} -> empirical={sigma:.3f}")
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-dallas] Dallas {release} T-{days_out}: {format_value(point)} "
@@ -213,7 +230,10 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, anchor, used, lean)
+                                consensus, anchor, used, lean,
+                                empirical_mae=empirical_mae,
+                                sigma_source=sigma_source,
+                                prior_sigma=prior_sigma)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"dallas-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)

@@ -119,13 +119,25 @@ def format_value(b: float) -> str:
     return f"{'+' if b >= 0 else '-'}${abs(b):.1f}B"
 
 
+from mae_utils import fetch_empirical_mae as _fetch_empirical_mae, build_empirical_mae_section, auto_tune_sigma
+
+
+def fetch_empirical_mae(slug_prefix: str) -> dict | None:
+    return _fetch_empirical_mae(slug_prefix, tag="emit-budget")
+
+
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    anchor: float | None, used: list[str], lean: str) -> str:
+                    anchor: float | None, used: list[str], lean: str,
+                    empirical_mae: dict | None = None,
+                    sigma_source: str = "prior (inverse-MAE)",
+                    prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else format_value(v)} | ${MAE[name]:.1f}B |"
         for name, v in (("consensus", consensus), ("anchor", anchor))
     )
+    prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
+    empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} B", unit="B")
     return f"""# Monthly Treasury Budget prediction — target {release} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -136,11 +148,11 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 **{format_value(point)}** federal surplus/deficit (Monthly Treasury Statement)
 
 - Regime: {regime_annotation(point)}
-- 68% CI: [{format_value(point - sigma)}, {format_value(point + sigma)}]
+- 68% CI: [{format_value(point - sigma)}, {format_value(point + sigma)}] · sigma source: {sigma_source}{f" (prior was {prior_sigma:.2f} B)" if prior_sigma is not None and sigma_source.startswith("empirical") else ""}
 - 95% CI: [{format_value(point - 2*sigma)}, {format_value(point + 2*sigma)}]
 - Lean vs consensus: {lean}
 - Sub-models used: {', '.join(used)}
-
+{empirical_section}
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
@@ -208,6 +220,11 @@ def main() -> None:
         return
 
     point, sigma, used = blend(consensus, anchor)
+    prior_sigma = sigma
+    empirical_mae = fetch_empirical_mae("budget")
+    sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
+    if sigma_source.startswith("empirical"):
+        print(f"[emit-budget] sigma auto-tuned: prior={prior_sigma:.3f} -> empirical={sigma:.3f}")
     lean = lean_vs_consensus(point, consensus)
 
     print(f"[emit-budget] Budget {release} T-{days_out}: {format_value(point)} "
@@ -234,7 +251,10 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, anchor, used, lean)
+                                consensus, anchor, used, lean,
+                                empirical_mae=empirical_mae,
+                                sigma_source=sigma_source,
+                                prior_sigma=prior_sigma)
     year_month = release[:7]
     report_path = ROOT / "reports" / year_month / f"budget-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
