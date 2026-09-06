@@ -27,6 +27,69 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+def fetch_empirical_mae(slug_prefix: str) -> dict | None:
+    """Read the worker's /public/models endpoint and return the empirical
+    MAE + hit-rate for our slug_prefix. Returns None on any failure so
+    callers degrade to prior-MAE-only reporting."""
+    base = os.environ.get("CALENDAR_WORKER_URL", "").rstrip("/")
+    if not base:
+        return None
+    url = f"{base}/public/models"
+    ua = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
+    req = urllib.request.Request(url, headers={"user-agent": ua})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit] empirical MAE fetch failed: {e}", file=sys.stderr)
+        return None
+    for m in data.get("models") or []:
+        if m.get("slug_prefix") == slug_prefix:
+            obs = m.get("mae_observed") or {}
+            if isinstance(obs, dict):
+                return obs
+    return None
+
+
+def build_empirical_mae_section(obs: dict | None, prior_mae_str: str) -> str:
+    """Show empirical accuracy alongside the prior MAE claim."""
+    if not obs or not isinstance(obs, dict):
+        return ""
+    count = obs.get("count", 0)
+    mae = obs.get("mae")
+    hit_rate = obs.get("hit_rate")
+    if count == 0:
+        return f"""
+## Empirical accuracy (live)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | {prior_mae_str} |
+| Resolved predictions | 0 (first NFP resolution pending) |
+| Empirical MAE | — |
+| Hit rate vs consensus | — |
+
+Empirical MAE + hit-rate auto-populate as predictions resolve. Once
+count >= 5 the CI sigma will switch from the model's blended_rmse
+prior to the empirical value.
+
+"""
+    hits = obs.get("hits", 0)
+    empirical_mae_str = f"{mae:.1f} K" if isinstance(mae, (int, float)) else "—"
+    hit_pct = f"{hit_rate*100:.0f}%" if isinstance(hit_rate, (int, float)) else "—"
+    return f"""
+## Empirical accuracy (live, from resolved predictions)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | {prior_mae_str} |
+| Resolved predictions | {count} |
+| Empirical MAE | {empirical_mae_str} |
+| Hit rate vs consensus | {hit_pct} ({hits}/{count}) |
+
+"""
+
+
 def parse_market_ladder() -> list[tuple[float, float]] | None:
     """NFP_MARKET_LADDER = JSON list of {threshold, probability} rungs
     representing P(nfp_jobs > threshold) from Kalshi's KXUSNFP series.
@@ -153,7 +216,8 @@ def build_market_dist_section(dist: dict | None) -> str:
 
 
 def build_report_md(result: dict, release_date: str, days_out: int, model_version: str,
-                    market_dist: dict | None = None) -> str:
+                    market_dist: dict | None = None,
+                    empirical_mae: dict | None = None) -> str:
     b = result["blended"]
     r = result["blended_rmse"]
     pm_note = " (stale, see caveat)" if result.get("pred_markets_stale") else ""
@@ -168,6 +232,8 @@ def build_report_md(result: dict, release_date: str, days_out: int, model_versio
             " refresh once real ticker mapping lands.\n"
         )
     dist_section = build_market_dist_section(market_dist)
+    # Best sub-model MAE on NFP = prediction markets (~40K)
+    empirical_section = build_empirical_mae_section(empirical_mae, "~40 K (best sub-model, markets)")
     return f"""# NFP prediction — target {release_date} (T-{days_out})
 
 **Model version:** `{model_version}`
@@ -180,7 +246,7 @@ def build_report_md(result: dict, release_date: str, days_out: int, model_versio
 - 68% CI: [{b-r:+.0f}, {b+r:+.0f}] K
 - 95% CI: [{b-2*r:+.0f}, {b+2*r:+.0f}] K
 - Lean vs consensus: {result['lean']}
-{caveat_section}{dist_section}## Sub-model breakdown
+{caveat_section}{dist_section}{empirical_section}## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
@@ -260,8 +326,10 @@ def main() -> None:
             " ticker verification (Phase 1.5). Consensus is live from ForexFactory."
         )
 
+    empirical_mae = fetch_empirical_mae("nfp")
     report_md = build_report_md(result, release_date, days_out, model_version,
-                                market_dist=market_dist)
+                                market_dist=market_dist,
+                                empirical_mae=empirical_mae)
     year_month = release_date[:7]
     report_path = ROOT / "reports" / year_month / f"nfp-t-{days_out}.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
