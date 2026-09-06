@@ -8,14 +8,18 @@ on:
       - "mae_utils.py"
       - "scripts/**"
       - "tests/**"
-      - ".github/workflows/test.yml"
+      - "docs/**-model-card.md"
+      - ".python-version"
+      - ".github/workflows/**"
   pull_request:
     paths:
       - "emit*.py"
       - "mae_utils.py"
       - "scripts/**"
       - "tests/**"
-      - ".github/workflows/test.yml"
+      - "docs/**-model-card.md"
+      - ".python-version"
+      - ".github/workflows/**"
   workflow_dispatch: {}
 
 concurrency:
