@@ -1,22 +1,26 @@
-"""PPI predictor + emitter. `v1-simple-blend`.
+"""PPI predictor + emitter. `v1.1-simple-blend`.
 
 PPI (Producer Price Index, headline m/m Final Demand) is analogous to CPI —
-monthly release, %-change target. Simpler model than CPI for v1 because
-Kalshi doesn't have PPI event contracts (checked 2026-09-03) and no
-trimmed-mean equivalent is published on FRED for Final Demand PPI.
+monthly release, %-change target. Kalshi doesn't have PPI event contracts
+(checked 2026-09-03) and no trimmed-mean equivalent is published on FRED
+for Final Demand PPI.
 
-Sub-models (up to 2):
+Sub-models (up to 3):
   - Bloomberg / FF consensus (~0.10pp historical MAE on headline m/m)
   - FRED PPIFIS 6-mo trend (~0.15pp, mean of past 6 m/m %-changes)
+  - FRED WPSFD4131 6-mo m/m trend (~0.15pp, PPI Finished Goods ex food/energy
+    — core-goods anchor. Divergence from headline PPIFIS signals whether the
+    print is being driven by transitory food/energy swings or persistent
+    underlying pressure).
 
 Env (set by GHA workflow):
-  FRED_API_KEY          — for PPIFIS 6-mo trend
+  FRED_API_KEY          — for PPIFIS + WPSFD4131 6-mo trends
   UPLOAD_AUTH_KEY       — POST auth to /upload
   CALENDAR_WORKER_URL   — https://faractionradar-calendar.faractionradar.workers.dev
   PPI_RELEASE_DATE      — YYYY-MM-DD
   PPI_DAYS_OUT          — 7|4|3|2|1
   PPI_CONSENSUS_PCT     — parsed from FF forecast field
-  MODEL_VERSION         — default "v1-simple-blend"
+  MODEL_VERSION         — default "v1.1-simple-blend"
 
 Ship pattern mirrors emit_cpi.py — same helpers, same shape, same soft-skip.
 """
@@ -54,8 +58,9 @@ ROOT = Path(__file__).parent
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
-    "consensus": 0.10,
-    "trend":     0.15,
+    "consensus":   0.10,
+    "trend":       0.15,
+    "core_anchor": 0.15,  # WPSFD4131 (Finished Goods ex food/energy) 6-mo trend
 }
 
 
@@ -77,13 +82,15 @@ def parse_pct(env_key: str) -> float | None:
         return None
 
 
-def fetch_fred_ppi_trend(api_key: str) -> float | None:
-    """Mean of last 6 published m/m %-changes of PPIFIS (Producer Price Index
-    by Industry: Final Demand, SA). Persistence-anchor sub-model."""
-    obs = _fetch_fred_observations(api_key, "PPIFIS", 8)
+def _fred_6mo_mom_mean(api_key: str, series_id: str) -> float | None:
+    """Mean of last 6 published m/m %-changes of a FRED index-level series."""
+    obs = _fetch_fred_observations(api_key, series_id, 8)
     if not obs or len(obs) < 7:
         return None
-    levels = [float(o["value"]) for o in obs[:7]]
+    try:
+        levels = [float(o["value"]) for o in obs[:7]]
+    except (ValueError, TypeError):
+        return None
     mom_pcts = []
     for i in range(6):
         prev = levels[i + 1]
@@ -95,14 +102,31 @@ def fetch_fred_ppi_trend(api_key: str) -> float | None:
     return sum(mom_pcts) / len(mom_pcts)
 
 
+def fetch_fred_ppi_trend(api_key: str) -> float | None:
+    """Mean of last 6 published m/m %-changes of PPIFIS (Producer Price Index
+    by Industry: Final Demand, SA). Persistence-anchor sub-model."""
+    return _fred_6mo_mom_mean(api_key, "PPIFIS")
+
+
+def fetch_fred_core_ppi_trend(api_key: str) -> float | None:
+    """Mean of last 6 m/m %-changes of WPSFD4131 (PPI Finished Goods less
+    Foods and Energy). Core-goods anchor: divergence from headline PPIFIS
+    signals whether the print is driven by transitory food/energy noise or
+    persistent underlying pressure."""
+    return _fred_6mo_mom_mean(api_key, "WPSFD4131")
+
+
 def blend(consensus: float | None,
-          trend: float | None) -> tuple[float, float, list[str]]:
+          trend: float | None,
+          core_anchor: float | None) -> tuple[float, float, list[str]]:
     """Inverse-MAE-weighted blend. Returns (point, sigma, used_labels)."""
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
+    if core_anchor is not None:
+        parts.append(("core_anchor", core_anchor, MAE["core_anchor"]))
     if not parts:
         raise RuntimeError("blend called with all sub-models missing")
     return inverse_variance_combine(parts)
@@ -132,13 +156,14 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    trend: float | None, used: list[str], lean: str,
+                    trend: float | None, core_anchor: float | None,
+                    used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
                     prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f} pp |"
-        for name, v in (("consensus", consensus), ("trend", trend))
+        for name, v in (("consensus", consensus), ("trend", trend), ("core_anchor", core_anchor))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp")
@@ -164,14 +189,16 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: inverse-MAE-weighted mean of up to 2 sub-models. Consensus
-(0.10pp historical MAE) + FRED PPIFIS 6-mo m/m trend (0.15pp). Blended sigma
-is the inverse-variance combination.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of up to 3 sub-models —
+consensus (0.10pp) + FRED PPIFIS 6-mo m/m trend (0.15pp) + FRED WPSFD4131
+6-mo m/m trend (0.15pp, PPI Finished Goods ex food/energy). The
+core-goods anchor signals whether the headline print is being driven by
+transitory food/energy swings (divergence) or persistent underlying
+pressure (convergence). Blended sigma is the inverse-variance combination.
 
 PPI has no Kalshi contract market (as of 2026-09-03) so no prediction-market
-sub-model — this makes v1 simpler than CPI. Phase 2 target adds a
-sector-decomposition sub-model (energy / food / trade services) since PPI
-is more sector-heterogeneous than CPI headline.
+sub-model. Phase 2 target: energy carve-out (WPUFD42) + food carve-out
+(WPUFD41) for finer decomposition when component data warrants.
 """
 
 
@@ -181,17 +208,18 @@ def main() -> None:
 
     release = os.environ["PPI_RELEASE_DATE"]
     days_out = int(os.environ["PPI_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
 
     consensus = parse_pct("PPI_CONSENSUS_PCT")
     fred_key = os.environ.get("FRED_API_KEY")
     trend = fetch_fred_ppi_trend(fred_key) if fred_key else None
+    core_anchor = fetch_fred_core_ppi_trend(fred_key) if fred_key else None
 
-    if consensus is None and trend is None:
+    if consensus is None and trend is None and core_anchor is None:
         print("[emit-ppi] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, trend)
+    point, sigma, used = blend(consensus, trend, core_anchor)
     prior_sigma = sigma
     lean = lean_vs_consensus(point, consensus)
 
@@ -202,8 +230,9 @@ def main() -> None:
 
     print(f"[emit-ppi] PPI {release} T-{days_out}: {format_value(point)} m/m "
           f"(sigma {sigma:.2f}pp, used: {', '.join(used)})")
-    if consensus is not None: print(f"  consensus:  {consensus:+.2f}%")
-    if trend     is not None: print(f"  trend(6mo): {trend:+.2f}%")
+    if consensus   is not None: print(f"  consensus:   {consensus:+.2f}%")
+    if trend       is not None: print(f"  trend(6mo):  {trend:+.2f}%")
+    if core_anchor is not None: print(f"  core_anchor: {core_anchor:+.2f}%")
 
     prediction = {
         "eventSlug": f"ppi-{release}",
@@ -224,7 +253,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, used, lean,
+                                consensus, trend, core_anchor, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
                                 prior_sigma=prior_sigma)
