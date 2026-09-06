@@ -303,6 +303,15 @@ def main() -> None:
         "grandMedian": None,
         "reportPath": str(report_path.relative_to(ROOT)),
     }
+    if isinstance(outcome_dist, dict):
+        modal = outcome_dist.get("modal")
+        source = outcome_dist.get("source")
+        if modal:
+            ledger_row["modalOutcome"] = modal
+        if source:
+            ledger_row["outcomeSource"] = source
+    if sigma_source.startswith("empirical"):
+        ledger_row["sigmaSource"] = sigma_source
     append_ledger(ledger_row)
     print(f"[emit-boe] appended predictions.jsonl")
 
