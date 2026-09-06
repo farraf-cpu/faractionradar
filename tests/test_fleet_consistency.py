@@ -76,6 +76,23 @@ def main() -> int:
         if "python-version-file" not in text:
             failed.append(f"{wf.name}: sets up python without .python-version file")
 
+    # 5. All 4 test suites present (they're wired into ci/test.yml). If any
+    # is deleted or renamed without updating test.yml, ci is silently narrower.
+    required_tests = {
+        "test_ladder_distribution.py",
+        "test_all_emitters_have_mae.py",
+        "test_all_emitters_render.py",
+        "test_fleet_consistency.py",
+    }
+    have = {p.name for p in (ROOT / "tests").glob("test_*.py")}
+    missing = required_tests - have
+    if missing:
+        failed.append(f"tests/ missing required suites: {sorted(missing)}")
+    ci = (ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
+    for t in sorted(required_tests):
+        if t not in ci:
+            failed.append(f"ci/test.yml doesn't reference {t}")
+
     if failed:
         for f in failed:
             print(f"FAIL {f}")
