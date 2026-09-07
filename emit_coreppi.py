@@ -1,4 +1,4 @@
-"""Core PPI predictor + emitter. `v1.1-simple-blend`.
+"""Core PPI predictor + emitter. `v1-simple-blend`.
 
 Core PPI (ex food + energy) is the Fed's actual inflation focus, not
 headline. Released same day/time as CPI headline (~mid-month, 08:30 ET,
@@ -9,9 +9,6 @@ Value format: `+0.3%` m/m Core PPI (ex food + energy).
 Sub-models:
   - Bloomberg / FF consensus (~0.08pp MAE)
   - FRED PPIFES 6-mo mean m/m trend (~0.15pp MAE)
-  - FRED PPICMM 6-mo mean m/m trend (~0.18pp MAE — Intermediate Materials
-    is an established 2-4 month leading indicator for final-demand PPI.
-    Conservative pre-empirical weight; graceful fallback on FRED failure.)
 
 Env: FRED_API_KEY, UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      COREPPI_RELEASE_DATE, COREPPI_DAYS_OUT, COREPPI_CONSENSUS,
@@ -44,9 +41,8 @@ ROOT = Path(__file__).parent
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
-    "consensus":         0.08,
-    "trend":             0.15,
-    "pipeline_pressure": 0.18,  # PPICMM leading indicator, conservative pre-empirical
+    "consensus": 0.08,
+    "trend":     0.15,
 }
 
 
@@ -68,20 +64,20 @@ def parse_float(env_key: str) -> float | None:
         return None
 
 
-def _fred_6mo_mom_mean(series_id: str) -> float | None:
-    """Shared helper: 6-mo mean of FRED m/m %-change for a given series."""
+def fetch_fred_trend() -> float | None:
+    """6-mo mean of FRED PPIFES m/m %-change (Core PPI ex food+energy)."""
     api_key = os.environ.get("FRED_API_KEY")
     if not api_key:
         return None
     url = ("https://api.stlouisfed.org/fred/series/observations?"
-           f"series_id={series_id}&api_key={api_key}&file_type=json"
+           f"series_id=PPIFES&api_key={api_key}&file_type=json"
            "&units=pch&sort_order=desc&limit=6")
     req = urllib.request.Request(url, headers={"user-agent": UA})
     try:
         with urllib.request.urlopen(req, timeout=20) as res:
             data = json.loads(res.read().decode("utf-8"))
     except Exception as e:
-        print(f"[emit-coreppi] FRED fetch failed for {series_id}: {e}", file=sys.stderr)
+        print(f"[emit-coreppi] FRED fetch failed: {e}", file=sys.stderr)
         return None
     obs = data.get("observations") or []
     vals = []
@@ -97,32 +93,13 @@ def _fred_6mo_mom_mean(series_id: str) -> float | None:
     return sum(vals) / len(vals)
 
 
-def fetch_fred_trend() -> float | None:
-    """6-mo mean of FRED PPIFES m/m %-change (Core PPI ex food+energy)."""
-    return _fred_6mo_mom_mean("PPIFES")
-
-
-def fetch_pipeline_pressure() -> float | None:
-    """6-mo mean of FRED PPICMM m/m %-change (PPI Intermediate Materials,
-    Supplies, and Components). Established 2-4 month leading indicator
-    for final-demand PPI: rising intermediate costs typically pass
-    through to finished-goods pricing on that lag. Sub-model returns
-    the intermediate-materials trend directly as a point estimate — the
-    inverse-variance blend handles its lower weight vs consensus/PPIFES
-    given the higher MAE."""
-    return _fred_6mo_mom_mean("PPICMM")
-
-
 def blend(consensus: float | None,
-          trend: float | None,
-          pipeline_pressure: float | None) -> tuple[float, float, list[str]]:
+          trend: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
-    if pipeline_pressure is not None:
-        parts.append(("pipeline_pressure", pipeline_pressure, MAE["pipeline_pressure"]))
     if not parts:
         raise RuntimeError("blend called with all sub-models missing")
     return inverse_variance_combine(parts)
@@ -159,14 +136,13 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    trend: float | None, pipeline_pressure: float | None,
-                    used: list[str], lean: str,
+                    trend: float | None, used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
                     prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f}pp |"
-        for name, v in (("consensus", consensus), ("trend", trend), ("pipeline_pressure", pipeline_pressure))
+        for name, v in (("consensus", consensus), ("trend", trend))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp", unit="pp")
@@ -193,11 +169,8 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1.1-simple-blend`: inverse-MAE-weighted mean of FF consensus + FRED
-PPIFES 6-month m/m trend + FRED PPICMM 6-month m/m intermediate-materials
-pressure. PPICMM is an established 2-4 month leading indicator for
-final-demand PPI: rising intermediate costs typically pass through to
-finished-goods pricing on that lag.
+`v1-simple-blend`: inverse-MAE-weighted mean of FF consensus + FRED
+PPIFES 6-month m/m trend.
 
 ## Positioning
 
@@ -208,12 +181,7 @@ prints >0.3% m/m sustain hawkish pressure; <0.2% opens easing path.
 
 ## Change log
 
-- **v1.1-simple-blend (2026-09-07)** — added PPICMM (Intermediate Materials)
-  6-mo trend as pipeline-pressure sub-model. MAE weight 0.18pp is
-  conservative pre-empirical; expected refinement once empirical MAE
-  auto-tune activates at N>=5 resolutions. Graceful fallback on FRED
-  failure keeps v1 behavior intact if fetch breaks.
-- **v1-simple-blend (2026-09-03)** — first ship.
+- **v1-simple-blend ({datetime.now(timezone.utc).strftime('%Y-%m-%d')})** — first ship.
 """
 
 
@@ -223,17 +191,16 @@ def main() -> None:
 
     release = os.environ["COREPPI_RELEASE_DATE"]
     days_out = int(os.environ["COREPPI_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
 
     consensus = parse_float("COREPPI_CONSENSUS")
     trend = fetch_fred_trend()
-    pipeline_pressure = fetch_pipeline_pressure()
 
-    if consensus is None and trend is None and pipeline_pressure is None:
+    if consensus is None and trend is None:
         print("[emit-coreppi] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, trend, pipeline_pressure)
+    point, sigma, used = blend(consensus, trend)
     prior_sigma = sigma
     empirical_mae = fetch_empirical_mae("coreppi")
     sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
@@ -243,9 +210,8 @@ def main() -> None:
 
     print(f"[emit-coreppi] Core PPI {release} T-{days_out}: {format_value(point)} "
           f"(sigma {sigma:.2f}pp, {regime_annotation(point)}, used: {', '.join(used)})")
-    if consensus         is not None: print(f"  consensus:          {consensus:+.2f}%")
-    if trend             is not None: print(f"  trend (PPIFES):     {trend:+.2f}%")
-    if pipeline_pressure is not None: print(f"  pipeline (PPICMM):  {pipeline_pressure:+.2f}%")
+    if consensus is not None: print(f"  consensus:  {consensus:+.2f}%")
+    if trend    is not None: print(f"  trend:      {trend:+.2f}%")
 
     prediction = {
         "eventSlug": f"coreppi-{release}",
@@ -265,7 +231,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, pipeline_pressure, used, lean,
+                                consensus, trend, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
                                 prior_sigma=prior_sigma)

@@ -1,4 +1,4 @@
-"""UMich Consumer Sentiment (Preliminary) predictor + emitter. `v1.1-simple-blend`.
+"""UMich Consumer Sentiment (Preliminary) predictor + emitter. `v1-simple-blend`.
 
 Monthly release, ~mid-month (2nd Friday), 10:00 ET by University of Michigan
 Survey of Consumers. Value format: index level (typical 60-100). Unlike CB
@@ -9,11 +9,6 @@ earlier — often a leading indicator.
 Sub-models:
   - Bloomberg / FF consensus (~1.5 index points MAE)
   - FRED UMCSENT 3-month trend (~2.5 pts MAE)
-  - FRED MCOILWTICO m/m oil-shock adjustment (~3.5 pts MAE — deliberately
-    conservative pre-empirical weight; oil prices are a well-documented
-    driver of UMich sentiment via the gas-price transmission mechanism,
-    but the sensitivity coefficient here is a starting-point estimate.
-    Falls out cleanly if FRED fetch fails.)
 
 Env: FRED_API_KEY, UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      UMICH_RELEASE_DATE, UMICH_DAYS_OUT, UMICH_CONSENSUS, MODEL_VERSION
@@ -52,16 +47,9 @@ ROOT = Path(__file__).parent
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
-    "consensus":  1.5,
-    "trend":      2.5,
-    "oil_shock":  3.5,  # conservative pre-empirical starting weight
+    "consensus": 1.5,
+    "trend":     2.5,
 }
-
-# Sensitivity coefficient for oil→sentiment transmission. Rough starting
-# value from Fed staff literature: ~0.4 index points of UMich decline per
-# 1% m/m WTI increase. Regime-dependent; tune once empirical MAE data
-# accumulates. Sign is negative (oil up → sentiment down).
-OIL_SHOCK_COEFF = -0.4
 
 
 def require_env(key: str) -> str:
@@ -91,44 +79,13 @@ def fetch_fred_umich_trend(api_key: str) -> float | None:
     return sum(vals) / len(vals)
 
 
-def fetch_wti_oil_shock(api_key: str, trend_baseline: float | None) -> float | None:
-    """Apply a WTI m/m adjustment to the trend baseline as an oil-shock
-    sub-model estimate. Returns None if either FRED fetch fails or the
-    trend baseline is unavailable — the oil signal is only meaningful
-    as a modulation on the current sentiment level, not a standalone
-    point.
-
-    Mechanism: MCOILWTICO is FRED's monthly WTI crude oil spot average.
-    Higher m/m oil → higher pump gasoline (3-6 week lag) → tighter
-    household budgets → lower sentiment. Coefficient OIL_SHOCK_COEFF
-    approximates published Fed-staff estimates; conservative pre-
-    empirical weight in MAE dict keeps this from over-driving the blend."""
-    if trend_baseline is None:
-        return None
-    obs = _fetch_fred_observations(api_key, "MCOILWTICO", 2)
-    if not obs or len(obs) < 2:
-        return None
-    try:
-        curr = float(obs[0]["value"])
-        prev = float(obs[1]["value"])
-    except (ValueError, TypeError, KeyError):
-        return None
-    if prev <= 0:
-        return None
-    mom_pct = (curr - prev) / prev * 100.0
-    return trend_baseline + OIL_SHOCK_COEFF * mom_pct
-
-
 def blend(consensus: float | None,
-          trend: float | None,
-          oil_shock: float | None) -> tuple[float, float, list[str]]:
+          trend: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
-    if oil_shock is not None:
-        parts.append(("oil_shock", oil_shock, MAE["oil_shock"]))
     if not parts:
         raise RuntimeError("blend called with all sub-models missing")
     return inverse_variance_combine(parts)
@@ -167,14 +124,13 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    trend: float | None, oil_shock: float | None,
-                    used: list[str], lean: str,
+                    trend: float | None, used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
                     prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:.1f}'} | {MAE[name]:.1f} pts |"
-        for name, v in (("consensus", consensus), ("trend", trend), ("oil_shock", oil_shock))
+        for name, v in (("consensus", consensus), ("trend", trend))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pts", unit="pts")
@@ -201,18 +157,9 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1.1-simple-blend`: inverse-MAE-weighted mean of up to 3 sub-models —
-consensus (~1.5 pts MAE) + FRED UMCSENT 3-month trend (~2.5 pts MAE) +
-FRED MCOILWTICO m/m oil-shock adjustment (~3.5 pts MAE, deliberately
-conservative pre-empirical weight). Unlike CB Consumer Confidence,
+`v1-simple-blend`: inverse-MAE-weighted mean of consensus (~1.5 pts MAE) +
+FRED UMCSENT 3-month trend (~2.5 pts MAE). Unlike CB Consumer Confidence,
 UMCSENT is freely published on FRED — enables real trend sub-model.
-
-Oil-shock sub-model applies `OIL_SHOCK_COEFF = -0.4` pts of UMich
-decline per 1% MCOILWTICO m/m increase to the trend baseline. Sign is
-negative (oil up → sentiment down via gas-price transmission). The
-coefficient is a starting-point estimate from published Fed-staff
-literature; empirical MAE auto-tune (N≥5 threshold) will replace this
-prior weight once resolution data accumulates.
 
 ## Relationship to CB Consumer Confidence
 
@@ -232,13 +179,6 @@ indicator for CB Confidence direction changes.
 
 ## Change log
 
-- **v1.1-simple-blend (2026-09-07)** — added MCOILWTICO m/m oil-shock
-  sub-model with conservative pre-empirical MAE weight (3.5 pts).
-  Sensitivity coefficient `-0.4 pts per 1% WTI m/m` is a starting-point
-  estimate; empirical MAE auto-tune will replace it once N≥5.
-  Falls through cleanly when FRED fetch fails or trend baseline is
-  unavailable (oil signal only meaningful as modulation on current
-  sentiment level).
 - **v1-simple-blend (2026-09-03)** — first ship. 19th event covered.
   Covers Preliminary only; Revised is Phase 2.
 """
@@ -250,18 +190,17 @@ def main() -> None:
 
     release = os.environ["UMICH_RELEASE_DATE"]
     days_out = int(os.environ["UMICH_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
 
     consensus = parse_float("UMICH_CONSENSUS")
     fred_key = os.environ.get("FRED_API_KEY")
     trend = fetch_fred_umich_trend(fred_key) if fred_key else None
-    oil_shock = fetch_wti_oil_shock(fred_key, trend) if fred_key else None
 
-    if consensus is None and trend is None and oil_shock is None:
+    if consensus is None and trend is None:
         print("[emit-umich] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, trend, oil_shock)
+    point, sigma, used = blend(consensus, trend)
     prior_sigma = sigma
     empirical_mae = fetch_empirical_mae("umich")
     sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
@@ -271,9 +210,8 @@ def main() -> None:
 
     print(f"[emit-umich] UMich {release} T-{days_out}: {format_value(point)} "
           f"(sigma {sigma:.1f} pts, {regime_annotation(point)}, used: {', '.join(used)})")
-    if consensus  is not None: print(f"  consensus:  {consensus:.1f}")
-    if trend      is not None: print(f"  trend(3mo): {trend:.1f}")
-    if oil_shock  is not None: print(f"  oil_shock:  {oil_shock:.1f} (trend + WTI m/m * {OIL_SHOCK_COEFF})")
+    if consensus is not None: print(f"  consensus:  {consensus:.1f}")
+    if trend     is not None: print(f"  trend(3mo): {trend:.1f}")
 
     prediction = {
         "eventSlug": f"umich-{release}",
@@ -293,7 +231,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, oil_shock, used, lean,
+                                consensus, trend, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
                                 prior_sigma=prior_sigma)

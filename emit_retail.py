@@ -1,19 +1,14 @@
-"""Retail Sales predictor + emitter. `v1.1-simple-blend`.
+"""Retail Sales predictor + emitter. `v1-simple-blend`.
 
 Retail Sales (Advance Monthly Sales for Retail and Food Services) is a
 consumer-spending gauge released mid-month by Census. Headline m/m
 %-change; Core Retail Sales strips autos out. Real-consumer heartbeat
 that drives Q/Q GDP nowcast revisions.
 
-Sub-models (up to 3):
+Sub-models (up to 2):
   - Bloomberg / FF consensus (~0.30pp historical MAE — retail sales is
     noisy m/m; consensus errors are wider than inflation prints)
   - FRED RSXFS 6-mo trend (~0.40pp)
-  - FRED TOTALSA auto-sales leading indicator (~0.50pp — Ward's total
-    vehicle sales publishes ~5 days ahead of Census release. Motor
-    vehicles are ~20-25% of retail sales; TOTALSA m/m proxies the auto
-    contribution to headline retail m/m. Conservative pre-empirical
-    weight; graceful fallback on FRED failure.)
 
 No Kalshi market sub-model (no retail sales contract as of 2026-09-03).
 
@@ -54,14 +49,9 @@ ROOT = Path(__file__).parent
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
-    "consensus":     0.30,
-    "trend":         0.40,
-    "auto_leading":  0.50,  # TOTALSA proxy, conservative pre-empirical weight
+    "consensus": 0.30,
+    "trend":     0.40,
 }
-
-# Autos share of headline retail m/m — empirical range 0.20-0.25, midpoint used.
-# Retail m/m responds ~AUTO_SHARE_COEFF * TOTALSA m/m to the auto-sales input.
-AUTO_SHARE_COEFF = 0.22
 
 
 def require_env(key: str) -> str:
@@ -100,43 +90,13 @@ def fetch_fred_retail_trend(api_key: str) -> float | None:
     return sum(mom_pcts) / len(mom_pcts)
 
 
-def fetch_auto_leading(api_key: str, trend_baseline: float | None) -> float | None:
-    """Apply a TOTALSA m/m adjustment to the trend baseline as an auto-sales
-    leading-indicator sub-model estimate. Returns None if either FRED
-    fetch fails or the trend baseline is unavailable — the auto signal
-    is only meaningful as a modulation on the current retail trend.
-
-    Mechanism: TOTALSA (Ward's Total Vehicle Sales, SAAR) publishes
-    ~5 days ahead of Census retail release. Motor vehicles are ~20-25%
-    of headline retail; TOTALSA m/m proxies that share's contribution
-    to the m/m retail print. AUTO_SHARE_COEFF (0.22) is the empirical
-    autos-of-retail share midpoint."""
-    if trend_baseline is None:
-        return None
-    obs = _fetch_fred_observations(api_key, "TOTALSA", 2)
-    if not obs or len(obs) < 2:
-        return None
-    try:
-        curr = float(obs[0]["value"])
-        prev = float(obs[1]["value"])
-    except (ValueError, TypeError, KeyError):
-        return None
-    if prev <= 0:
-        return None
-    totalsa_mom_pct = (curr - prev) / prev * 100.0
-    return trend_baseline + AUTO_SHARE_COEFF * totalsa_mom_pct
-
-
 def blend(consensus: float | None,
-          trend: float | None,
-          auto_leading: float | None) -> tuple[float, float, list[str]]:
+          trend: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
-    if auto_leading is not None:
-        parts.append(("auto_leading", auto_leading, MAE["auto_leading"]))
     if not parts:
         raise RuntimeError("blend called with all sub-models missing")
     return inverse_variance_combine(parts)
@@ -166,14 +126,13 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    trend: float | None, auto_leading: float | None,
-                    used: list[str], lean: str,
+                    trend: float | None, used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
                     prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.2f} pp |"
-        for name, v in (("consensus", consensus), ("trend", trend), ("auto_leading", auto_leading))
+        for name, v in (("consensus", consensus), ("trend", trend))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp")
@@ -199,26 +158,15 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1.1-simple-blend`: inverse-MAE-weighted mean of up to 3 sub-models —
-consensus (0.30pp) + FRED RSXFS 6-mo trend (0.40pp) + FRED TOTALSA auto-
-sales leading indicator (0.50pp, conservative pre-empirical). Retail
-sales is one of the noisier monthly prints — consumer spending swings
-sharply on weather, holiday timing, and one-off sector moves.
+`v1-simple-blend`: inverse-MAE-weighted mean of consensus (0.30pp) + FRED
+RSXFS 6-mo trend (0.40pp). Retail sales is one of the noisier monthly prints
+— consumer spending swings sharply on weather, holiday timing, and one-off
+sector moves. Consensus MAE wider than inflation prints; blend MAE follows.
 
-Auto-leading formula: `trend_baseline + AUTO_SHARE_COEFF * totalsa_mom_pct`
-where AUTO_SHARE_COEFF = 0.22 (autos-of-retail share midpoint from
-Census SAAR history). Empirical MAE auto-tune replaces prior weight
-once N>=5 resolutions accumulate.
-
-Phase 2 target: gas station sales carve-out (retail food services excludes
+Phase 2 target: add auto-sales adjustment sub-model (Ward's Intelligence
+publishes monthly auto SAAR ahead of the Census release — leads headline
+by ~5-7 days) + gas station sales carve-out (retail food services excludes
 gas but headline includes it, so oil-price shocks flow through).
-
-## Change log
-
-- **v1.1-simple-blend (2026-09-07)** — added TOTALSA auto-sales leading
-  indicator as third sub-model. Ward's publishes ~5 days ahead of Census.
-  Falls through cleanly if FRED or trend baseline unavailable.
-- **v1-simple-blend** — first ship.
 """
 
 
@@ -228,18 +176,17 @@ def main() -> None:
 
     release = os.environ["RETAIL_RELEASE_DATE"]
     days_out = int(os.environ["RETAIL_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
 
     consensus = parse_pct("RETAIL_CONSENSUS_PCT")
     fred_key = os.environ.get("FRED_API_KEY")
     trend = fetch_fred_retail_trend(fred_key) if fred_key else None
-    auto_leading = fetch_auto_leading(fred_key, trend) if fred_key else None
 
-    if consensus is None and trend is None and auto_leading is None:
+    if consensus is None and trend is None:
         print("[emit-retail] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, trend, auto_leading)
+    point, sigma, used = blend(consensus, trend)
     prior_sigma = sigma
     empirical_mae = fetch_empirical_mae("retail")
     sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
@@ -249,9 +196,8 @@ def main() -> None:
 
     print(f"[emit-retail] Retail {release} T-{days_out}: {format_value(point)} m/m "
           f"(sigma {sigma:.2f}pp, used: {', '.join(used)})")
-    if consensus    is not None: print(f"  consensus:     {consensus:+.2f}%")
-    if trend        is not None: print(f"  trend (RSXFS): {trend:+.2f}%")
-    if auto_leading is not None: print(f"  auto (TOTALSA):{auto_leading:+.2f}% (baseline + {AUTO_SHARE_COEFF} * TOTALSA m/m)")
+    if consensus is not None: print(f"  consensus:  {consensus:+.2f}%")
+    if trend     is not None: print(f"  trend(6mo): {trend:+.2f}%")
 
     prediction = {
         "eventSlug": f"retail-{release}",
@@ -271,7 +217,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, auto_leading, used, lean,
+                                consensus, trend, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
                                 prior_sigma=prior_sigma)
