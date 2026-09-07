@@ -1,4 +1,4 @@
-"""New Home Sales predictor + emitter. `v1-simple-blend`.
+"""New Home Sales predictor + emitter. `v1.1-simple-blend`.
 
 Monthly release, ~4th week of month, 10:00 ET by Census. Value format:
 annualized rate in thousands of new single-family homes sold (typical
@@ -8,6 +8,10 @@ more rate-sensitive since new construction is mortgage-financed at 90%+.
 Sub-models:
   - Bloomberg / FF consensus (~40K MAE on annualized rate)
   - FRED HSN1F 3-month trend (~55K MAE)
+  - FRED MORTGAGE30US 4-week rate-shock (~75K MAE — tighter timing window
+    than Existing since new-home sales react to rates in ~1 month vs
+    ~2 months for resales. Correlation ~-0.65, sensitivity coefficient
+    conservative pre-empirical.)
 
 Env: FRED_API_KEY, UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      NEWHOME_RELEASE_DATE, NEWHOME_DAYS_OUT, NEWHOME_CONSENSUS_K, MODEL_VERSION
@@ -46,9 +50,16 @@ ROOT = Path(__file__).parent
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
-    "consensus": 40.0,
-    "trend":     55.0,
+    "consensus":       40.0,
+    "trend":           55.0,
+    "mortgage_shock":  75.0,  # conservative pre-empirical
 }
+
+# Mortgage-rate sensitivity for new home sales. Higher than existing
+# (-0.005) because new-home purchases are 90%+ mortgage-financed and
+# builders are more responsive to rate signals. Historical correlation
+# is -0.65 at a 4-week lag.
+MORTGAGE_SENSITIVITY = -0.007
 
 
 def require_env(key: str) -> str:
@@ -78,13 +89,41 @@ def fetch_fred_newhome_trend(api_key: str) -> float | None:
     return sum(vals) / len(vals)
 
 
+def fetch_mortgage_shock(api_key: str, trend_baseline: float | None) -> float | None:
+    """Apply MORTGAGE30US 4-week rate change to the trend baseline as a
+    mortgage-shock sub-model. Returns None if MORTGAGE30US fetch fails
+    or trend baseline is unavailable.
+
+    Mechanism: 90%+ of new-home purchases are mortgage-financed, so
+    Freddie Mac 30-yr fixed rate movements transmit faster than for
+    existing sales. Historical -0.65 correlation at a 4-week lag."""
+    if trend_baseline is None:
+        return None
+    obs = _fetch_fred_observations(api_key, "MORTGAGE30US", 5)
+    if not obs or len(obs) < 5:
+        return None
+    try:
+        rates = [float(o["value"]) for o in obs[:5]]
+    except (ValueError, KeyError):
+        return None
+    # Recent rate (avg of last 2 weekly obs) vs 4-week-lagged rate
+    # (avg of oldest 2 obs, ~4 weeks prior).
+    recent = (rates[0] + rates[1]) / 2.0
+    lagged = (rates[3] + rates[4]) / 2.0
+    rate_change_bp = (recent - lagged) * 100.0
+    return trend_baseline * (1.0 + MORTGAGE_SENSITIVITY * rate_change_bp)
+
+
 def blend(consensus: float | None,
-          trend: float | None) -> tuple[float, float, list[str]]:
+          trend: float | None,
+          mortgage_shock: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
+    if mortgage_shock is not None:
+        parts.append(("mortgage_shock", mortgage_shock, MAE["mortgage_shock"]))
     if not parts:
         raise RuntimeError("blend called with all sub-models missing")
     return inverse_variance_combine(parts)
@@ -123,13 +162,14 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    trend: float | None, used: list[str], lean: str,
+                    trend: float | None, mortgage_shock: float | None,
+                    used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
                     prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:.0f}K'} | {MAE[name]:.0f}K |"
-        for name, v in (("consensus", consensus), ("trend", trend))
+        for name, v in (("consensus", consensus), ("trend", trend), ("mortgage_shock", mortgage_shock))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} K", unit="K")
@@ -156,15 +196,19 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: inverse-MAE-weighted mean of consensus (~40K) + FRED
-HSN1F 3-month trend (~55K). New Home Sales is more rate-sensitive than
-Existing — 90%+ of new-home purchases are mortgage-financed.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of up to 3 sub-models —
+consensus (~40K) + FRED HSN1F 3-month trend (~55K) + FRED MORTGAGE30US
+4-week rate-shock (~75K, conservative pre-empirical). New Home Sales is
+more rate-sensitive than Existing — 90%+ of new-home purchases are
+mortgage-financed.
+
+Mortgage-shock formula: `trend * (1 + MORTGAGE_SENSITIVITY * rate_change_bp)`
+where MORTGAGE_SENSITIVITY = -0.007 (higher magnitude than existing's
+-0.005 because new-home financing dependence is greater). Empirical MAE
+auto-tune replaces prior weight once N>=5 resolutions.
 
 ## Phase 2 targets
 
-- **Mortgage rate 4-week lag** — Freddie Mac 30-yr fixed 4-week lag
-  correlates ~-0.65 with new home sales (rate up → sales down after 1mo,
-  faster reaction than existing)
 - **NAHB Housing Market Index cross** — HMI is a builder-sentiment survey
   released ~5 days before New Home Sales; leading indicator
 - **Housing Starts as trailing anchor** — Starts leads Sales by 3-6 months
@@ -172,6 +216,11 @@ Existing — 90%+ of new-home purchases are mortgage-financed.
 
 ## Change log
 
+- **v1.1-simple-blend (2026-09-07)** — added FRED MORTGAGE30US 4-week
+  rate-change as mortgage-shock sub-model. Sensitivity -0.007 per bp is
+  conservative pre-empirical; tighter 4-week window than existing's
+  8-week window reflects new-home's faster rate reaction. Falls through
+  cleanly on FRED failure.
 - **v1-simple-blend (2026-09-03)** — first ship. 18th event covered.
 """
 
@@ -182,17 +231,18 @@ def main() -> None:
 
     release = os.environ["NEWHOME_RELEASE_DATE"]
     days_out = int(os.environ["NEWHOME_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
 
     consensus = parse_k("NEWHOME_CONSENSUS_K")
     fred_key = os.environ.get("FRED_API_KEY")
     trend = fetch_fred_newhome_trend(fred_key) if fred_key else None
+    mortgage_shock = fetch_mortgage_shock(fred_key, trend) if fred_key else None
 
-    if consensus is None and trend is None:
+    if consensus is None and trend is None and mortgage_shock is None:
         print("[emit-newhome] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, trend)
+    point, sigma, used = blend(consensus, trend, mortgage_shock)
     prior_sigma = sigma
     empirical_mae = fetch_empirical_mae("newhome")
     sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
@@ -202,8 +252,9 @@ def main() -> None:
 
     print(f"[emit-newhome] NewHome {release} T-{days_out}: {format_value(point)} "
           f"(sigma {sigma:.0f}K, {regime_annotation(point)}, used: {', '.join(used)})")
-    if consensus is not None: print(f"  consensus:  {consensus:.0f}K")
-    if trend     is not None: print(f"  trend(3mo): {trend:.0f}K")
+    if consensus       is not None: print(f"  consensus:              {consensus:.0f}K")
+    if trend           is not None: print(f"  trend (HSN1F):          {trend:.0f}K")
+    if mortgage_shock  is not None: print(f"  mortgage (MORTGAGE30US):{mortgage_shock:.0f}K")
 
     prediction = {
         "eventSlug": f"newhome-{release}",
@@ -223,7 +274,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, used, lean,
+                                consensus, trend, mortgage_shock, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
                                 prior_sigma=prior_sigma)

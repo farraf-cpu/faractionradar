@@ -115,7 +115,7 @@ jobs:
           NEWHOME_RELEASE_DATE: ${{ needs.gate.outputs.newhome_release_date }}
           NEWHOME_DAYS_OUT: ${{ needs.gate.outputs.newhome_days_out }}
           NEWHOME_CONSENSUS_K: ${{ steps.consensus.outputs.consensus_k }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v1.1-simple-blend
         run: python emit_newhome.py
 
       - name: Commit report + ledger row
