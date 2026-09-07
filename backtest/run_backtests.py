@@ -26,15 +26,14 @@ from pathlib import Path
 # Registry: event_name -> (module_name, human_label)
 # Extend as more per-event backtests land.
 EVENTS = {
-    "retail": ("backtest_retail", "US Advance Retail Sales m/m"),
-    # TODO(next passes):
-    # "umich": ("backtest_umich", "US UMich Consumer Sentiment Preliminary"),
-    # "housing": ("backtest_housing", "US Housing Starts"),
-    # "confidence": ("backtest_confidence", "US CB Consumer Confidence"),
-    # "durable": ("backtest_durable", "US Durable Goods Orders m/m"),
-    # "existing": ("backtest_existing", "US Existing Home Sales"),
-    # "newhome": ("backtest_newhome", "US New Home Sales"),
-    # "coreppi": ("backtest_coreppi", "US Core PPI m/m"),
+    "retail":     ("backtest_retail",     "US Advance Retail Sales m/m"),
+    "umich":      ("backtest_umich",      "US UMich Consumer Sentiment Preliminary"),
+    "housing":    ("backtest_housing",    "US Housing Starts"),
+    "confidence": ("backtest_confidence", "US CB Consumer Confidence (OECD proxy)"),
+    "durable":    ("backtest_durable",    "US Durable Goods Orders m/m"),
+    "existing":   ("backtest_existing",   "US Existing Home Sales"),
+    "newhome":    ("backtest_newhome",    "US New Home Sales"),
+    "coreppi":    ("backtest_coreppi",    "US Core PPI m/m"),
 }
 
 
