@@ -184,3 +184,4 @@
 {"publishedAt":"2026-09-07T14:10:33.176521+00:00","eventSlug":"cpi-2026-09-11","daysOut":4,"modelVersion":"v1.3-kalshi-ladder-dist","ourCall":"+0.3%","ci68":[0.2,0.32],"grandMedian":null,"reportPath":"reports/2026-09/cpi-t-4.md","modalOutcome":"+0.3%","outcomeSource":"kalshi-ladder"}
 {"publishedAt":"2026-09-07T14:20:44.704359+00:00","eventSlug":"ppi-2026-09-10","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.3,0.45],"grandMedian":null,"reportPath":"reports/2026-09/ppi-t-3.md"}
 {"publishedAt":"2026-09-07T15:14:45.550233+00:00","eventSlug":"jolts-2026-09-08","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"7.33M","ci68":[7.08,7.58],"grandMedian":null,"reportPath":"reports/2026-09/jolts-t-1.md"}
+{"publishedAt":"2026-09-07T15:32:56.054419+00:00","eventSlug":"umich-2026-09-11","daysOut":4,"modelVersion":"v1.1-simple-blend","ourCall":"50.3","ci68":[49.1,51.6],"grandMedian":null,"reportPath":"reports/2026-09/umich-t-4.md"}
