@@ -117,7 +117,7 @@ jobs:
           DURABLE_RELEASE_DATE: ${{ needs.gate.outputs.durable_release_date }}
           DURABLE_DAYS_OUT: ${{ needs.gate.outputs.durable_days_out }}
           DURABLE_CONSENSUS_PCT: ${{ steps.consensus.outputs.consensus_pct }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v1.1-simple-blend
         run: python emit_durable.py
 
       - name: Commit report + ledger row

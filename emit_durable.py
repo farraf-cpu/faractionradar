@@ -1,4 +1,4 @@
-"""Durable Goods Orders predictor + emitter. `v1-simple-blend`.
+"""Durable Goods Orders predictor + emitter. `v1.1-simple-blend`.
 
 Monthly release, ~4th week of month (24th-28th), 08:30 ET by Census.
 Value format: m/m %-change (headline). One of the noisiest monthly prints —
@@ -7,6 +7,11 @@ single-plane Boeing orders can swing headline by 2pp+.
 Sub-models:
   - Bloomberg / FF consensus (~0.5pp historical MAE on headline)
   - FRED DGORDER 3-month trend (~0.8pp — series is volatile so short window)
+  - FRED NEWORDER 3-month trend (~0.6pp — Nondefense Capital Goods Excluding
+    Aircraft is the "core capex orders" cut. Strips Boeing/defense noise
+    that plagues headline. Historically correlates ~0.65 with headline
+    direction with much lower variance. Conservative pre-empirical weight;
+    graceful fallback on FRED failure.)
 
 Env: FRED_API_KEY, UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      DURABLE_RELEASE_DATE, DURABLE_DAYS_OUT, DURABLE_CONSENSUS_PCT, MODEL_VERSION
@@ -45,8 +50,9 @@ ROOT = Path(__file__).parent
 UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
 MAE = {
-    "consensus": 0.5,
-    "trend":     0.8,
+    "consensus":   0.5,
+    "trend":       0.8,
+    "core_orders": 0.6,  # NEWORDER (core capex ex aircraft), conservative pre-empirical
 }
 
 
@@ -68,13 +74,15 @@ def parse_pct(env_key: str) -> float | None:
         return None
 
 
-def fetch_fred_durable_trend(api_key: str) -> float | None:
-    """3-month mean of DGORDER m/m %-changes. FRED reports as level; compute
-    m/m %-change from the last 4 levels."""
-    obs = _fetch_fred_observations(api_key, "DGORDER", 4)
+def _fred_series_3mo_mom(api_key: str, series_id: str) -> float | None:
+    """Shared: 3-month mean of m/m %-changes derived from a FRED level series."""
+    obs = _fetch_fred_observations(api_key, series_id, 4)
     if not obs or len(obs) < 4:
         return None
-    levels = [float(o["value"]) for o in obs[:4]]
+    try:
+        levels = [float(o["value"]) for o in obs[:4]]
+    except (ValueError, KeyError):
+        return None
     mom_pcts = []
     for i in range(3):
         prev = levels[i + 1]
@@ -86,13 +94,31 @@ def fetch_fred_durable_trend(api_key: str) -> float | None:
     return sum(mom_pcts) / len(mom_pcts)
 
 
+def fetch_fred_durable_trend(api_key: str) -> float | None:
+    """3-month mean of DGORDER m/m %-changes (headline durable goods orders)."""
+    return _fred_series_3mo_mom(api_key, "DGORDER")
+
+
+def fetch_core_orders(api_key: str) -> float | None:
+    """3-month mean of NEWORDER m/m %-changes. NEWORDER =
+    Manufacturers' New Orders: Nondefense Capital Goods Excluding
+    Aircraft — the "core capex orders" cut used by macro trackers to
+    strip Boeing / defense noise from the headline. Historically
+    correlates ~0.65 with headline direction with materially lower
+    variance."""
+    return _fred_series_3mo_mom(api_key, "NEWORDER")
+
+
 def blend(consensus: float | None,
-          trend: float | None) -> tuple[float, float, list[str]]:
+          trend: float | None,
+          core_orders: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
+    if core_orders is not None:
+        parts.append(("core_orders", core_orders, MAE["core_orders"]))
     if not parts:
         raise RuntimeError("blend called with all sub-models missing")
     return inverse_variance_combine(parts)
@@ -122,13 +148,14 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    trend: float | None, used: list[str], lean: str,
+                    trend: float | None, core_orders: float | None,
+                    used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
                     prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:+.2f}%'} | {MAE[name]:.1f} pp |"
-        for name, v in (("consensus", consensus), ("trend", trend))
+        for name, v in (("consensus", consensus), ("trend", trend), ("core_orders", core_orders))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pp", unit="pp")
@@ -154,10 +181,13 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: inverse-MAE-weighted mean of consensus (~0.5pp MAE) +
-FRED DGORDER 3-month trend (~0.8pp MAE). Durable goods is one of the
-noisiest monthly prints — a single-plane Boeing order can swing headline
-by 2pp+. Consensus MAE is wider than inflation/employment prints.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of up to 3 sub-models —
+consensus (~0.5pp MAE) + FRED DGORDER 3-month trend (~0.8pp MAE) + FRED
+NEWORDER 3-month core-orders trend (~0.6pp MAE, conservative pre-empirical).
+Durable goods is one of the noisiest monthly prints — a single-plane
+Boeing order can swing headline by 2pp+. Core capex orders (NEWORDER)
+strips that transportation noise; historically correlates ~0.65 with
+headline direction with materially lower variance.
 
 Phase 2 target:
 - **Core Durable Goods Orders split** — separate slug `durable-core-<date>`
@@ -166,6 +196,14 @@ Phase 2 target:
 - **Boeing 737 MAX orders tracker** — Boeing reports monthly commercial
   aircraft orders separately; subtract from headline to build a
   "durable ex-Boeing" leading indicator
+
+## Change log
+
+- **v1.1-simple-blend (2026-09-07)** — added FRED NEWORDER (Nondefense
+  Capital Goods Excluding Aircraft) 3-mo trend as core-orders sub-model.
+  MAE weight 0.6pp is conservative pre-empirical; empirical MAE auto-tune
+  replaces prior weight once N>=5 resolutions.
+- **v1-simple-blend** — first ship.
 """
 
 
@@ -175,17 +213,18 @@ def main() -> None:
 
     release = os.environ["DURABLE_RELEASE_DATE"]
     days_out = int(os.environ["DURABLE_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
 
     consensus = parse_pct("DURABLE_CONSENSUS_PCT")
     fred_key = os.environ.get("FRED_API_KEY")
     trend = fetch_fred_durable_trend(fred_key) if fred_key else None
+    core_orders = fetch_core_orders(fred_key) if fred_key else None
 
-    if consensus is None and trend is None:
+    if consensus is None and trend is None and core_orders is None:
         print("[emit-durable] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, trend)
+    point, sigma, used = blend(consensus, trend, core_orders)
     prior_sigma = sigma
     empirical_mae = fetch_empirical_mae("durable")
     sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
@@ -195,8 +234,9 @@ def main() -> None:
 
     print(f"[emit-durable] Durable {release} T-{days_out}: {format_value(point)} m/m "
           f"(sigma {sigma:.2f}pp, used: {', '.join(used)})")
-    if consensus is not None: print(f"  consensus:  {consensus:+.2f}%")
-    if trend     is not None: print(f"  trend(3mo): {trend:+.2f}%")
+    if consensus   is not None: print(f"  consensus:              {consensus:+.2f}%")
+    if trend       is not None: print(f"  trend (DGORDER):        {trend:+.2f}%")
+    if core_orders is not None: print(f"  core_orders (NEWORDER): {core_orders:+.2f}%")
 
     prediction = {
         "eventSlug": f"durable-{release}",
@@ -216,7 +256,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, used, lean,
+                                consensus, trend, core_orders, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
                                 prior_sigma=prior_sigma)
