@@ -1,7 +1,11 @@
 """Housing Starts backtest — v1 vs v1.1.
 
   v1:   HOUST 3-month trend (mean of last 3 levels, converted to millions).
-  v1.1: v1 + PERMIT 3-month trend (permits leading indicator).
+  v1.1: inverse-MAE blend of HOUST 3-mo trend + PERMIT 3-mo trend,
+        matching live emit_housing.py's blend() call. First backtest
+        pass measured aux (PERMIT) alone which showed spurious
+        regression; corrected here to reflect what the live predictor
+        actually does.
 
 Values in millions of annualized starts (e.g. 1.35M). Both HOUST and PERMIT
 are reported in thousands annualized on FRED — convert by /1000.
@@ -21,6 +25,12 @@ from harness import (
     obs_to_floats,
     slice_at_date,
 )
+
+
+# Inverse-MAE weights matching live emit_housing.py's MAE dict (both in
+# millions of annualized starts):
+HOUST_MAE = 0.06
+PERMIT_MAE = 0.07
 
 
 def _release_proxy_date(obs_date_str: str) -> str:
@@ -55,14 +65,18 @@ def run(n: int = 24) -> str:
             continue
         v1_trend = statistics.mean(vals_m)
 
-        # v1.1: PERMIT 3-mo trend (independent point estimate, same units)
+        # v1.1: inverse-MAE blend of HOUST trend + PERMIT trend, matching
+        # live emit_housing.py behavior. Weight = 1/MAE^2 (inverse variance).
         v1_1_pred = None
         if permit:
             permit_avail = slice_at_date(permit, release_date)
             if len(permit_avail) >= 3:
                 permit_vals_m = [v / 1000.0 for v in obs_to_floats(permit_avail[:3])]
                 if len(permit_vals_m) == 3:
-                    v1_1_pred = statistics.mean(permit_vals_m)
+                    permit_trend = statistics.mean(permit_vals_m)
+                    w_h = 1.0 / (HOUST_MAE ** 2)
+                    w_p = 1.0 / (PERMIT_MAE ** 2)
+                    v1_1_pred = (w_h * v1_trend + w_p * permit_trend) / (w_h + w_p)
 
         # Actual: HOUST level for target month, in millions
         try:
@@ -85,10 +99,11 @@ def run(n: int = 24) -> str:
         "US Housing Starts (annualized)",
         rows, [v1_summary, v1_1_summary],
         caveats=DEFAULT_CAVEATS + (
-            "- **Housing-specific:** v1.1 sub-model is PERMIT 3-mo trend "
-            "as its own point estimate (not a modulation of HOUST trend). "
-            "Permits typically run slightly higher than starts (some don't "
-            "convert), which introduces a documented bias.\n"
+            "- **Housing-specific:** v1.1 is now an inverse-MAE blend of "
+            f"HOUST trend (MAE {HOUST_MAE*1000:.0f}K) + PERMIT trend "
+            f"(MAE {PERMIT_MAE*1000:.0f}K), matching live emit_housing.py. "
+            "First backtest pass measured PERMIT alone and produced a "
+            "spurious regression; corrected to reflect actual live behavior.\n"
         ),
     )
 

@@ -22,7 +22,7 @@ from harness import (
     slice_at_date,
 )
 
-OIL_SHOCK_COEFF = -0.4  # match emit_umich.py
+OIL_SHOCK_COEFF = -0.068  # OLS refit from backtest run 34099012259; was -0.4 in first ship
 
 
 def _release_proxy_date(obs_date_str: str) -> str:

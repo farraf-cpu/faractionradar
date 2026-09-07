@@ -1,10 +1,14 @@
 """Core PPI backtest — v1 vs v1.1.
 
   v1:   PPIFES 6-month m/m trend.
-  v1.1: v1 + PPICMM 6-month m/m intermediate-materials trend (independent).
+  v1.1: inverse-MAE blend of PPIFES trend + PPICMM trend, matching live
+        emit_coreppi.py's blend() call. First backtest pass measured
+        PPICMM alone which showed spurious regression. Even after this
+        correction, OLS refit shows blend weight w=0.998 on v1 (i.e.
+        PPICMM adds essentially no signal); the live v1.1 was reverted
+        for this reason.
 
-Both output m/m %-change on Core PPI (ex food + energy). PPIFES and PPICMM
-are both directly on FRED as pchange-friendly series.
+Both output m/m %-change on Core PPI (ex food + energy).
 """
 from __future__ import annotations
 
@@ -22,6 +26,11 @@ from harness import (
     obs_to_floats,
     slice_at_date,
 )
+
+
+# Inverse-MAE weights matching live emit_coreppi.py (all in pp):
+PPIFES_MAE = 0.15
+PPICMM_MAE = 0.18
 
 
 def _release_proxy_date(obs_date_str: str) -> str:
@@ -59,7 +68,8 @@ def run(n: int = 24) -> str:
             continue
         v1_trend = statistics.mean(v1_mom)
 
-        # v1.1: PPICMM 6-mo trend as independent point estimate
+        # v1.1: inverse-MAE blend of PPIFES trend + PPICMM trend, matching
+        # live emit_coreppi.py behavior.
         v1_1_pred = None
         if ppicmm:
             cmm_avail = slice_at_date(ppicmm, release_date)
@@ -68,7 +78,10 @@ def run(n: int = 24) -> str:
                 if len(cmm_levels) >= 7:
                     cmm_mom = mom_pct_from_levels(cmm_levels)
                     if len(cmm_mom) >= 6:
-                        v1_1_pred = statistics.mean(cmm_mom)
+                        cmm_trend = statistics.mean(cmm_mom)
+                        w_pf = 1.0 / (PPIFES_MAE ** 2)
+                        w_pc = 1.0 / (PPICMM_MAE ** 2)
+                        v1_1_pred = (w_pf * v1_trend + w_pc * cmm_trend) / (w_pf + w_pc)
 
         # Actual: m/m of target vs preceding
         if i + 1 >= len(ppifes):

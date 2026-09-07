@@ -116,7 +116,7 @@ jobs:
           HOUSING_RELEASE_DATE: ${{ needs.gate.outputs.housing_release_date }}
           HOUSING_DAYS_OUT: ${{ needs.gate.outputs.housing_days_out }}
           HOUSING_CONSENSUS_M: ${{ steps.consensus.outputs.consensus_m }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v1.1-simple-blend
         run: python emit_housing.py
 
       - name: Commit report + ledger row
