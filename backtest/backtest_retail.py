@@ -30,16 +30,18 @@ AUTO_SHARE_COEFF = 0.22
 
 
 def _release_proxy_date(obs_date_str: str) -> str:
-    """Given a FRED observation date (e.g. '2024-08-01' for August 2024
-    data), return the approximate release date (~15th of the following
-    month).
+    """Point-in-time cutoff for the slice filter. Returns the target obs
+    date itself, so `slice_at_date(series, cutoff)` filters obs strictly
+    older than the target month — correctly excluding the target AND
+    all future obs.
+
+    Conservative on auxiliary series: same-month auxiliary observations
+    (e.g. August TOTALSA that publishes ~5 days after month-end, so it
+    IS available at August retail's mid-September release) are excluded.
+    This makes backtest v1.1 slightly WORSE than live v1.1; the direction
+    of v1 vs v1.1 improvement is preserved.
     """
-    obs_dt = datetime.strptime(obs_date_str, "%Y-%m-%d").date()
-    if obs_dt.month == 12:
-        rel = date(obs_dt.year + 1, 1, 15)
-    else:
-        rel = date(obs_dt.year, obs_dt.month + 1, 15)
-    return rel.isoformat()
+    return obs_date_str
 
 
 def run(n: int = 24) -> str:

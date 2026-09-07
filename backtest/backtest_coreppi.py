@@ -25,13 +25,10 @@ from harness import (
 
 
 def _release_proxy_date(obs_date_str: str) -> str:
-    """Core PPI releases mid-month (~15th of following month), same day as CPI."""
-    obs_dt = datetime.strptime(obs_date_str, "%Y-%m-%d").date()
-    if obs_dt.month == 12:
-        rel = date(obs_dt.year + 1, 1, 15)
-    else:
-        rel = date(obs_dt.year, obs_dt.month + 1, 15)
-    return rel.isoformat()
+    """Point-in-time cutoff = target obs date (see backtest_retail.py for
+    the rationale). PPIFES + PPICMM publish same day, so same-month
+    conservatism matches live behavior."""
+    return obs_date_str
 
 
 def run(n: int = 24) -> str:

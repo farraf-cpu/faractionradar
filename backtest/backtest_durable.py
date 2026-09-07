@@ -24,13 +24,11 @@ from harness import (
 
 
 def _release_proxy_date(obs_date_str: str) -> str:
-    """Durable Goods releases ~4th week of following month."""
-    obs_dt = datetime.strptime(obs_date_str, "%Y-%m-%d").date()
-    if obs_dt.month == 12:
-        rel = date(obs_dt.year + 1, 1, 26)
-    else:
-        rel = date(obs_dt.year, obs_dt.month + 1, 26)
-    return rel.isoformat()
+    """Point-in-time cutoff = target obs date (see backtest_retail.py for
+    the rationale). Conservative on NEWORDER: same-month NEWORDER
+    publishes same day as headline DGORDER, so live v1.1 wouldn't have
+    it either — this cutoff matches live behavior."""
+    return obs_date_str
 
 
 def run(n: int = 24) -> str:

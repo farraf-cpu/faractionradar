@@ -195,4 +195,10 @@ DEFAULT_CAVEATS = """- **Revision drift:** current FRED values may differ from f
   consensus + trend; live v1.1 blends consensus + trend + new sub-model.
 - **Coefficient defaults:** measures the pre-empirical coefficients
   shipped 2026-09-07. Refit is a separate follow-up pass.
+- **Point-in-time cutoff is target's obs date, not release date.** This
+  strictly excludes future obs and the target itself (no future-peek).
+  Same-month auxiliary series (e.g. TOTALSA that publishes ~5 days
+  after month-end and IS available at retail's mid-month release) get
+  excluded too, so backtest v1.1 is CONSERVATIVE on the sub-model
+  contribution. Direction of v1 → v1.1 improvement is preserved.
 """

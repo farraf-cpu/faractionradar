@@ -26,14 +26,11 @@ OIL_SHOCK_COEFF = -0.4  # match emit_umich.py
 
 
 def _release_proxy_date(obs_date_str: str) -> str:
-    """UMich Preliminary releases ~10-14 days after month-end.
-    Use 12th of following month as proxy."""
-    obs_dt = datetime.strptime(obs_date_str, "%Y-%m-%d").date()
-    if obs_dt.month == 12:
-        rel = date(obs_dt.year + 1, 1, 12)
-    else:
-        rel = date(obs_dt.year, obs_dt.month + 1, 12)
-    return rel.isoformat()
+    """Point-in-time cutoff = target obs date (see backtest_retail.py for
+    the rationale). Conservative on WTI: same-month MCOILWTICO is
+    excluded, though live UMich at 2nd-Friday release WOULD have that
+    reading. Preserves v1 vs v1.1 direction; understates v1.1 improvement."""
+    return obs_date_str
 
 
 def run(n: int = 24) -> str:

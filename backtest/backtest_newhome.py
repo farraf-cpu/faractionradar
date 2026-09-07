@@ -26,13 +26,11 @@ MORTGAGE_SENSITIVITY = -0.007  # match emit_newhome.py
 
 
 def _release_proxy_date(obs_date_str: str) -> str:
-    """New Home Sales releases ~4th week of following month."""
-    obs_dt = datetime.strptime(obs_date_str, "%Y-%m-%d").date()
-    if obs_dt.month == 12:
-        rel = date(obs_dt.year + 1, 1, 25)
-    else:
-        rel = date(obs_dt.year, obs_dt.month + 1, 25)
-    return rel.isoformat()
+    """Point-in-time cutoff = target obs date (see backtest_retail.py for
+    the rationale). Same MORTGAGE30US conservatism as backtest_existing.py
+    — live v1.1 would have current-month weekly prints; backtest excludes
+    them. Preserves v1 vs v1.1 direction; understates v1.1 improvement."""
+    return obs_date_str
 
 
 def run(n: int = 24) -> str:

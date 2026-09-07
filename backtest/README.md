@@ -58,6 +58,16 @@ Retail (n=24 recent releases):
 3. **Coefficient tuning is separate.** This harness measures the
    default coefficients we shipped 2026-09-07. Refit is a follow-up
    pass once we've reviewed these baseline numbers.
+4. **Point-in-time cutoff is target's obs date (not release date).**
+   FRED obs dates use the START of the covered month; releases happen
+   1-4 weeks later depending on series. Using the target's obs date
+   as cutoff strictly excludes the target AND all future obs — no
+   future-peek. It also excludes same-month auxiliary series (e.g.
+   TOTALSA that publishes ~5 days after month-end and IS available
+   at retail's mid-month release), so the backtest is CONSERVATIVE
+   on v1.1 auxiliary sub-models. Live v1.1 accuracy is expected to
+   be at least as good as backtest v1.1 accuracy. Direction of the
+   v1 → v1.1 improvement measurement is preserved.
 
 ## How to run
 

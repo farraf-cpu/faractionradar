@@ -31,11 +31,13 @@ CB_PROXY_SERIES = "CSCICP03USM665S"
 
 
 def _release_proxy_date(obs_date_str: str) -> str:
-    """CB Confidence releases last Tuesday of the reference month.
-    Use 28th of same month as proxy."""
-    obs_dt = datetime.strptime(obs_date_str, "%Y-%m-%d").date()
-    rel = date(obs_dt.year, obs_dt.month, 28)
-    return rel.isoformat()
+    """Point-in-time cutoff = target obs date (see backtest_retail.py for
+    the rationale). Conservative on UMCSENT: same-month UMCSENT Prelim
+    releases 2nd Friday of the month, ~2 weeks BEFORE CB Confidence,
+    so live v1.1 would have current-month UMCSENT. Preserves v1 vs v1.1
+    direction; understates v1.1 improvement here more materially since
+    UMCSENT current-month is the freshest input v1.1 uses."""
+    return obs_date_str
 
 
 def run(n: int = 24) -> str:
