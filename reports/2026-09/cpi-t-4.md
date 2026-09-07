@@ -1,22 +1,51 @@
 # CPI prediction — target 2026-09-11 (T-4)
 
-**Model version:** `v1.1-simple-blend`
-**Published:** 2026-09-03T09:04:09.524063+00:00
+**Model version:** `v1.3-kalshi-ladder-dist`
+**Published:** 2026-09-07T10:40:53.725530+00:00
 
 ## Final pick
 
-**+0.1% m/m**
+**+0.3% m/m**
 
-- 68% CI: [+0.05%, +0.23%]
-- 95% CI: [-0.05%, +0.33%]
-- Lean vs consensus: no consensus
-- Sub-models used: market, trend
+- 68% CI: [+0.20%, +0.32%] · sigma source: prior (inverse-MAE)
+- 95% CI: [+0.13%, +0.38%]
+- Lean vs consensus: below consensus by 0.14pp
+- Sub-models used: consensus, market, trend
+
+
+## Market outcome distribution (source: `kalshi-ladder`)
+
+| CPI m/m | Probability |
+|---------|-------------|
+| -0.1% | 1.5% |
+| 0.0% | 0.0% |
+| +0.1% | 8.0% |
+| +0.2% | 31.5% |
+| +0.3% | 45.5% **(modal)** |
+| +0.4% | 5.5% |
+| +0.5% | 8.0% |
+
+
+## Empirical accuracy (live)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | 0.08 pp |
+| Resolved predictions | 0 (first resolution pending) |
+| Empirical MAE | — |
+| Hit rate (ourCall closest) | — |
+
+Empirical MAE + hit-rate auto-populate as predictions resolve. Once
+count >= 5 the CI sigma will switch from the prior to the
+empirical value.
+
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | — | 0.08 pp |
+| consensus | +0.40% | 0.08 pp |
+| cleveland_fed | — | 0.06 pp |
 | market | +0.00% | 0.12 pp |
 | trimmed_mean | — | 0.10 pp |
 | trend | +0.32% | 0.15 pp |
