@@ -113,7 +113,7 @@ jobs:
           COREPPI_RELEASE_DATE: ${{ needs.gate.outputs.coreppi_release_date }}
           COREPPI_DAYS_OUT: ${{ needs.gate.outputs.coreppi_days_out }}
           COREPPI_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v1.1-simple-blend
         run: python emit_coreppi.py
 
       - name: Commit report + ledger row
