@@ -1,0 +1,56 @@
+name: Backtest Harness
+
+# On-demand backtest replay of the FRED-based sub-models. Uploads a
+# markdown report as workflow artifact for review.
+#
+# Trigger via Actions tab -> "Backtest Harness" -> "Run workflow".
+# Pick an event (or "all") and a rolling window size N.
+
+on:
+  workflow_dispatch:
+    inputs:
+      event:
+        description: 'Event slug (see backtest/run_backtests.py --list) or "all"'
+        required: true
+        default: 'retail'
+      n:
+        description: 'Rolling window size — most recent N releases'
+        required: false
+        default: '24'
+
+concurrency:
+  group: backtest-${{ github.event.inputs.event }}
+  cancel-in-progress: false
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+
+      - name: Unit tests (harness)
+        run: python backtest/test_harness.py
+
+      - name: Run backtest
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event.inputs.event }}" = "all" ]; then
+            python backtest/run_backtests.py --all --n ${{ github.event.inputs.n }}
+          else
+            python backtest/run_backtests.py --event ${{ github.event.inputs.event }} --n ${{ github.event.inputs.n }}
+          fi
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-${{ github.event.inputs.event }}-${{ github.event.inputs.n }}
+          path: backtest/results/
+          if-no-files-found: error
