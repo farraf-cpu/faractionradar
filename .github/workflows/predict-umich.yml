@@ -116,7 +116,7 @@ jobs:
           UMICH_RELEASE_DATE: ${{ needs.gate.outputs.umich_release_date }}
           UMICH_DAYS_OUT: ${{ needs.gate.outputs.umich_days_out }}
           UMICH_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v1.1-simple-blend
         run: python emit_umich.py
 
       - name: Commit report + ledger row
