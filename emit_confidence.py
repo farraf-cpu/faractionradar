@@ -1,15 +1,20 @@
-"""Consumer Confidence (Conference Board) predictor + emitter. `v1-simple-blend`.
+"""Consumer Confidence (Conference Board) predictor + emitter. `v1.1-simple-blend`.
 
 Monthly, last Tuesday of month, 10:00 ET by The Conference Board. Value
 format: index level normalized to 1985=100, typical range 60-140. Similar
 to ISM PMI, this index is proprietary to Conference Board so we can't pull
-a FRED trend cleanly. v1 ships with consensus + naive last-known anchor.
+a FRED trend cleanly for CB itself. v1.1 adds UMich as a leading indicator.
 
 Sub-models:
   - Bloomberg / FF consensus (~2.0 index points MAE)
   - Last-known anchor (~4.0 index points MAE — naive persistence)
+  - FRED UMCSENT leading indicator (~3.5 index points MAE — UMich Consumer
+    Sentiment correlates ~0.75 with CB Consumer Confidence and releases
+    2-3 weeks earlier. Uses UMCSENT 2-month momentum applied to the CB
+    anchor as a direction-adjusted sub-model. Conservative pre-empirical
+    weight; graceful fallback on FRED failure or missing anchor.)
 
-Env: UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
+Env: FRED_API_KEY, UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      CONFIDENCE_RELEASE_DATE, CONFIDENCE_DAYS_OUT,
      CONFIDENCE_CONSENSUS, CONFIDENCE_ANCHOR, MODEL_VERSION
 """
@@ -43,9 +48,15 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 # analysts triangulate from University of Michigan preliminary + weekly
 # sentiment surveys. Anchor is naive persistence — wider.
 MAE = {
-    "consensus": 2.0,
-    "anchor":    4.0,
+    "consensus":     2.0,
+    "anchor":        4.0,
+    "umich_leading": 3.5,  # UMich-CB correlation ~0.75, conservative pre-empirical
 }
+
+# UMich-CB correlation coefficient. Historical 0.72-0.78 range; midpoint used.
+# Applied to UMCSENT momentum to translate a UMich sentiment shift into an
+# expected CB Confidence shift.
+UMICH_CB_CORRELATION = 0.75
 
 
 def require_env(key: str) -> str:
@@ -66,13 +77,59 @@ def parse_float(env_key: str) -> float | None:
         return None
 
 
+def fetch_umich_leading(anchor: float | None) -> float | None:
+    """Apply UMCSENT 2-month momentum to the CB Confidence anchor to
+    produce a leading-indicator sub-model estimate. Returns None if
+    either FRED fetch fails or the anchor is unavailable.
+
+    Mechanism: UMich Consumer Sentiment releases 2-3 weeks before CB
+    Confidence and correlates ~0.75 in monthly direction. Momentum-
+    scaled to anchor: rising UMich sentiment should translate to a
+    proportionally rising CB reading, adjusted for the correlation gap."""
+    if anchor is None:
+        return None
+    api_key = os.environ.get("FRED_API_KEY")
+    if not api_key:
+        return None
+    url = ("https://api.stlouisfed.org/fred/series/observations?"
+           f"series_id=UMCSENT&api_key={api_key}&file_type=json"
+           "&sort_order=desc&limit=3")
+    req = urllib.request.Request(url, headers={"user-agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as res:
+            data = json.loads(res.read().decode("utf-8"))
+    except Exception as e:
+        print(f"[emit-confidence] UMCSENT fetch failed: {e}", file=sys.stderr)
+        return None
+    obs = data.get("observations") or []
+    vals = []
+    for o in obs:
+        v = o.get("value")
+        if v and v != ".":
+            try:
+                vals.append(float(v))
+            except ValueError:
+                pass
+    if len(vals) < 3:
+        return None
+    # 2-month momentum: (latest - oldest) / oldest
+    latest, _mid, oldest = vals[0], vals[1], vals[2]
+    if oldest <= 0:
+        return None
+    momentum = (latest - oldest) / oldest
+    return anchor * (1.0 + UMICH_CB_CORRELATION * momentum)
+
+
 def blend(consensus: float | None,
-          anchor: float | None) -> tuple[float, float, list[str]]:
+          anchor: float | None,
+          umich_leading: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
     if anchor is not None:
         parts.append(("anchor", anchor, MAE["anchor"]))
+    if umich_leading is not None:
+        parts.append(("umich_leading", umich_leading, MAE["umich_leading"]))
     if not parts:
         raise RuntimeError("blend called with all sub-models missing")
     return inverse_variance_combine(parts)
@@ -111,13 +168,14 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    anchor: float | None, used: list[str], lean: str,
+                    anchor: float | None, umich_leading: float | None,
+                    used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
                     prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:.1f}'} | {MAE[name]:.1f} pts |"
-        for name, v in (("consensus", consensus), ("anchor", anchor))
+        for name, v in (("consensus", consensus), ("anchor", anchor), ("umich_leading", umich_leading))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     empirical_section = build_empirical_mae_section(empirical_mae, f"{prior_mae_used:.2f} pts", unit="pts")
@@ -144,16 +202,18 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: inverse-MAE-weighted mean of consensus + naive anchor.
-Conference Board's index is proprietary (analogous to ISM PMI) so no
-FRED trend sub-model in v1. Same architecture as ISM Manufacturing/Services
-predictors.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of up to 3 sub-models —
+consensus + naive anchor + UMich-leading. Conference Board's index is
+proprietary (analogous to ISM PMI) so we can't pull a FRED CB trend
+directly, but UMCSENT is FRED-published and correlates ~0.75 in monthly
+direction. UMich releases 2-3 weeks before CB Confidence.
+
+UMich-leading formula: `anchor * (1 + UMICH_CB_CORRELATION * umcsent_2mo_momentum)`
+where UMICH_CB_CORRELATION = 0.75 (empirical range 0.72-0.78 midpoint).
+Applies UMCSENT momentum as a directional adjustment to the CB anchor.
 
 ## Phase 2 target
 
-- **University of Michigan Consumer Sentiment (UMCSENT)** — FRED-published
-  free, releases mid-month (preliminary) and end-of-month (revised),
-  correlates ~0.75 with Conference Board's Consumer Confidence
 - **Weekly consumer sentiment surveys** — Bloomberg Weekly Consumer
   Comfort, Redfin Homebuyer Demand — build weighted composite as leading
   indicator for CB
@@ -162,6 +222,11 @@ predictors.
 
 ## Change log
 
+- **v1.1-simple-blend (2026-09-07)** — added FRED UMCSENT 2-month momentum
+  as leading-indicator sub-model. Correlation coefficient 0.75 is
+  conservative pre-empirical; empirical MAE auto-tune replaces prior
+  weight once N>=5 resolutions accumulate. Falls through cleanly if
+  FRED fetch fails or anchor missing.
 - **v1-simple-blend (2026-09-03)** — first ship. 15th event covered.
 """
 
@@ -172,16 +237,17 @@ def main() -> None:
 
     release = os.environ["CONFIDENCE_RELEASE_DATE"]
     days_out = int(os.environ["CONFIDENCE_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
 
     consensus = parse_float("CONFIDENCE_CONSENSUS")
     anchor = parse_float("CONFIDENCE_ANCHOR")
+    umich_leading = fetch_umich_leading(anchor)
 
-    if consensus is None and anchor is None:
+    if consensus is None and anchor is None and umich_leading is None:
         print("[emit-confidence] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, anchor)
+    point, sigma, used = blend(consensus, anchor, umich_leading)
     prior_sigma = sigma
     empirical_mae = fetch_empirical_mae("confidence")
     sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
@@ -191,8 +257,9 @@ def main() -> None:
 
     print(f"[emit-confidence] Confidence {release} T-{days_out}: {format_value(point)} "
           f"(sigma {sigma:.1f} pts, {regime_annotation(point)}, used: {', '.join(used)})")
-    if consensus is not None: print(f"  consensus:  {consensus:.1f}")
-    if anchor    is not None: print(f"  anchor:     {anchor:.1f}")
+    if consensus     is not None: print(f"  consensus:            {consensus:.1f}")
+    if anchor        is not None: print(f"  anchor:               {anchor:.1f}")
+    if umich_leading is not None: print(f"  umich_leading:        {umich_leading:.1f} (UMCSENT-adjusted)")
 
     prediction = {
         "eventSlug": f"confidence-{release}",
@@ -212,7 +279,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, anchor, used, lean,
+                                consensus, anchor, umich_leading, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
                                 prior_sigma=prior_sigma)

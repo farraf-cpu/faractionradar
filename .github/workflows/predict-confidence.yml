@@ -118,7 +118,7 @@ jobs:
           CONFIDENCE_DAYS_OUT: ${{ needs.gate.outputs.confidence_days_out }}
           CONFIDENCE_CONSENSUS: ${{ steps.consensus.outputs.consensus }}
           CONFIDENCE_ANCHOR: ${{ steps.consensus.outputs.anchor }}
-          MODEL_VERSION: v1-simple-blend
+          MODEL_VERSION: v1.1-simple-blend
         run: python emit_confidence.py
 
       - name: Commit report + ledger row
