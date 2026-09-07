@@ -8,6 +8,7 @@ on:
       - "mae_utils.py"
       - "scripts/**"
       - "tests/**"
+      - "backtest/**"
       - "docs/**-model-card.md"
       - ".python-version"
       - ".github/workflows/**"
@@ -17,6 +18,7 @@ on:
       - "mae_utils.py"
       - "scripts/**"
       - "tests/**"
+      - "backtest/**"
       - "docs/**-model-card.md"
       - ".python-version"
       - ".github/workflows/**"
@@ -43,3 +45,5 @@ jobs:
         run: python tests/test_fleet_consistency.py
       - name: All emitters render (smoke build_report_md)
         run: python tests/test_all_emitters_render.py
+      - name: Backtest harness self-tests
+        run: python backtest/test_harness.py
