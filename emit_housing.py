@@ -1,4 +1,4 @@
-"""Housing Starts predictor + emitter. `v1-simple-blend`.
+"""Housing Starts predictor + emitter. `v1.1-simple-blend`.
 
 Monthly release ~16th-19th of month, 08:30 ET by Census. Annualized rate
 of new residential construction starts (single-family + multi-family).
@@ -8,6 +8,9 @@ Sub-models:
   - Bloomberg / FF consensus (~40K MAE on the annualized rate)
   - FRED HOUST 3-month trend (~60K MAE — housing series is trend-persistent
     so short window works better than 6mo)
+  - FRED PERMIT 3-month trend (~70K MAE — Building Permits lead Starts by
+    1-2 months since permits are legally required before construction.
+    Conservative pre-empirical weight; graceful fallback on FRED failure.)
 
 Env: FRED_API_KEY, UPLOAD_AUTH_KEY, CALENDAR_WORKER_URL,
      HOUSING_RELEASE_DATE, HOUSING_DAYS_OUT, HOUSING_CONSENSUS_M, MODEL_VERSION
@@ -48,8 +51,9 @@ UA = "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 # MAE in millions of annualized starts. Consensus ~0.04M = 40K annualized.
 # Trend wider because rate-sensitive series turn on mortgage-rate inflections.
 MAE = {
-    "consensus": 0.04,
-    "trend":     0.06,
+    "consensus":       0.04,
+    "trend":           0.06,
+    "permits_leading": 0.07,  # PERMIT leads Starts by 1-2 months, conservative pre-empirical
 }
 
 
@@ -83,13 +87,32 @@ def fetch_fred_housing_trend(api_key: str) -> float | None:
     return sum(vals_m) / len(vals_m)
 
 
+def fetch_permits_leading(api_key: str) -> float | None:
+    """3-month mean of PERMIT (Building Permits, SA), converted to millions.
+    FRED reports PERMIT in thousands of annualized permits, same units as
+    HOUST. Permits legally precede starts, so PERMIT trend is a 1-2 month
+    leading indicator. Some slack: not every permit becomes an immediate
+    start (weather, financing delays), which the higher MAE weight reflects."""
+    obs = _fetch_fred_observations(api_key, "PERMIT", 3)
+    if not obs or len(obs) < 3:
+        return None
+    try:
+        vals_m = [float(o["value"]) / 1000.0 for o in obs[:3]]
+    except (ValueError, KeyError):
+        return None
+    return sum(vals_m) / len(vals_m)
+
+
 def blend(consensus: float | None,
-          trend: float | None) -> tuple[float, float, list[str]]:
+          trend: float | None,
+          permits_leading: float | None) -> tuple[float, float, list[str]]:
     parts = []
     if consensus is not None:
         parts.append(("consensus", consensus, MAE["consensus"]))
     if trend is not None:
         parts.append(("trend", trend, MAE["trend"]))
+    if permits_leading is not None:
+        parts.append(("permits_leading", permits_leading, MAE["permits_leading"]))
     if not parts:
         raise RuntimeError("blend called with all sub-models missing")
     return inverse_variance_combine(parts)
@@ -128,13 +151,14 @@ def fetch_empirical_mae(slug_prefix: str) -> dict | None:
 
 def build_report_md(point: float, sigma: float, release: str, days_out: int,
                     model_version: str, consensus: float | None,
-                    trend: float | None, used: list[str], lean: str,
+                    trend: float | None, permits_leading: float | None,
+                    used: list[str], lean: str,
                     empirical_mae: dict | None = None,
                     sigma_source: str = "prior (inverse-MAE)",
                     prior_sigma: float | None = None) -> str:
     parts_tbl = "\n".join(
         f"| {name} | {'—' if v is None else f'{v:.2f}M'} | {MAE[name]*1000:.0f}K |"
-        for name, v in (("consensus", consensus), ("trend", trend))
+        for name, v in (("consensus", consensus), ("trend", trend), ("permits_leading", permits_leading))
     )
     prior_mae_used = min(MAE[u] for u in used if u in MAE) if used else min(MAE.values())
     # Housing MAE dict stores values in M-units (0.04 = 40K/month). Convert
@@ -163,18 +187,25 @@ def build_report_md(point: float, sigma: float, release: str, days_out: int,
 
 ## Method
 
-`v1-simple-blend`: inverse-MAE-weighted mean of consensus (~40K MAE) + FRED
-HOUST 3-month trend (~60K MAE). Housing Starts is trend-persistent so a
-short 3-month trend window captures direction changes.
+`v1.1-simple-blend`: inverse-MAE-weighted mean of up to 3 sub-models —
+consensus (~40K MAE) + FRED HOUST 3-month trend (~60K MAE) + FRED PERMIT
+3-month trend (~70K MAE, permits leading indicator). Housing Starts is
+trend-persistent so a short 3-month window captures direction changes;
+permits legally precede starts by 1-2 months.
 
 Phase 2 targets:
-- **Building Permits leading indicator** — FRED PERMIT publishes same day
-  as Starts; use as a co-anchor rather than trend-alone
 - **Mortgage rate cross** — Freddie Mac 30-year fixed (FRED MORTGAGE30US)
   is the main driver of Starts turns. Add a mortgage-rate-change sub-model
   that flags direction when the 4-week average moves >25bp
 - **Regional split** — Northeast/Midwest/South/West follow different
   seasonal patterns; South is ~50% of national starts
+
+## Change log
+
+- **v1.1-simple-blend (2026-09-07)** — added FRED PERMIT 3-mo trend as
+  building-permits leading sub-model. MAE weight 70K is conservative
+  pre-empirical. Falls through cleanly on FRED failure.
+- **v1-simple-blend** — first ship.
 """
 
 
@@ -184,17 +215,18 @@ def main() -> None:
 
     release = os.environ["HOUSING_RELEASE_DATE"]
     days_out = int(os.environ["HOUSING_DAYS_OUT"])
-    model_version = os.environ.get("MODEL_VERSION", "v1-simple-blend")
+    model_version = os.environ.get("MODEL_VERSION", "v1.1-simple-blend")
 
     consensus = parse_m("HOUSING_CONSENSUS_M")
     fred_key = os.environ.get("FRED_API_KEY")
     trend = fetch_fred_housing_trend(fred_key) if fred_key else None
+    permits_leading = fetch_permits_leading(fred_key) if fred_key else None
 
-    if consensus is None and trend is None:
+    if consensus is None and trend is None and permits_leading is None:
         print("[emit-housing] all sub-models missing; nothing to blend — exit 0 (soft skip)")
         return
 
-    point, sigma, used = blend(consensus, trend)
+    point, sigma, used = blend(consensus, trend, permits_leading)
     prior_sigma = sigma
     empirical_mae = fetch_empirical_mae("housing")
     sigma, sigma_source = auto_tune_sigma(prior_sigma, empirical_mae)
@@ -204,8 +236,9 @@ def main() -> None:
 
     print(f"[emit-housing] Housing {release} T-{days_out}: {format_value(point)} "
           f"(sigma {sigma*1000:.0f}K, {regime_annotation(point)}, used: {', '.join(used)})")
-    if consensus is not None: print(f"  consensus:  {consensus:.2f}M")
-    if trend     is not None: print(f"  trend(3mo): {trend:.2f}M")
+    if consensus       is not None: print(f"  consensus:        {consensus:.2f}M")
+    if trend           is not None: print(f"  trend (HOUST):    {trend:.2f}M")
+    if permits_leading is not None: print(f"  permits (PERMIT): {permits_leading:.2f}M")
 
     prediction = {
         "eventSlug": f"housing-{release}",
@@ -225,7 +258,7 @@ def main() -> None:
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
-                                consensus, trend, used, lean,
+                                consensus, trend, permits_leading, used, lean,
                                 empirical_mae=empirical_mae,
                                 sigma_source=sigma_source,
                                 prior_sigma=prior_sigma)
