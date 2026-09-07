@@ -188,3 +188,4 @@
 {"publishedAt":"2026-09-07T17:11:48.274549+00:00","eventSlug":"wholesale-2026-09-10","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.11,0.61],"grandMedian":null,"reportPath":"reports/2026-09/wholesale-t-3.md"}
 {"publishedAt":"2026-09-07T17:17:22.159216+00:00","eventSlug":"credit-2026-09-08","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+$12.4B","ci68":[8.0,16.7],"grandMedian":null,"reportPath":"reports/2026-09/credit-t-1.md"}
 {"publishedAt":"2026-09-07T17:26:49.602781+00:00","eventSlug":"budget-2026-09-11","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"-$226.6B","ci68":[-242.0,-211.2],"grandMedian":null,"reportPath":"reports/2026-09/budget-t-4.md"}
+{"publishedAt":"2026-09-07T17:34:11.855858+00:00","eventSlug":"coreppi-2026-09-10","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.23,0.38],"grandMedian":null,"reportPath":"reports/2026-09/coreppi-t-3.md"}
