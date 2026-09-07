@@ -9,8 +9,7 @@ Verifies:
 3. Every emitter has a scripts/should_run_<slug>.py gate script
    (except emit.py which uses scripts/should_run.py).
 
-Catches: new emitter added without a model card, workflow, or gate;
-model card renamed without the emitter updating modelCardUrl; etc.
+Catches: new emitter added without a model card, workflow, or gate.
 
 Run: python tests/test_fleet_consistency.py
 """

@@ -233,7 +233,6 @@ def main() -> None:
             "model_version": model_version,
         },
         "grandMedian": None,
-        "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/caputil-model-card.md",
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,

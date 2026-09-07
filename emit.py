@@ -247,7 +247,6 @@ def main() -> None:
         "daysOut": days_out,
         "ourCall": our_call,
         "grandMedian": format_grand_median(result),
-        "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/nfp-model-card.md",
     }
     if result.get("pred_markets_stale"):
         prediction["caveat"] = (

@@ -393,7 +393,6 @@ def main() -> None:
             **({"outcomeDistribution": market_dist} if market_dist else {}),
         },
         "grandMedian": None,
-        "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/cpi-model-card.md",
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,

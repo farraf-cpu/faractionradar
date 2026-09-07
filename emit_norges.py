@@ -224,7 +224,6 @@ def main() -> None:
             "outcomeDistribution": outcome_dist,
         },
         "grandMedian": None,
-        "modelCardUrl": "https://github.com/farraf-cpu/faractionradar/blob/main/docs/norges-model-card.md",
     }
 
     report_md = build_report_md(point, sigma, release, days_out, model_version,
