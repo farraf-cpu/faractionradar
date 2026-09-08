@@ -210,3 +210,4 @@
 {"publishedAt":"2026-09-08T15:16:27.212957+00:00","eventSlug":"jolts-2026-09-08","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"7.33M","ci68":[7.08,7.58],"grandMedian":null,"reportPath":"reports/2026-09/jolts-t-0.md"}
 {"publishedAt":"2026-09-08T15:35:43.186819+00:00","eventSlug":"umich-2026-09-11","daysOut":3,"modelVersion":"v1.1-simple-blend","ourCall":"50.3","ci68":[49.1,51.6],"grandMedian":null,"reportPath":"reports/2026-09/umich-t-3.md"}
 {"publishedAt":"2026-09-08T15:40:10.610756+00:00","eventSlug":"cclaims-2026-09-10","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"1781.75M","ci68":[1781.72,1781.78],"grandMedian":null,"reportPath":"reports/2026-09/cclaims-t-2.md"}
+{"publishedAt":"2026-09-08T15:52:45.476968+00:00","eventSlug":"empire-2026-09-15","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+14.0","ci68":[9.0,19.0],"grandMedian":null,"reportPath":"reports/2026-09/empire-t-7.md"}
