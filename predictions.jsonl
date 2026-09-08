@@ -202,3 +202,4 @@
 {"publishedAt":"2026-09-08T10:42:13.967863+00:00","eventSlug":"claims-2026-09-10","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"206K","ci68":[198,214],"grandMedian":null,"reportPath":"reports/2026-09/claims-t-2.md"}
 {"publishedAt":"2026-09-08T10:42:28.440276+00:00","eventSlug":"coreppi-2026-09-10","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.23,0.38],"grandMedian":null,"reportPath":"reports/2026-09/coreppi-t-2.md"}
 {"publishedAt":"2026-09-08T11:27:59.563749+00:00","eventSlug":"ecb-2026-09-10","daysOut":2,"modelVersion":"v2-outcome-distribution","ourCall":"2.58%","ci68":[2.52,2.64],"grandMedian":null,"reportPath":"reports/2026-09/ecb-t-2.md","modalOutcome":"hike25"}
+{"publishedAt":"2026-09-08T12:13:19.282021+00:00","eventSlug":"umich-2026-09-11","daysOut":3,"modelVersion":"v1.1-simple-blend","ourCall":"50.3","ci68":[49.1,51.6],"grandMedian":null,"reportPath":"reports/2026-09/umich-t-3.md"}
