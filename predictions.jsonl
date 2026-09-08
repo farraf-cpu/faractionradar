@@ -198,3 +198,4 @@
 {"publishedAt":"2026-09-08T04:17:50.705203+00:00","eventSlug":"ukgdp-2026-09-11","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.0%","ci68":[-0.15,0.15],"grandMedian":null,"reportPath":"reports/2026-09/ukgdp-t-3.md"}
 {"publishedAt":"2026-09-08T10:40:15.907282+00:00","eventSlug":"ppi-2026-09-10","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.3,0.45],"grandMedian":null,"reportPath":"reports/2026-09/ppi-t-2.md"}
 {"publishedAt":"2026-09-08T10:41:49.109662+00:00","eventSlug":"cpi-2026-09-11","daysOut":3,"modelVersion":"v1.3-kalshi-ladder-dist","ourCall":"+0.3%","ci68":[0.2,0.32],"grandMedian":null,"reportPath":"reports/2026-09/cpi-t-3.md","modalOutcome":"+0.3%","outcomeSource":"kalshi-ladder"}
+{"publishedAt":"2026-09-08T10:42:10.065024+00:00","eventSlug":"cclaims-2026-09-10","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"1781.75M","ci68":[1781.72,1781.78],"grandMedian":null,"reportPath":"reports/2026-09/cclaims-t-2.md"}
