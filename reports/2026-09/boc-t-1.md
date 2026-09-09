@@ -1,7 +1,7 @@
 # BOC Overnight Rate prediction - target 2026-09-10 (T-1)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-09T01:40:41.116776+00:00
+**Published:** 2026-09-09T18:39:34.199566+00:00
 
 ## Final pick
 
