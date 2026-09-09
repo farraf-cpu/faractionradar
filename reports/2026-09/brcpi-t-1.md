@@ -1,7 +1,7 @@
 # BR CPI (IPCA) prediction - target 2026-09-10 (T-1)
 
 **Model version:** `v1.1-sidra`
-**Published:** 2026-09-09T18:31:50.169825+00:00
+**Published:** 2026-09-09T22:34:24.985346+00:00
 
 ## Final pick
 

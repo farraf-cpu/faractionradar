@@ -253,3 +253,4 @@
 {"publishedAt":"2026-09-09T18:43:55.361374+00:00","eventSlug":"bcb-2026-09-16","daysOut":7,"modelVersion":"v2.1-wide-buckets","ourCall":"21.00%","ci68":[20.7,21.3],"grandMedian":null,"reportPath":"reports/2026-09/bcb-t-7.md","modalOutcome":"hold"}
 {"publishedAt":"2026-09-09T18:49:24.350488+00:00","eventSlug":"cacpi-2026-09-16","daysOut":7,"modelVersion":"v1.1-statcan","ourCall":"+2.7%","ci68":[2.47,2.87],"grandMedian":null,"reportPath":"reports/2026-09/cacpi-t-7.md"}
 {"publishedAt":"2026-09-09T22:11:09.926290+00:00","eventSlug":"cacpi-2026-09-16","daysOut":7,"modelVersion":"v1.1-statcan","ourCall":"+2.7%","ci68":[2.47,2.87],"grandMedian":null,"reportPath":"reports/2026-09/cacpi-t-7.md"}
+{"publishedAt":"2026-09-09T22:34:24.985316+00:00","eventSlug":"brcpi-2026-09-10","daysOut":1,"modelVersion":"v1.1-sidra","ourCall":"+4.6%","ci68":[4.4,4.8],"grandMedian":null,"reportPath":"reports/2026-09/brcpi-t-1.md"}
