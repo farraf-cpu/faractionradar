@@ -1,7 +1,7 @@
 # PPI prediction — target 2026-09-10 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-10T10:40:12.940956+00:00
+**Published:** 2026-09-10T14:20:23.783418+00:00
 
 ## Final pick
 
