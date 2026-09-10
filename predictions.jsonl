@@ -273,3 +273,4 @@
 {"publishedAt":"2026-09-10T15:33:44.375946+00:00","eventSlug":"umich-2026-09-11","daysOut":1,"modelVersion":"v1.1-simple-blend","ourCall":"50.3","ci68":[49.1,51.6],"grandMedian":null,"reportPath":"reports/2026-09/umich-t-1.md"}
 {"publishedAt":"2026-09-10T16:08:12.584662+00:00","eventSlug":"fomc-2026-09-17","daysOut":7,"modelVersion":"v2.1-kalshi-ladder","ourCall":"3.96%","ci68":[3.9,4.02],"grandMedian":null,"reportPath":"reports/2026-09/fomc-t-7.md","modalOutcome":"hold","outcomeSource":"kalshi-ladder"}
 {"publishedAt":"2026-09-10T16:22:41.441157+00:00","eventSlug":"permits-2026-09-17","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"1.41M","ci68":[1.35,1.47],"grandMedian":null,"reportPath":"reports/2026-09/permits-t-7.md"}
+{"publishedAt":"2026-09-10T17:26:43.646850+00:00","eventSlug":"budget-2026-09-11","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"-$240.2B","ci68":[-255.6,-224.8],"grandMedian":null,"reportPath":"reports/2026-09/budget-t-1.md"}
