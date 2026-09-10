@@ -1,7 +1,7 @@
 # Core PPI prediction — target 2026-09-10 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-10T10:42:31.756243+00:00
+**Published:** 2026-09-10T17:34:16.371015+00:00
 
 ## Final pick
 
@@ -9,7 +9,7 @@
 
 - Regime: elevated core wholesale inflation
 - 68% CI: [+0.23%, +0.38%] · sigma source: prior (inverse-MAE)
-- 95% CI: [+0.16%, +0.45%]
+- 95% CI: [+0.15%, +0.45%]
 - Lean vs consensus: in line with consensus
 - Sub-models used: consensus, trend
 
