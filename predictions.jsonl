@@ -276,3 +276,4 @@
 {"publishedAt":"2026-09-10T17:26:43.646850+00:00","eventSlug":"budget-2026-09-11","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"-$240.2B","ci68":[-255.6,-224.8],"grandMedian":null,"reportPath":"reports/2026-09/budget-t-1.md"}
 {"publishedAt":"2026-09-10T17:34:16.370983+00:00","eventSlug":"coreppi-2026-09-10","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.23,0.38],"grandMedian":null,"reportPath":"reports/2026-09/coreppi-t-0.md"}
 {"publishedAt":"2026-09-10T17:54:08.826024+00:00","eventSlug":"ecb-2026-09-10","daysOut":0,"modelVersion":"v2-outcome-distribution","ourCall":"2.58%","ci68":[2.52,2.64],"grandMedian":null,"reportPath":"reports/2026-09/ecb-t-0.md","modalOutcome":"hike25"}
+{"publishedAt":"2026-09-10T18:18:16.209311+00:00","eventSlug":"boe-2026-09-17","daysOut":7,"modelVersion":"v2-outcome-distribution","ourCall":"3.73%","ci68":[3.48,3.98],"grandMedian":null,"reportPath":"reports/2026-09/boe-t-7.md","modalOutcome":"hold"}
