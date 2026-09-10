@@ -1,7 +1,7 @@
 # UK Monthly GDP prediction - target 2026-09-11 (T-1)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-10T04:17:23.939857+00:00
+**Published:** 2026-09-10T18:25:52.980838+00:00
 
 ## Final pick
 
