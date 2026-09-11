@@ -292,3 +292,4 @@
 {"publishedAt":"2026-09-11T14:10:44.074480+00:00","eventSlug":"cpi-2026-09-11","daysOut":0,"modelVersion":"v1.3-kalshi-ladder-dist","ourCall":"+0.2%","ci68":[0.09,0.22],"grandMedian":null,"reportPath":"reports/2026-09/cpi-t-0.md","modalOutcome":"-0.1%","outcomeSource":"kalshi-ladder"}
 {"publishedAt":"2026-09-11T15:32:28.792317+00:00","eventSlug":"umich-2026-09-11","daysOut":0,"modelVersion":"v1.1-simple-blend","ourCall":"50.3","ci68":[49.1,51.6],"grandMedian":null,"reportPath":"reports/2026-09/umich-t-0.md"}
 {"publishedAt":"2026-09-11T15:49:54.220735+00:00","eventSlug":"empire-2026-09-15","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+14.0","ci68":[9.0,19.0],"grandMedian":null,"reportPath":"reports/2026-09/empire-t-4.md"}
+{"publishedAt":"2026-09-11T18:26:59.057144+00:00","eventSlug":"ukgdp-2026-09-11","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"+0.0%","ci68":[-0.15,0.15],"grandMedian":null,"reportPath":"reports/2026-09/ukgdp-t-0.md"}
