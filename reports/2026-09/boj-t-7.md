@@ -1,7 +1,7 @@
 # BOJ Policy Rate prediction - target 2026-09-19 (T-7)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-12T02:44:46.872978+00:00
+**Published:** 2026-09-12T18:24:25.482735+00:00
 
 ## Final pick
 
