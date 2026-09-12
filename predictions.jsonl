@@ -299,3 +299,4 @@
 {"publishedAt":"2026-09-12T10:33:58.591711+00:00","eventSlug":"coreretail-2026-09-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.55,0.85],"grandMedian":null,"reportPath":"reports/2026-09/coreretail-t-4.md"}
 {"publishedAt":"2026-09-12T10:39:23.370896+00:00","eventSlug":"retail-2026-09-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.25,1.05],"grandMedian":null,"reportPath":"reports/2026-09/retail-t-4.md"}
 {"publishedAt":"2026-09-12T14:33:35.733659+00:00","eventSlug":"retail-2026-09-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.25,1.05],"grandMedian":null,"reportPath":"reports/2026-09/retail-t-4.md"}
+{"publishedAt":"2026-09-12T15:44:29.693300+00:00","eventSlug":"indpro-2026-09-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.2%","ci68":[-0.25,0.55],"grandMedian":null,"reportPath":"reports/2026-09/indpro-t-4.md"}
