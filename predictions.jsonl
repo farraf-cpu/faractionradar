@@ -298,3 +298,4 @@
 {"publishedAt":"2026-09-12T02:44:46.872931+00:00","eventSlug":"boj-2026-09-19","daysOut":7,"modelVersion":"v2-outcome-distribution","ourCall":"0.84%","ci68":[0.69,0.99],"grandMedian":null,"reportPath":"reports/2026-09/boj-t-7.md","modalOutcome":"hold"}
 {"publishedAt":"2026-09-12T10:33:58.591711+00:00","eventSlug":"coreretail-2026-09-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.55,0.85],"grandMedian":null,"reportPath":"reports/2026-09/coreretail-t-4.md"}
 {"publishedAt":"2026-09-12T10:39:23.370896+00:00","eventSlug":"retail-2026-09-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.25,1.05],"grandMedian":null,"reportPath":"reports/2026-09/retail-t-4.md"}
+{"publishedAt":"2026-09-12T14:33:35.733659+00:00","eventSlug":"retail-2026-09-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.25,1.05],"grandMedian":null,"reportPath":"reports/2026-09/retail-t-4.md"}

@@ -1,7 +1,7 @@
 # Retail Sales prediction — target 2026-09-16 (T-4)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-12T10:39:23.370929+00:00
+**Published:** 2026-09-12T14:33:35.733713+00:00
 
 ## Final pick
 
