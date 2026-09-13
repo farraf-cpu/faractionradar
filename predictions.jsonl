@@ -322,3 +322,4 @@
 {"publishedAt":"2026-09-13T14:15:55.678505+00:00","eventSlug":"fomc-2026-09-17","daysOut":4,"modelVersion":"v2.1-kalshi-ladder","ourCall":"3.96%","ci68":[3.9,4.02],"grandMedian":null,"reportPath":"reports/2026-09/fomc-t-4.md","modalOutcome":"hold","outcomeSource":"kalshi-ladder"}
 {"publishedAt":"2026-09-13T14:32:10.996382+00:00","eventSlug":"retail-2026-09-16","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.49,0.98],"grandMedian":null,"reportPath":"reports/2026-09/retail-t-3.md"}
 {"publishedAt":"2026-09-13T14:46:26.406187+00:00","eventSlug":"housing-2026-09-17","daysOut":4,"modelVersion":"v1.1-simple-blend","ourCall":"1.33M","ci68":[1.3,1.36],"grandMedian":null,"reportPath":"reports/2026-09/housing-t-4.md"}
+{"publishedAt":"2026-09-13T15:44:58.856044+00:00","eventSlug":"indpro-2026-09-16","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.2%","ci68":[-0.25,0.55],"grandMedian":null,"reportPath":"reports/2026-09/indpro-t-3.md"}
