@@ -1,7 +1,7 @@
 # FOMC prediction — target 2026-09-17 (T-4)
 
 **Model version:** `v2.1-kalshi-ladder`
-**Published:** 2026-09-13T14:15:55.678551+00:00
+**Published:** 2026-09-13T16:07:52.602363+00:00
 
 ## Final pick
 
