@@ -357,3 +357,4 @@
 {"publishedAt":"2026-09-14T15:52:54.277059+00:00","eventSlug":"empire-2026-09-15","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+14.0","ci68":[10.9,17.2],"grandMedian":null,"reportPath":"reports/2026-09/empire-t-1.md"}
 {"publishedAt":"2026-09-14T15:56:23.077806+00:00","eventSlug":"philly-2026-09-17","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+36.3","ci68":[32.9,39.7],"grandMedian":null,"reportPath":"reports/2026-09/philly-t-3.md"}
 {"publishedAt":"2026-09-14T16:07:57.625225+00:00","eventSlug":"fomc-2026-09-17","daysOut":3,"modelVersion":"v2.1-kalshi-ladder","ourCall":"3.96%","ci68":[3.9,4.02],"grandMedian":null,"reportPath":"reports/2026-09/fomc-t-3.md","modalOutcome":"hold","outcomeSource":"kalshi-ladder"}
+{"publishedAt":"2026-09-14T16:23:33.772516+00:00","eventSlug":"permits-2026-09-17","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"1.40M","ci68":[1.37,1.44],"grandMedian":null,"reportPath":"reports/2026-09/permits-t-3.md"}
