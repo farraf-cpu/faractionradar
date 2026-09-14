@@ -361,3 +361,4 @@
 {"publishedAt":"2026-09-14T16:34:34.276852+00:00","eventSlug":"caputil-2026-09-16","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"76.2%","ci68":[75.78,76.58],"grandMedian":null,"reportPath":"reports/2026-09/caputil-t-2.md"}
 {"publishedAt":"2026-09-14T17:03:53.922084+00:00","eventSlug":"businv-2026-09-16","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.18,0.45],"grandMedian":null,"reportPath":"reports/2026-09/businv-t-2.md"}
 {"publishedAt":"2026-09-14T17:24:47.834961+00:00","eventSlug":"imprices-2026-09-16","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.1%","ci68":[-0.07,0.3],"grandMedian":null,"reportPath":"reports/2026-09/imprices-t-2.md"}
+{"publishedAt":"2026-09-14T17:40:47.728078+00:00","eventSlug":"coreretail-2026-09-16","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.6%","ci68":[0.49,0.64],"grandMedian":null,"reportPath":"reports/2026-09/coreretail-t-2.md"}
