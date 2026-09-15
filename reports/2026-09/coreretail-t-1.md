@@ -1,7 +1,7 @@
 # Core Retail Sales prediction — target 2026-09-16 (T-1)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-15T10:36:01.985157+00:00
+**Published:** 2026-09-15T17:38:50.082087+00:00
 
 ## Final pick
 
