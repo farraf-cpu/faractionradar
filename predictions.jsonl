@@ -383,3 +383,4 @@
 {"publishedAt":"2026-09-15T09:09:43.395477+00:00","eventSlug":"boe-2026-09-17","daysOut":2,"modelVersion":"v2-outcome-distribution","ourCall":"3.73%","ci68":[3.48,3.98],"grandMedian":null,"reportPath":"reports/2026-09/boe-t-2.md","modalOutcome":"hold"}
 {"publishedAt":"2026-09-15T10:36:01.985120+00:00","eventSlug":"coreretail-2026-09-16","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+0.6%","ci68":[0.49,0.64],"grandMedian":null,"reportPath":"reports/2026-09/coreretail-t-1.md"}
 {"publishedAt":"2026-09-15T10:37:06.293402+00:00","eventSlug":"pce-2026-09-22","daysOut":7,"modelVersion":"v1.1-simple-blend","ourCall":"+0.2%","ci68":[0.15,0.23],"grandMedian":null,"reportPath":"reports/2026-09/pce-t-7.md"}
+{"publishedAt":"2026-09-15T10:39:17.536657+00:00","eventSlug":"housing-2026-09-17","daysOut":2,"modelVersion":"v1.1-simple-blend","ourCall":"1.33M","ci68":[1.29,1.36],"grandMedian":null,"reportPath":"reports/2026-09/housing-t-2.md"}
