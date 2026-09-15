@@ -1,7 +1,7 @@
 # Initial Jobless Claims prediction — target 2026-09-17 (T-2)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-15T10:42:02.086464+00:00
+**Published:** 2026-09-15T14:42:31.162966+00:00
 
 ## Final pick
 
