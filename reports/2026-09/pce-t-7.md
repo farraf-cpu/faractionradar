@@ -1,16 +1,16 @@
 # PCE prediction — target 2026-09-22 (T-7)
 
 **Model version:** `v1.1-simple-blend`
-**Published:** 2026-09-15T10:37:06.293441+00:00
+**Published:** 2026-09-15T14:30:13.177203+00:00
 
 ## Final pick
 
-**+0.2% m/m** (PCE Price Index)
+**+0.1% m/m** (PCE Price Index)
 
-- 68% CI: [+0.15%, +0.23%] · sigma source: prior (inverse-MAE)
-- 95% CI: [+0.11%, +0.27%]
+- 68% CI: [+0.09%, +0.17%] · sigma source: prior (inverse-MAE)
+- 95% CI: [+0.05%, +0.21%]
 - Lean vs consensus: no consensus
-- Sub-models used: cleveland_fed, trend
+- Sub-models used: cleveland_fed
 
 
 ## Empirical accuracy (live)
@@ -33,7 +33,7 @@ empirical value.
 |-----------|-------|----------------|
 | consensus | — | 0.05 pp |
 | cleveland_fed | +0.13% | 0.04 pp |
-| trend | +0.34% | 0.10 pp |
+| trend | — | 0.10 pp |
 
 ## Method
 
