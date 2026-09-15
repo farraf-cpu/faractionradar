@@ -395,3 +395,4 @@
 {"publishedAt":"2026-09-15T14:49:48.265142+00:00","eventSlug":"housing-2026-09-17","daysOut":2,"modelVersion":"v1.1-simple-blend","ourCall":"1.33M","ci68":[1.29,1.36],"grandMedian":null,"reportPath":"reports/2026-09/housing-t-2.md"}
 {"publishedAt":"2026-09-15T15:24:38.214917+00:00","eventSlug":"existing-2026-09-22","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"4056.67M","ci68":[4056.59,4056.75],"grandMedian":null,"reportPath":"reports/2026-09/existing-t-7.md"}
 {"publishedAt":"2026-09-15T15:38:02.287134+00:00","eventSlug":"cclaims-2026-09-17","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"1779.00M","ci68":[1778.97,1779.03],"grandMedian":null,"reportPath":"reports/2026-09/cclaims-t-2.md"}
+{"publishedAt":"2026-09-15T15:48:26.392964+00:00","eventSlug":"indpro-2026-09-16","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+0.2%","ci68":[-0.25,0.55],"grandMedian":null,"reportPath":"reports/2026-09/indpro-t-1.md"}
