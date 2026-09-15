@@ -1,15 +1,15 @@
-# Continuing Claims prediction — target 2026-09-10 (T-2)
+# Continuing Claims prediction — target 2026-09-17 (T-2)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-08T15:40:10.610788+00:00
+**Published:** 2026-09-15T10:42:02.066124+00:00
 
 ## Final pick
 
-**1781.75M** continuing unemployment claims (SA)
+**1779.00M** continuing unemployment claims (SA)
 
 - Regime: elevated persistence
-- 68% CI: [1781.72M, 1781.78M] · sigma source: prior (inverse-MAE)
-- 95% CI: [1781.69M, 1781.81M]
+- 68% CI: [1778.97M, 1779.03M] · sigma source: prior (inverse-MAE)
+- 95% CI: [1778.94M, 1779.06M]
 - Lean vs consensus: no consensus
 - Sub-models used: trend
 
@@ -33,7 +33,7 @@ empirical value.
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | — | 20K |
-| trend | 1781.75M | 30K |
+| trend | 1779.00M | 30K |
 
 ## Method
 
