@@ -1,7 +1,7 @@
 # Housing Starts prediction — target 2026-09-17 (T-1)
 
 **Model version:** `v1.1-simple-blend`
-**Published:** 2026-09-16T10:39:37.336605+00:00
+**Published:** 2026-09-16T14:50:15.433096+00:00
 
 ## Final pick
 
