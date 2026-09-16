@@ -1,7 +1,7 @@
 # NORGES Policy Rate prediction - target 2026-09-18 (T-2)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-16T01:42:05.440014+00:00
+**Published:** 2026-09-16T18:43:26.211590+00:00
 
 ## Final pick
 
