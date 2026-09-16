@@ -1,7 +1,7 @@
 # BOE Bank Rate prediction - target 2026-09-17 (T-1)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-16T09:07:53.498072+00:00
+**Published:** 2026-09-16T18:18:41.787996+00:00
 
 ## Final pick
 
