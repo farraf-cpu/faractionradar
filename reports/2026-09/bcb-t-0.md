@@ -1,7 +1,7 @@
 # BCB Policy Rate prediction - target 2026-09-16 (T-0)
 
 **Model version:** `v2.1-wide-buckets`
-**Published:** 2026-09-16T01:35:16.051858+00:00
+**Published:** 2026-09-16T18:45:07.912294+00:00
 
 ## Final pick
 
