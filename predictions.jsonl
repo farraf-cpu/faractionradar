@@ -460,3 +460,4 @@
 {"publishedAt":"2026-09-17T12:23:22.086705+00:00","eventSlug":"newhome-2026-09-24","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"638K","ci68":[583,693],"grandMedian":null,"reportPath":"reports/2026-09/newhome-t-7.md"}
 {"publishedAt":"2026-09-17T14:18:19.087178+00:00","eventSlug":"fomc-2026-09-17","daysOut":0,"modelVersion":"v2.1-kalshi-ladder","ourCall":"3.96%","ci68":[3.9,4.02],"grandMedian":null,"reportPath":"reports/2026-09/fomc-t-0.md","modalOutcome":"hold","outcomeSource":"kalshi-ladder"}
 {"publishedAt":"2026-09-17T14:49:29.259724+00:00","eventSlug":"housing-2026-09-17","daysOut":0,"modelVersion":"v1.1-simple-blend","ourCall":"1.35M","ci68":[1.32,1.38],"grandMedian":null,"reportPath":"reports/2026-09/housing-t-0.md"}
+{"publishedAt":"2026-09-17T15:29:37.819848+00:00","eventSlug":"newhome-2026-09-24","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"638K","ci68":[583,693],"grandMedian":null,"reportPath":"reports/2026-09/newhome-t-7.md"}

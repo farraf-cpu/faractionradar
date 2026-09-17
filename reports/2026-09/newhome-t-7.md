@@ -1,7 +1,7 @@
 # New Home Sales prediction — target 2026-09-24 (T-7)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-17T12:23:22.086739+00:00
+**Published:** 2026-09-17T15:29:37.819884+00:00
 
 ## Final pick
 
