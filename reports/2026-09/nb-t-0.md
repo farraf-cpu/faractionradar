@@ -1,7 +1,7 @@
 # NB Policy Rate prediction - target 2026-09-17 (T-0)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-17T01:38:36.686384+00:00
+**Published:** 2026-09-17T18:44:10.241329+00:00
 
 ## Final pick
 
