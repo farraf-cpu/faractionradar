@@ -1,16 +1,16 @@
 # Housing Starts prediction — target 2026-09-17 (T-0)
 
 **Model version:** `v1.1-simple-blend`
-**Published:** 2026-09-17T10:39:28.425919+00:00
+**Published:** 2026-09-17T14:49:29.259756+00:00
 
 ## Final pick
 
-**1.33M** annualized starts (SA)
+**1.35M** annualized starts (SA)
 
 - Regime: slowing construction cycle
-- 68% CI: [1.30M, 1.36M] · sigma source: prior (inverse-MAE)
-- 95% CI: [1.27M, 1.39M]
-- Lean vs consensus: in line with consensus
+- 68% CI: [1.32M, 1.38M] · sigma source: prior (inverse-MAE)
+- 95% CI: [1.28M, 1.41M]
+- Lean vs consensus: above consensus by 27K
 - Sub-models used: consensus, trend, permits_leading
 
 
@@ -33,8 +33,8 @@ empirical value.
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | 1.32M | 40K |
-| trend | 1.28M | 60K |
-| permits_leading | 1.41M | 70K |
+| trend | 1.34M | 60K |
+| permits_leading | 1.40M | 70K |
 
 ## Method
 
