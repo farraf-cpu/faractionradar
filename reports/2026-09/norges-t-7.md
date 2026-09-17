@@ -1,7 +1,7 @@
-# NORGES Policy Rate prediction - target 2026-09-18 (T-7)
+# NORGES Policy Rate prediction - target 2026-09-24 (T-7)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-11T18:41:59.486406+00:00
+**Published:** 2026-09-17T18:42:56.941712+00:00
 
 ## Final pick
 
@@ -61,4 +61,4 @@ FOMC/ECB/BOE/BOJ/RBA for UI consistency.
 
 ## Change log
 
-- **v2-outcome-distribution (2026-09-11)** - first ship. Phase 11 NOK expansion opens.
+- **v2-outcome-distribution (2026-09-17)** - first ship. Phase 11 NOK expansion opens.
