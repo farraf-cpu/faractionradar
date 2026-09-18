@@ -1,7 +1,7 @@
 # MNB Policy Rate prediction - target 2026-09-22 (T-4)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-18T01:36:43.414120+00:00
+**Published:** 2026-09-18T18:41:37.823909+00:00
 
 ## Final pick
 
