@@ -1,7 +1,7 @@
 # PCE prediction — target 2026-09-22 (T-4)
 
 **Model version:** `v1.1-simple-blend`
-**Published:** 2026-09-18T10:36:41.151738+00:00
+**Published:** 2026-09-18T14:28:56.789367+00:00
 
 ## Final pick
 
