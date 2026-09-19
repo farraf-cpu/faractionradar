@@ -1,14 +1,14 @@
-# BI Policy Rate prediction - target 2026-09-17 (T-4)
+# BI Policy Rate prediction - target 2026-09-23 (T-4)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-13T18:38:40.047055+00:00
+**Published:** 2026-09-19T01:35:56.715159+00:00
 
 ## Final pick
 
-**5.88%** BI Policy Rate
+**6.06%** BI Policy Rate
 
-- 68% CI: [5.73%, 6.03%] · sigma source: prior (inverse-MAE)
-- 95% CI: [5.58%, 6.18%]
+- 68% CI: [5.91%, 6.21%] · sigma source: prior (inverse-MAE)
+- 95% CI: [5.76%, 6.36%]
 - Lean vs anchor: hold expected
 - Sub-models used: anchor
 
@@ -45,7 +45,7 @@ empirical value.
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | - | 0.05pp |
-| anchor | 5.88% | 0.15pp |
+| anchor | 6.06% | 0.15pp |
 
 ## Method
 
@@ -61,4 +61,4 @@ FOMC/ECB/BOE/BOJ/RBA for UI consistency.
 
 ## Change log
 
-- **v2-outcome-distribution (2026-09-13)** - first ship. Phase 25 IDR expansion opens.
+- **v2-outcome-distribution (2026-09-19)** - first ship. Phase 25 IDR expansion opens.
