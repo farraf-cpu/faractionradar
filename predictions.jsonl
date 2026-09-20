@@ -511,3 +511,4 @@
 {"publishedAt":"2026-09-20T15:27:39.096703+00:00","eventSlug":"newhome-2026-09-24","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"627K","ci68":[594,660],"grandMedian":null,"reportPath":"reports/2026-09/newhome-t-4.md"}
 {"publishedAt":"2026-09-20T16:13:36.867814+00:00","eventSlug":"richmond-2026-09-22","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+4.6","ci68":[0.5,8.7],"grandMedian":null,"reportPath":"reports/2026-09/richmond-t-2.md"}
 {"publishedAt":"2026-09-20T16:22:29.726999+00:00","eventSlug":"spending-2026-09-22","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.5%","ci68":[0.26,0.66],"grandMedian":null,"reportPath":"reports/2026-09/spending-t-2.md"}
+{"publishedAt":"2026-09-20T16:31:32.648979+00:00","eventSlug":"income-2026-09-22","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.23,0.63],"grandMedian":null,"reportPath":"reports/2026-09/income-t-2.md"}
