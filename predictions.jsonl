@@ -507,3 +507,4 @@
 {"publishedAt":"2026-09-20T12:06:39.298279+00:00","eventSlug":"existing-2026-09-22","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"4056.67M","ci68":[4056.59,4056.75],"grandMedian":null,"reportPath":"reports/2026-09/existing-t-2.md"}
 {"publishedAt":"2026-09-20T12:21:26.372595+00:00","eventSlug":"newhome-2026-09-24","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"627K","ci68":[594,660],"grandMedian":null,"reportPath":"reports/2026-09/newhome-t-4.md"}
 {"publishedAt":"2026-09-20T14:27:06.585738+00:00","eventSlug":"pce-2026-09-22","daysOut":2,"modelVersion":"v1.1-simple-blend","ourCall":"+0.2%","ci68":[0.15,0.23],"grandMedian":null,"reportPath":"reports/2026-09/pce-t-2.md"}
+{"publishedAt":"2026-09-20T15:21:51.347640+00:00","eventSlug":"existing-2026-09-22","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"4056.67M","ci68":[4056.59,4056.75],"grandMedian":null,"reportPath":"reports/2026-09/existing-t-2.md"}
