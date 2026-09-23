@@ -1,7 +1,7 @@
-# BI Policy Rate prediction - target 2026-09-17 (T-0)
+# BI Policy Rate prediction - target 2026-09-23 (T-0)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-17T01:36:41.264483+00:00
+**Published:** 2026-09-23T01:35:53.440347+00:00
 
 ## Final pick
 
@@ -61,4 +61,4 @@ FOMC/ECB/BOE/BOJ/RBA for UI consistency.
 
 ## Change log
 
-- **v2-outcome-distribution (2026-09-17)** - first ship. Phase 25 IDR expansion opens.
+- **v2-outcome-distribution (2026-09-23)** - first ship. Phase 25 IDR expansion opens.
