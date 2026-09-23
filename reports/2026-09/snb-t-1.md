@@ -1,7 +1,7 @@
 # SNB Policy Rate prediction - target 2026-09-24 (T-1)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-23T01:38:12.925033+00:00
+**Published:** 2026-09-23T18:41:39.289305+00:00
 
 ## Final pick
 
