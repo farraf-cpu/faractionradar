@@ -583,3 +583,4 @@
 {"publishedAt":"2026-09-23T15:31:25.927546+00:00","eventSlug":"newhome-2026-09-24","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"625K","ci68":[592,658],"grandMedian":null,"reportPath":"reports/2026-09/newhome-t-1.md"}
 {"publishedAt":"2026-09-23T15:39:09.698199+00:00","eventSlug":"cclaims-2026-09-24","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"1761.25M","ci68":[1761.22,1761.28],"grandMedian":null,"reportPath":"reports/2026-09/cclaims-t-1.md"}
 {"publishedAt":"2026-09-23T16:54:58.234743+00:00","eventSlug":"adtrade-2026-09-30","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"-$109.3B","ci68":[-114.3,-104.3],"grandMedian":null,"reportPath":"reports/2026-09/adtrade-t-7.md"}
+{"publishedAt":"2026-09-23T18:39:32.531907+00:00","eventSlug":"riksbank-2026-09-24","daysOut":1,"modelVersion":"v2-outcome-distribution","ourCall":"1.97%","ci68":[1.67,2.27],"grandMedian":null,"reportPath":"reports/2026-09/riksbank-t-1.md","modalOutcome":"hold"}

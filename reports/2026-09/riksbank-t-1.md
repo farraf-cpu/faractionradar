@@ -1,7 +1,7 @@
 # RIKSBANK Policy Rate prediction - target 2026-09-24 (T-1)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-23T01:36:58.378770+00:00
+**Published:** 2026-09-23T18:39:32.531969+00:00
 
 ## Final pick
 
