@@ -1,16 +1,16 @@
 # New Home Sales prediction — target 2026-09-24 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-24T12:23:02.530365+00:00
+**Published:** 2026-09-24T15:31:20.276995+00:00
 
 ## Final pick
 
-**625K** annualized new single-family home sales (SA)
+**637K** annualized new single-family home sales (SA)
 
 - Regime: slowing new-home market
-- 68% CI: [592K, 658K] · sigma source: prior (inverse-MAE)
-- 95% CI: [559K, 690K]
-- Lean vs consensus: in line with consensus
+- 68% CI: [604K, 669K] · sigma source: prior (inverse-MAE)
+- 95% CI: [571K, 702K]
+- Lean vs consensus: above consensus by 22K
 - Sub-models used: consensus, trend
 
 
@@ -33,7 +33,7 @@ empirical value.
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | 615K | 40K |
-| trend | 638K | 55K |
+| trend | 666K | 55K |
 
 ## Method
 
