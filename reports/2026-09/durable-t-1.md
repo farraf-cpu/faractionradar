@@ -1,7 +1,7 @@
 # Durable Goods Orders prediction — target 2026-09-25 (T-1)
 
 **Model version:** `v1.1-simple-blend`
-**Published:** 2026-09-24T10:43:34.683194+00:00
+**Published:** 2026-09-24T15:04:28.102939+00:00
 
 ## Final pick
 
@@ -11,21 +11,6 @@
 - 95% CI: [-0.63%, +0.78%]
 - Lean vs consensus: above consensus by 0.4pp
 - Sub-models used: consensus, trend, core_orders
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 0.50 pp |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
 
 ## Sub-model breakdown
 
