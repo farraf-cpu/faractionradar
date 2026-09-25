@@ -602,3 +602,4 @@
 {"publishedAt":"2026-09-25T10:43:47.288084+00:00","eventSlug":"durable-2026-09-25","daysOut":0,"modelVersion":"v1.1-simple-blend","ourCall":"+0.1%","ci68":[-0.28,0.43],"grandMedian":null,"reportPath":"reports/2026-09/durable-t-0.md"}
 {"publishedAt":"2026-09-25T15:04:24.963083+00:00","eventSlug":"durable-2026-09-25","daysOut":0,"modelVersion":"v1.1-simple-blend","ourCall":"+0.4%","ci68":[0.08,0.78],"grandMedian":null,"reportPath":"reports/2026-09/durable-t-0.md"}
 {"publishedAt":"2026-09-25T16:47:07.136864+00:00","eventSlug":"caseshiller-2026-09-29","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+1.6%","ci68":[1.39,1.89],"grandMedian":null,"reportPath":"reports/2026-09/caseshiller-t-4.md"}
+{"publishedAt":"2026-09-25T16:49:00.089903+00:00","eventSlug":"factory-2026-10-02","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"-0.1%","ci68":[-0.61,0.39],"grandMedian":null,"reportPath":"reports/2026-10/factory-t-7.md"}
