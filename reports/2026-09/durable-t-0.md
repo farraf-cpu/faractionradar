@@ -1,15 +1,15 @@
 # Durable Goods Orders prediction — target 2026-09-25 (T-0)
 
 **Model version:** `v1.1-simple-blend`
-**Published:** 2026-09-25T10:43:47.288122+00:00
+**Published:** 2026-09-25T15:04:24.963137+00:00
 
 ## Final pick
 
-**+0.1% m/m** (Durable Goods Orders, headline)
+**+0.4% m/m** (Durable Goods Orders, headline)
 
-- 68% CI: [-0.28%, +0.43%] · sigma source: prior (inverse-MAE)
-- 95% CI: [-0.63%, +0.78%]
-- Lean vs consensus: above consensus by 0.4pp
+- 68% CI: [+0.08%, +0.78%] · sigma source: prior (inverse-MAE)
+- 95% CI: [-0.27%, +1.14%]
+- Lean vs consensus: above consensus by 0.7pp
 - Sub-models used: consensus, trend, core_orders
 
 
@@ -32,8 +32,8 @@ empirical value.
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | -0.30% | 0.5 pp |
-| trend | -0.78% | 0.8 pp |
-| core_orders | +1.17% | 0.6 pp |
+| trend | +0.47% | 0.8 pp |
+| core_orders | +1.28% | 0.6 pp |
 
 ## Method
 
