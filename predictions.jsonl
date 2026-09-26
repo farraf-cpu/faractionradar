@@ -609,3 +609,4 @@
 {"publishedAt":"2026-09-26T14:56:57.742931+00:00","eventSlug":"adp-2026-09-30","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+132762333K","ci68":[132762293,132762373],"grandMedian":null,"reportPath":"reports/2026-09/adp-t-4.md"}
 {"publishedAt":"2026-09-26T16:44:18.938003+00:00","eventSlug":"caseshiller-2026-09-29","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+1.6%","ci68":[1.39,1.89],"grandMedian":null,"reportPath":"reports/2026-09/caseshiller-t-3.md"}
 {"publishedAt":"2026-09-26T16:54:10.843609+00:00","eventSlug":"adtrade-2026-09-30","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"-$109.3B","ci68":[-114.3,-104.3],"grandMedian":null,"reportPath":"reports/2026-09/adtrade-t-4.md"}
+{"publishedAt":"2026-09-26T18:42:49.657476+00:00","eventSlug":"rba-2026-09-29","daysOut":3,"modelVersion":"v2-outcome-distribution","ourCall":"4.35%","ci68":[4.2,4.5],"grandMedian":null,"reportPath":"reports/2026-09/rba-t-3.md","modalOutcome":"hold"}

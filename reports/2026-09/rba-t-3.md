@@ -1,7 +1,7 @@
 # RBA Cash Rate prediction - target 2026-09-29 (T-3)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-26T01:43:31.488970+00:00
+**Published:** 2026-09-26T18:42:49.657517+00:00
 
 ## Final pick
 
