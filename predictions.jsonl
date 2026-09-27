@@ -619,3 +619,4 @@
 {"publishedAt":"2026-09-27T15:12:09.938335+00:00","eventSlug":"confidence-2026-09-29","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"89.9","ci68":[88.0,91.8],"grandMedian":null,"reportPath":"reports/2026-09/confidence-t-2.md"}
 {"publishedAt":"2026-09-27T15:46:58.864845+00:00","eventSlug":"chgpmi-2026-09-30","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"49.7","ci68":[47.5,51.9],"grandMedian":null,"reportPath":"reports/2026-09/chgpmi-t-3.md"}
 {"publishedAt":"2026-09-27T16:44:38.958352+00:00","eventSlug":"caseshiller-2026-09-29","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+2.0%","ci68":[1.86,2.12],"grandMedian":null,"reportPath":"reports/2026-09/caseshiller-t-2.md"}
+{"publishedAt":"2026-09-27T16:50:58.521296+00:00","eventSlug":"construction-2026-10-01","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"-0.0%","ci68":[-0.26,0.23],"grandMedian":null,"reportPath":"reports/2026-10/construction-t-4.md"}
