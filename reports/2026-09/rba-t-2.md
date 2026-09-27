@@ -1,27 +1,27 @@
 # RBA Cash Rate prediction - target 2026-09-29 (T-2)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-27T01:43:18.406696+00:00
+**Published:** 2026-09-27T18:42:46.758882+00:00
 
 ## Final pick
 
-**4.35%** RBA Cash Rate
+**4.54%** RBA Cash Rate
 
-- 68% CI: [4.20%, 4.50%] · sigma source: prior (inverse-MAE)
-- 95% CI: [4.05%, 4.65%]
-- Lean vs anchor: hold expected
-- Sub-models used: anchor
+- 68% CI: [4.48%, 4.59%] · sigma source: prior (inverse-MAE)
+- 95% CI: [4.43%, 4.64%]
+- Lean vs anchor: +19bp move vs current rate
+- Sub-models used: consensus, anchor
 
 
 ## Outcome distribution (source: `unknown`)
 
 | Outcome | Probability |
 |---------|-------------|
-| +50bp hike | 0.6% |
-| +25bp hike | 19.6% |
-| hold | 59.5% **(modal)** |
-| -25bp cut | 19.6% |
-| -50bp cut | 0.6% |
+| +50bp hike | 0.0% |
+| +25bp hike | 88.1% **(modal)** |
+| hold | 11.9% |
+| -25bp cut | 0.0% |
+| -50bp cut | 0.0% |
 | -75bp or deeper | 0.0% |
 
 
@@ -30,7 +30,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Prior MAE claim | 0.15 pp |
+| Prior MAE claim | 0.05 pp |
 | Resolved predictions | 0 (first resolution pending) |
 | Empirical MAE | — |
 | Hit rate (ourCall closest) | — |
@@ -44,7 +44,7 @@ empirical value.
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | - | 0.05pp |
+| consensus | 4.60% | 0.05pp |
 | anchor | 4.35% | 0.15pp |
 
 ## Method
