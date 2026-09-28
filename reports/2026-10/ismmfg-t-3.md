@@ -1,7 +1,7 @@
 # ISM Manufacturing PMI prediction — target 2026-10-01 (T-3)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-28T12:19:26.745814+00:00
+**Published:** 2026-09-28T14:37:08.776120+00:00
 
 ## Final pick
 
