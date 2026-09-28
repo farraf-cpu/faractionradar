@@ -1,7 +1,7 @@
 # ADP Non-Farm Employment prediction — target 2026-09-30 (T-2)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-28T10:47:28.715247+00:00
+**Published:** 2026-09-28T15:02:46.027890+00:00
 
 ## Final pick
 
@@ -11,21 +11,6 @@
 - 95% CI: [+56898134K, +56898231K]
 - Lean vs consensus: above consensus by +56898113K
 - Sub-models used: consensus, trend
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 30.00 K |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
 
 ## Sub-model breakdown
 
