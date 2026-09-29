@@ -1,7 +1,7 @@
 # Consumer Confidence prediction — target 2026-09-29 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-29T12:24:21.852185+00:00
+**Published:** 2026-09-29T15:15:48.566513+00:00
 
 ## Final pick
 
@@ -12,21 +12,6 @@
 - 95% CI: [85.5, 93.0]
 - Lean vs consensus: in line with consensus
 - Sub-models used: consensus, anchor
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 2.00 pts |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
 
 ## Sub-model breakdown
 
