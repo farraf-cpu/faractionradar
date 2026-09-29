@@ -650,3 +650,4 @@
 {"publishedAt":"2026-09-29T15:02:52.987894+00:00","eventSlug":"adp-2026-09-30","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+56898185K","ci68":[56898160,56898209],"grandMedian":null,"reportPath":"reports/2026-09/adp-t-1.md"}
 {"publishedAt":"2026-09-29T15:15:48.566473+00:00","eventSlug":"confidence-2026-09-29","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"89.3","ci68":[87.4,91.2],"grandMedian":null,"reportPath":"reports/2026-09/confidence-t-0.md"}
 {"publishedAt":"2026-09-29T15:17:45.623046+00:00","eventSlug":"jolts-2026-10-06","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"7.20M","ci68":[6.95,7.45],"grandMedian":null,"reportPath":"reports/2026-10/jolts-t-7.md"}
+{"publishedAt":"2026-09-29T15:26:24.657685+00:00","eventSlug":"trade-2026-10-06","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"-$78.5B","ci68":[-82.5,-74.5],"grandMedian":null,"reportPath":"reports/2026-10/trade-t-7.md"}
