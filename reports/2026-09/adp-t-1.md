@@ -1,7 +1,7 @@
 # ADP Non-Farm Employment prediction — target 2026-09-30 (T-1)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-29T10:48:23.600201+00:00
+**Published:** 2026-09-29T15:02:52.987930+00:00
 
 ## Final pick
 
