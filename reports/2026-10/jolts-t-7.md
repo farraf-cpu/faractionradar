@@ -1,15 +1,15 @@
 # JOLTS Job Openings prediction — target 2026-10-06 (T-7)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-09-29T12:20:04.914916+00:00
+**Published:** 2026-09-29T15:17:45.623095+00:00
 
 ## Final pick
 
-**7.33M** job openings (level, SA)
+**7.20M** job openings (level, SA)
 
 - Regime: moderating labor demand
-- 68% CI: [7.08M, 7.58M] · sigma source: prior (inverse-MAE)
-- 95% CI: [6.83M, 7.83M]
+- 68% CI: [6.95M, 7.45M] · sigma source: prior (inverse-MAE)
+- 95% CI: [6.70M, 7.70M]
 - Lean vs consensus: no consensus
 - Sub-models used: trend
 
@@ -33,7 +33,7 @@ empirical value.
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | — | 150K |
-| trend | 7.33M | 250K |
+| trend | 7.20M | 250K |
 
 ## Method
 
