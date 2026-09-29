@@ -641,3 +641,4 @@
 {"publishedAt":"2026-09-29T10:44:35.208825+00:00","eventSlug":"cclaims-2026-10-01","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"1744.00M","ci68":[1743.97,1744.03],"grandMedian":null,"reportPath":"reports/2026-10/cclaims-t-2.md"}
 {"publishedAt":"2026-09-29T10:44:38.756512+00:00","eventSlug":"claims-2026-10-01","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"202K","ci68":[193,210],"grandMedian":null,"reportPath":"reports/2026-10/claims-t-2.md"}
 {"publishedAt":"2026-09-29T10:48:23.600165+00:00","eventSlug":"adp-2026-09-30","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+56898185K","ci68":[56898160,56898209],"grandMedian":null,"reportPath":"reports/2026-09/adp-t-1.md"}
+{"publishedAt":"2026-09-29T12:19:36.743021+00:00","eventSlug":"ismmfg-2026-10-01","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"54.7","ci68":[53.7,55.8],"grandMedian":null,"reportPath":"reports/2026-10/ismmfg-t-2.md"}
