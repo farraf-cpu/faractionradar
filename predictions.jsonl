@@ -670,3 +670,4 @@
 {"publishedAt":"2026-09-30T15:42:37.439885+00:00","eventSlug":"cclaims-2026-10-01","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"1744.00M","ci68":[1743.97,1744.03],"grandMedian":null,"reportPath":"reports/2026-10/cclaims-t-1.md"}
 {"publishedAt":"2026-09-30T16:49:38.361044+00:00","eventSlug":"factory-2026-10-02","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.0%","ci68":[-0.24,0.29],"grandMedian":null,"reportPath":"reports/2026-10/factory-t-2.md"}
 {"publishedAt":"2026-09-30T16:53:48.637656+00:00","eventSlug":"construction-2026-10-01","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"-0.1%","ci68":[-0.31,0.17],"grandMedian":null,"reportPath":"reports/2026-10/construction-t-1.md"}
+{"publishedAt":"2026-09-30T17:20:47.564106+00:00","eventSlug":"credit-2026-10-07","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+$11.5B","ci68":[3.5,19.5],"grandMedian":null,"reportPath":"reports/2026-10/credit-t-7.md"}
