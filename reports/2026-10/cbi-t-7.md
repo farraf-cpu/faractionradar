@@ -1,7 +1,7 @@
 # CBI Policy Rate prediction - target 2026-10-07 (T-7)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-09-30T01:43:36.010903+00:00
+**Published:** 2026-09-30T18:50:57.379967+00:00
 
 ## Final pick
 
