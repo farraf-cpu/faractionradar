@@ -1,7 +1,7 @@
 # NFP prediction — target 2026-10-02 (T-2)
 
 **Model version:** `v1.1-bayesian-blend-ladder-dist`
-**Published:** 2026-09-30T10:31:54.528198+00:00
+**Published:** 2026-09-30T14:20:02.821915+00:00
 
 ## Final pick
 
@@ -16,8 +16,8 @@
 | Jobs count | Probability |
 |------------|-------------|
 | <=25K | 19.0% |
-| 25-75K | 19.0% |
-| 75-125K | 62.0% **(modal)** |
+| 25-75K | 19.5% |
+| 75-125K | 61.5% **(modal)** |
 | 125-175K | 0.0% |
 | 175-225K | 0.0% |
 | 225K+ | 0.0% |
