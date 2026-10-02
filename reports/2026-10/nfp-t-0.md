@@ -1,23 +1,23 @@
 # NFP prediction — target 2026-10-02 (T-0)
 
 **Model version:** `v1.1-bayesian-blend-ladder-dist`
-**Published:** 2026-10-02T10:31:07.922913+00:00
+**Published:** 2026-10-02T14:18:02.134426+00:00
 
 ## Final pick
 
-**+98K jobs**
+**+35K jobs**
 
-- 68% CI: [+67, +129] K · sigma source: prior (blended RMSE)
-- 95% CI: [+36, +160] K
-- Lean vs consensus: SLIGHTLY ABOVE consensus
+- 68% CI: [+4, +66] K · sigma source: prior (blended RMSE)
+- 95% CI: [-27, +97] K
+- Lean vs consensus: MODESTLY BELOW consensus
 
 ## Market outcome distribution (source: `kalshi-ladder`)
 
 | Jobs count | Probability |
 |------------|-------------|
-| <=25K | 23.5% |
-| 25-75K | 18.0% |
-| 75-125K | 58.5% **(modal)** |
+| <=25K | 50.0% **(modal)** |
+| 25-75K | 0.0% |
+| 75-125K | 50.0% |
 | 125-175K | 0.0% |
 | 175-225K | 0.0% |
 | 225K+ | 0.0% |
@@ -42,10 +42,10 @@ empirical value.
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | Bloomberg consensus       |     +89 K | ~55 K |
-| Prediction markets (avg)  |     +95 K | ~40 K |
-| ML ensemble (revised)     |     +39 K | — |
-| First-print ensemble      |    +158 K | — |
-| Bridge models median      |    +121 K | — |
-| Sector decomposition (11) |    +113 K | — |
-| Grand median (all models) |    +114 K | — |
-| **Blended (Bayesian)**    | **    +98 K** | — |
+| Prediction markets (avg)  |     -12 K | ~40 K |
+| ML ensemble (revised)     |     +32 K | — |
+| First-print ensemble      |    +165 K | — |
+| Bridge models median      |    +114 K | — |
+| Sector decomposition (11) |    +114 K | — |
+| Grand median (all models) |    +108 K | — |
+| **Blended (Bayesian)**    | **    +35 K** | — |
