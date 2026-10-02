@@ -683,3 +683,4 @@
 {"publishedAt":"2026-10-02T12:19:30.064658+00:00","eventSlug":"jolts-2026-10-06","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"7.20M","ci68":[6.95,7.45],"grandMedian":null,"reportPath":"reports/2026-10/jolts-t-4.md"}
 {"publishedAt":"2026-10-02T14:18:02.134274+00:00","eventSlug":"nfp-2026-10-02","daysOut":0,"modelVersion":"v1.1-bayesian-blend-ladder-dist","ourCall":"+35K","ci68":[4,66],"grandMedian":"+108K","reportPath":"reports/2026-10/nfp-t-0.md","modalOutcome":"<=25K","outcomeSource":"kalshi-ladder"}
 {"publishedAt":"2026-10-02T19:49:46.436236+00:00","eventSlug":"jolts-2026-10-06","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"7.20M","ci68":[6.95,7.45],"grandMedian":null,"reportPath":"reports/2026-10/jolts-t-4.md"}
+{"publishedAt":"2026-10-02T19:56:01.368612+00:00","eventSlug":"trade-2026-10-06","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"-$78.5B","ci68":[-82.5,-74.5],"grandMedian":null,"reportPath":"reports/2026-10/trade-t-4.md"}
