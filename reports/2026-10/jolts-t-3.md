@@ -1,7 +1,7 @@
 # JOLTS Job Openings prediction — target 2026-10-06 (T-3)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-10-03T15:58:43.619378+00:00
+**Published:** 2026-10-03T18:35:36.224305+00:00
 
 ## Final pick
 
