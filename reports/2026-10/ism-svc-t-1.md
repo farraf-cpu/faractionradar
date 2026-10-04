@@ -1,7 +1,7 @@
 # ISM Services PMI prediction — target 2026-10-05 (T-1)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-10-04T16:01:32.889430+00:00
+**Published:** 2026-10-04T18:17:21.576623+00:00
 
 ## Final pick
 
@@ -12,21 +12,6 @@
 - 95% CI: [53.0, 57.4]
 - Lean vs consensus: in line with consensus
 - Sub-models used: consensus, anchor
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 1.10 pts |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
 
 ## Sub-model breakdown
 
