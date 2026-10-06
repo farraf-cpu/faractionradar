@@ -720,3 +720,4 @@
 {"publishedAt":"2026-10-06T18:08:04.514358+00:00","eventSlug":"jolts-2026-10-06","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"7.20M","ci68":[6.95,7.45],"grandMedian":null,"reportPath":"reports/2026-10/jolts-t-0.md"}
 {"publishedAt":"2026-10-06T19:44:32.506908+00:00","eventSlug":"claims-2026-10-08","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"200K","ci68":[192,208],"grandMedian":null,"reportPath":"reports/2026-10/claims-t-2.md"}
 {"publishedAt":"2026-10-06T20:05:42.016203+00:00","eventSlug":"jolts-2026-10-06","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"7.20M","ci68":[6.95,7.45],"grandMedian":null,"reportPath":"reports/2026-10/jolts-t-0.md"}
+{"publishedAt":"2026-10-06T20:23:35.841300+00:00","eventSlug":"umich-2026-10-09","daysOut":3,"modelVersion":"v1.1-simple-blend","ourCall":"49.8","ci68":[48.6,51.1],"grandMedian":null,"reportPath":"reports/2026-10/umich-t-3.md"}

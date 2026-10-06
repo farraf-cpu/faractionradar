@@ -1,7 +1,7 @@
 # UMich Consumer Sentiment prediction — target 2026-10-09 (T-3)
 
 **Model version:** `v1.1-simple-blend`
-**Published:** 2026-10-06T17:54:05.435591+00:00
+**Published:** 2026-10-06T20:23:35.841352+00:00
 
 ## Final pick
 
@@ -12,21 +12,6 @@
 - 95% CI: [47.3, 52.4]
 - Lean vs consensus: above consensus by 2.2 pts
 - Sub-models used: consensus, trend, oil_shock
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 1.50 pts |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
 
 ## Sub-model breakdown
 
