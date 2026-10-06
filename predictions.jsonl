@@ -716,3 +716,4 @@
 {"publishedAt":"2026-10-06T07:55:17.724882+00:00","eventSlug":"cbi-2026-10-07","daysOut":1,"modelVersion":"v2-outcome-distribution","ourCall":"7.89%","ci68":[7.74,8.04],"grandMedian":null,"reportPath":"reports/2026-10/cbi-t-1.md","modalOutcome":"hold"}
 {"publishedAt":"2026-10-06T16:54:21.909851+00:00","eventSlug":"cclaims-2026-10-08","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"1723.75M","ci68":[1723.72,1723.78],"grandMedian":null,"reportPath":"reports/2026-10/cclaims-t-2.md"}
 {"publishedAt":"2026-10-06T16:54:27.267801+00:00","eventSlug":"claims-2026-10-08","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"200K","ci68":[192,208],"grandMedian":null,"reportPath":"reports/2026-10/claims-t-2.md"}
+{"publishedAt":"2026-10-06T17:54:05.435557+00:00","eventSlug":"umich-2026-10-09","daysOut":3,"modelVersion":"v1.1-simple-blend","ourCall":"49.8","ci68":[48.6,51.1],"grandMedian":null,"reportPath":"reports/2026-10/umich-t-3.md"}
