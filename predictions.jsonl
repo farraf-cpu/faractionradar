@@ -739,3 +739,4 @@
 {"publishedAt":"2026-10-07T20:42:27.827374+00:00","eventSlug":"cclaims-2026-10-08","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"1723.75M","ci68":[1723.72,1723.78],"grandMedian":null,"reportPath":"reports/2026-10/cclaims-t-1.md"}
 {"publishedAt":"2026-10-07T21:49:07.477349+00:00","eventSlug":"wholesale-2026-10-08","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+0.6%","ci68":[0.39,0.89],"grandMedian":null,"reportPath":"reports/2026-10/wholesale-t-1.md"}
 {"publishedAt":"2026-10-07T23:06:16.718069+00:00","eventSlug":"brcpi-2026-10-09","daysOut":2,"modelVersion":"v1.1-sidra","ourCall":"+4.4%","ci68":[4.23,4.63],"grandMedian":null,"reportPath":"reports/2026-10/brcpi-t-2.md"}
+{"publishedAt":"2026-10-07T23:16:35.551126+00:00","eventSlug":"cbi-2026-10-07","daysOut":0,"modelVersion":"v2-outcome-distribution","ourCall":"7.89%","ci68":[7.74,8.04],"grandMedian":null,"reportPath":"reports/2026-10/cbi-t-0.md","modalOutcome":"hold"}
