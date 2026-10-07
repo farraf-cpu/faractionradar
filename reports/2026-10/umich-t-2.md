@@ -1,7 +1,7 @@
 # UMich Consumer Sentiment prediction — target 2026-10-09 (T-2)
 
 **Model version:** `v1.1-simple-blend`
-**Published:** 2026-10-07T18:24:51.529794+00:00
+**Published:** 2026-10-07T20:40:55.066574+00:00
 
 ## Final pick
 
