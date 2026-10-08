@@ -748,3 +748,4 @@
 {"publishedAt":"2026-10-08T19:50:42.867750+00:00","eventSlug":"ppi-2026-10-15","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.28,0.49],"grandMedian":null,"reportPath":"reports/2026-10/ppi-t-7.md"}
 {"publishedAt":"2026-10-08T20:44:08.111730+00:00","eventSlug":"umich-2026-10-09","daysOut":1,"modelVersion":"v1.1-simple-blend","ourCall":"49.6","ci68":[48.3,50.9],"grandMedian":null,"reportPath":"reports/2026-10/umich-t-1.md"}
 {"publishedAt":"2026-10-08T20:49:32.709282+00:00","eventSlug":"empire-2026-10-15","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+14.6","ci68":[9.6,19.6],"grandMedian":null,"reportPath":"reports/2026-10/empire-t-7.md"}
+{"publishedAt":"2026-10-08T21:38:32.433839+00:00","eventSlug":"businv-2026-10-15","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.2,0.7],"grandMedian":null,"reportPath":"reports/2026-10/businv-t-7.md"}
