@@ -1,39 +1,24 @@
 # BR CPI (IPCA) prediction - target 2026-10-09 (T-0)
 
 **Model version:** `v1.1-sidra`
-**Published:** 2026-10-09T02:20:16.090887+00:00
+**Published:** 2026-10-09T22:39:25.348435+00:00
 
 ## Final pick
 
 **+4.4%** y/y IPCA (12-mo rolling)
 
 - Regime: hot JP inflation (RBNZ hawkish pressure)
-- 68% CI: [+4.23%, +4.63%] · sigma source: prior (inverse-MAE)
-- 95% CI: [+4.03%, +4.83%]
+- 68% CI: [+4.21%, +4.61%] · sigma source: prior (inverse-MAE)
+- 95% CI: [+4.01%, +4.81%]
 - Lean vs consensus: no consensus
 - Sub-models used: trend
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 0.20 pp |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | - | 0.15pp |
-| trend | +4.43% | 0.20pp |
+| trend | +4.41% | 0.20pp |
 
 ## Method
 

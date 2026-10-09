@@ -764,3 +764,4 @@
 {"publishedAt":"2026-10-09T21:41:57.751904+00:00","eventSlug":"budget-2026-10-13","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"-$344.8B","ci68":[-384.8,-304.8],"grandMedian":null,"reportPath":"reports/2026-10/budget-t-4.md"}
 {"publishedAt":"2026-10-09T21:49:45.793738+00:00","eventSlug":"coreretail-2026-10-16","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.8%","ci68":[0.63,0.93],"grandMedian":null,"reportPath":"reports/2026-10/coreretail-t-7.md"}
 {"publishedAt":"2026-10-09T21:50:35.768533+00:00","eventSlug":"exprices-2026-10-16","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.8%","ci68":[0.67,0.97],"grandMedian":null,"reportPath":"reports/2026-10/exprices-t-7.md"}
+{"publishedAt":"2026-10-09T22:39:25.348376+00:00","eventSlug":"brcpi-2026-10-09","daysOut":0,"modelVersion":"v1.1-sidra","ourCall":"+4.4%","ci68":[4.21,4.61],"grandMedian":null,"reportPath":"reports/2026-10/brcpi-t-0.md"}
