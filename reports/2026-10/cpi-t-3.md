@@ -1,7 +1,7 @@
 # CPI prediction — target 2026-10-14 (T-3)
 
 **Model version:** `v1.3-kalshi-ladder-dist`
-**Published:** 2026-10-11T16:24:16.456764+00:00
+**Published:** 2026-10-11T18:37:23.169829+00:00
 
 ## Final pick
 
