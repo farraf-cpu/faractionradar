@@ -1,0 +1,45 @@
+# Empire State Manufacturing prediction — target 2026-10-15 (T-4)
+
+**Model version:** `v1-simple-blend`
+**Published:** 2026-10-11T19:43:24.024637+00:00
+
+## Final pick
+
+**+8.3** Empire State General Business Conditions
+
+- Regime: modest regional expansion
+- 68% CI: [+5.1, +11.4] · sigma source: prior (inverse-MAE)
+- 95% CI: [+2.0, +14.6]
+- Lean vs consensus: above consensus by 5.1 pts
+- Sub-models used: consensus, trend
+
+## Sub-model breakdown
+
+| Sub-model | Value | Historical MAE |
+|-----------|-------|----------------|
+| consensus | +3.2 | 4.0 pts |
+| trend | +14.6 | 5.0 pts |
+
+## Method
+
+`v1-simple-blend`: inverse-MAE-weighted mean of consensus (~4 pts) + FRED
+GACDISA066MSFRBNY 3-mo trend (~5 pts). Empire State releases ~15th of
+month — first regional Fed survey ahead of ISM Manufacturing on the 1st
+business day of the following month.
+
+## Positioning
+
+Empire State is one of five regional Fed manufacturing surveys (Empire,
+Philly, Dallas, Kansas City, Richmond). Weighted composite of the five
+correlates ~0.85 with ISM Mfg headline. Empire is the earliest to publish
+each month, so it's the leading edge of the regional composite signal.
+
+## Phase 2 targets
+
+- **New Orders sub-index** — Empire's New Orders leads national manufacturing
+  by 1-2 months
+- **Feed into ismmfg predictor** — as a leading sub-model alongside Chicago PMI
+
+## Change log
+
+- **v1-simple-blend (2026-09-03)** — first ship. 23rd event covered.
