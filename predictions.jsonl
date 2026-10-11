@@ -771,3 +771,4 @@
 {"publishedAt":"2026-10-11T10:44:20.337482+00:00","eventSlug":"ukgdp-2026-10-15","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"-0.1%","ci68":[-0.25,0.05],"grandMedian":null,"reportPath":"reports/2026-10/ukgdp-t-4.md"}
 {"publishedAt":"2026-10-11T10:56:55.880248+00:00","eventSlug":"ukcpi-2026-10-15","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+3.7%","ci68":[3.47,3.87],"grandMedian":null,"reportPath":"reports/2026-10/ukcpi-t-4.md"}
 {"publishedAt":"2026-10-11T16:23:59.009694+00:00","eventSlug":"ppi-2026-10-15","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.36,0.51],"grandMedian":null,"reportPath":"reports/2026-10/ppi-t-4.md"}
+{"publishedAt":"2026-10-11T16:24:16.456706+00:00","eventSlug":"cpi-2026-10-14","daysOut":3,"modelVersion":"v1.3-kalshi-ladder-dist","ourCall":"+0.7%","ci68":[0.59,0.72],"grandMedian":null,"reportPath":"reports/2026-10/cpi-t-3.md","modalOutcome":"+0.5%","outcomeSource":"kalshi-ladder"}
