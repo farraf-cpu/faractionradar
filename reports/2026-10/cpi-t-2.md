@@ -1,7 +1,7 @@
 # CPI prediction — target 2026-10-14 (T-2)
 
 **Model version:** `v1.3-kalshi-ladder-dist`
-**Published:** 2026-10-12T19:57:05.630284+00:00
+**Published:** 2026-10-12T21:58:54.584399+00:00
 
 ## Final pick
 
@@ -24,21 +24,6 @@
 | +0.3% | 6.0% |
 | +0.4% | 33.0% |
 | +0.5% | 58.5% **(modal)** |
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 0.08 pp |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
 
 ## Sub-model breakdown
 
