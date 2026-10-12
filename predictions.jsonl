@@ -798,3 +798,4 @@
 {"publishedAt":"2026-10-12T22:36:09.919064+00:00","eventSlug":"empire-2026-10-15","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+8.3","ci68":[5.1,11.4],"grandMedian":null,"reportPath":"reports/2026-10/empire-t-3.md"}
 {"publishedAt":"2026-10-12T22:37:13.040181+00:00","eventSlug":"philly-2026-10-15","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+31.0","ci68":[27.6,34.4],"grandMedian":null,"reportPath":"reports/2026-10/philly-t-3.md"}
 {"publishedAt":"2026-10-12T23:04:54.617982+00:00","eventSlug":"caputil-2026-10-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"76.4%","ci68":[76.24,76.62],"grandMedian":null,"reportPath":"reports/2026-10/caputil-t-4.md"}
+{"publishedAt":"2026-10-12T23:21:41.809094+00:00","eventSlug":"businv-2026-10-15","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.28,0.55],"grandMedian":null,"reportPath":"reports/2026-10/businv-t-3.md"}
