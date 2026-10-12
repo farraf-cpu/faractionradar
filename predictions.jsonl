@@ -789,3 +789,4 @@
 {"publishedAt":"2026-10-12T19:54:21.119347+00:00","eventSlug":"coreretail-2026-10-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.8%","ci68":[0.63,0.93],"grandMedian":null,"reportPath":"reports/2026-10/coreretail-t-4.md"}
 {"publishedAt":"2026-10-12T19:56:02.013769+00:00","eventSlug":"ppi-2026-10-15","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.36,0.51],"grandMedian":null,"reportPath":"reports/2026-10/ppi-t-3.md"}
 {"publishedAt":"2026-10-12T19:57:05.630224+00:00","eventSlug":"cpi-2026-10-14","daysOut":2,"modelVersion":"v1.3-kalshi-ladder-dist","ourCall":"+0.7%","ci68":[0.59,0.72],"grandMedian":null,"reportPath":"reports/2026-10/cpi-t-2.md","modalOutcome":"+0.5%","outcomeSource":"kalshi-ladder"}
+{"publishedAt":"2026-10-12T19:57:48.422126+00:00","eventSlug":"retail-2026-10-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.29,1.09],"grandMedian":null,"reportPath":"reports/2026-10/retail-t-4.md"}
