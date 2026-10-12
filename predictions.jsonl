@@ -784,3 +784,4 @@
 {"publishedAt":"2026-10-11T21:54:28.343544+00:00","eventSlug":"ukgdp-2026-10-15","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"-0.1%","ci68":[-0.25,0.05],"grandMedian":null,"reportPath":"reports/2026-10/ukgdp-t-4.md"}
 {"publishedAt":"2026-10-11T22:06:29.963510+00:00","eventSlug":"cncpi-2026-10-14","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+1.0%","ci68":[0.85,1.15],"grandMedian":null,"reportPath":"reports/2026-10/cncpi-t-3.md"}
 {"publishedAt":"2026-10-12T01:35:12.369953+00:00","eventSlug":"cncpi-2026-10-14","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+1.0%","ci68":[0.85,1.15],"grandMedian":null,"reportPath":"reports/2026-10/cncpi-t-2.md"}
+{"publishedAt":"2026-10-12T11:49:57.490465+00:00","eventSlug":"ukgdp-2026-10-15","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"-0.1%","ci68":[-0.25,0.05],"grandMedian":null,"reportPath":"reports/2026-10/ukgdp-t-3.md"}
