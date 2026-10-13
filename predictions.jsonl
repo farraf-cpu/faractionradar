@@ -834,3 +834,4 @@
 {"publishedAt":"2026-10-13T21:14:52.633494+00:00","eventSlug":"permits-2026-10-20","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"1.40M","ci68":[1.34,1.46],"grandMedian":null,"reportPath":"reports/2026-10/permits-t-7.md"}
 {"publishedAt":"2026-10-13T21:21:20.713543+00:00","eventSlug":"caputil-2026-10-16","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"76.4%","ci68":[76.24,76.62],"grandMedian":null,"reportPath":"reports/2026-10/caputil-t-3.md"}
 {"publishedAt":"2026-10-13T21:39:39.524872+00:00","eventSlug":"businv-2026-10-15","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.28,0.55],"grandMedian":null,"reportPath":"reports/2026-10/businv-t-2.md"}
+{"publishedAt":"2026-10-13T21:51:21.185431+00:00","eventSlug":"imprices-2026-10-16","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.6%","ci68":[0.42,0.8],"grandMedian":null,"reportPath":"reports/2026-10/imprices-t-3.md"}
