@@ -831,3 +831,4 @@
 {"publishedAt":"2026-10-13T20:49:21.443896+00:00","eventSlug":"indpro-2026-10-16","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.05,0.53],"grandMedian":null,"reportPath":"reports/2026-10/indpro-t-3.md"}
 {"publishedAt":"2026-10-13T20:50:01.593375+00:00","eventSlug":"empire-2026-10-15","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+13.2","ci68":[10.1,16.4],"grandMedian":null,"reportPath":"reports/2026-10/empire-t-2.md"}
 {"publishedAt":"2026-10-13T20:50:35.632289+00:00","eventSlug":"philly-2026-10-15","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+32.0","ci68":[28.6,35.4],"grandMedian":null,"reportPath":"reports/2026-10/philly-t-2.md"}
+{"publishedAt":"2026-10-13T21:14:52.633494+00:00","eventSlug":"permits-2026-10-20","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"1.40M","ci68":[1.34,1.46],"grandMedian":null,"reportPath":"reports/2026-10/permits-t-7.md"}
