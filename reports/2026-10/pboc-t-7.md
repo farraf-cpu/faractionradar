@@ -1,7 +1,7 @@
 # PBOC Policy Rate prediction - target 2026-10-20 (T-7)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-10-13T00:54:55.548083+00:00
+**Published:** 2026-10-13T08:01:41.796649+00:00
 
 ## Final pick
 
