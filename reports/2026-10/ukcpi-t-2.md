@@ -1,7 +1,7 @@
 # UK CPI prediction - target 2026-10-15 (T-2)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-10-13T12:00:25.036038+00:00
+**Published:** 2026-10-13T22:37:47.024709+00:00
 
 ## Final pick
 
