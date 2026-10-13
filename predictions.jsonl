@@ -818,3 +818,4 @@
 {"publishedAt":"2026-10-13T17:42:43.748047+00:00","eventSlug":"housing-2026-10-20","daysOut":7,"modelVersion":"v1.1-simple-blend","ourCall":"1.37M","ci68":[1.32,1.42],"grandMedian":null,"reportPath":"reports/2026-10/housing-t-7.md"}
 {"publishedAt":"2026-10-13T17:42:57.631686+00:00","eventSlug":"ppi-2026-10-15","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.5%","ci68":[0.4,0.55],"grandMedian":null,"reportPath":"reports/2026-10/ppi-t-2.md"}
 {"publishedAt":"2026-10-13T17:43:44.131106+00:00","eventSlug":"cpi-2026-10-14","daysOut":1,"modelVersion":"v1.3-kalshi-ladder-dist","ourCall":"+0.7%","ci68":[0.59,0.72],"grandMedian":null,"reportPath":"reports/2026-10/cpi-t-1.md","modalOutcome":"+0.5%","outcomeSource":"kalshi-ladder"}
+{"publishedAt":"2026-10-13T17:43:58.502726+00:00","eventSlug":"retail-2026-10-16","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.29,1.09],"grandMedian":null,"reportPath":"reports/2026-10/retail-t-3.md"}
