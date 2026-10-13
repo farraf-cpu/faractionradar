@@ -815,3 +815,4 @@
 {"publishedAt":"2026-10-13T11:37:53.612354+00:00","eventSlug":"ukgdp-2026-10-15","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"-0.1%","ci68":[-0.25,0.05],"grandMedian":null,"reportPath":"reports/2026-10/ukgdp-t-2.md"}
 {"publishedAt":"2026-10-13T12:00:25.036004+00:00","eventSlug":"ukcpi-2026-10-15","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+3.7%","ci68":[3.47,3.87],"grandMedian":null,"reportPath":"reports/2026-10/ukcpi-t-2.md"}
 {"publishedAt":"2026-10-13T17:41:47.531022+00:00","eventSlug":"coreretail-2026-10-16","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.8%","ci68":[0.63,0.93],"grandMedian":null,"reportPath":"reports/2026-10/coreretail-t-3.md"}
+{"publishedAt":"2026-10-13T17:42:43.748047+00:00","eventSlug":"housing-2026-10-20","daysOut":7,"modelVersion":"v1.1-simple-blend","ourCall":"1.37M","ci68":[1.32,1.42],"grandMedian":null,"reportPath":"reports/2026-10/housing-t-7.md"}
