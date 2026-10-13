@@ -1,7 +1,7 @@
 # JP CPI prediction - target 2026-10-14 (T-1)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-10-13T00:49:07.800274+00:00
+**Published:** 2026-10-13T03:08:11.692089+00:00
 
 ## Final pick
 
