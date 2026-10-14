@@ -845,3 +845,4 @@
 {"publishedAt":"2026-10-13T23:01:12.503590+00:00","eventSlug":"mnb-2026-10-20","daysOut":7,"modelVersion":"v2-outcome-distribution","ourCall":"5.71%","ci68":[5.56,5.86],"grandMedian":null,"reportPath":"reports/2026-10/mnb-t-7.md","modalOutcome":"hold"}
 {"publishedAt":"2026-10-14T00:54:01.541328+00:00","eventSlug":"cacpi-2026-10-21","daysOut":7,"modelVersion":"v1.1-statcan","ourCall":"+2.6%","ci68":[2.43,2.83],"grandMedian":null,"reportPath":"reports/2026-10/cacpi-t-7.md"}
 {"publishedAt":"2026-10-14T01:20:56.739274+00:00","eventSlug":"cncpi-2026-10-14","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"+1.0%","ci68":[0.85,1.15],"grandMedian":null,"reportPath":"reports/2026-10/cncpi-t-0.md"}
+{"publishedAt":"2026-10-14T06:21:00.130407+00:00","eventSlug":"bi-2026-10-21","daysOut":7,"modelVersion":"v2-outcome-distribution","ourCall":"6.06%","ci68":[5.91,6.21],"grandMedian":null,"reportPath":"reports/2026-10/bi-t-7.md","modalOutcome":"hold"}
