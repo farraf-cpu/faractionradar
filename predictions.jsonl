@@ -858,3 +858,4 @@
 {"publishedAt":"2026-10-14T18:18:44.940764+00:00","eventSlug":"cpi-2026-10-14","daysOut":0,"modelVersion":"v1.3-kalshi-ladder-dist","ourCall":"+0.2%","ci68":[0.18,0.3],"grandMedian":null,"reportPath":"reports/2026-10/cpi-t-0.md","modalOutcome":"-0.1%","outcomeSource":"kalshi-ladder"}
 {"publishedAt":"2026-10-14T18:30:56.247985+00:00","eventSlug":"ppi-2026-10-15","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+0.5%","ci68":[0.4,0.55],"grandMedian":null,"reportPath":"reports/2026-10/ppi-t-1.md"}
 {"publishedAt":"2026-10-14T18:44:34.234943+00:00","eventSlug":"retail-2026-10-16","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.29,1.09],"grandMedian":null,"reportPath":"reports/2026-10/retail-t-2.md"}
+{"publishedAt":"2026-10-14T18:49:05.205956+00:00","eventSlug":"claims-2026-10-15","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"199K","ci68":[190,207],"grandMedian":null,"reportPath":"reports/2026-10/claims-t-1.md"}
