@@ -1,7 +1,7 @@
 # JP CPI prediction - target 2026-10-14 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-10-14T01:20:56.739300+00:00
+**Published:** 2026-10-14T21:48:04.005402+00:00
 
 ## Final pick
 
@@ -12,21 +12,6 @@
 - 95% CI: [+0.70%, +1.30%]
 - Lean vs consensus: in line with consensus
 - Sub-models used: consensus
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 0.15 pp |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
 
 ## Sub-model breakdown
 
