@@ -1,15 +1,15 @@
 # CPI prediction — target 2026-10-14 (T-0)
 
 **Model version:** `v1.3-kalshi-ladder-dist`
-**Published:** 2026-10-14T15:21:54.035370+00:00
+**Published:** 2026-10-14T18:18:44.940827+00:00
 
 ## Final pick
 
-**+0.6% m/m**
+**+0.2% m/m**
 
-- 68% CI: [+0.59%, +0.71%] · sigma source: prior (inverse-MAE)
-- 95% CI: [+0.52%, +0.77%]
-- Lean vs consensus: above consensus by 0.05pp
+- 68% CI: [+0.18%, +0.30%] · sigma source: prior (inverse-MAE)
+- 95% CI: [+0.11%, +0.37%]
+- Lean vs consensus: below consensus by 0.36pp
 - Sub-models used: consensus, market, trend
 
 
@@ -17,13 +17,28 @@
 
 | CPI m/m | Probability |
 |---------|-------------|
-| -0.1% | 0.5% |
+| -0.1% | 50.0% **(modal)** |
 | 0.0% | 0.0% |
-| +0.1% | 0.5% |
+| +0.1% | 0.0% |
 | +0.2% | 0.0% |
-| +0.3% | 9.5% |
-| +0.4% | 18.0% |
-| +0.5% | 71.5% **(modal)** |
+| +0.3% | 0.0% |
+| +0.4% | 0.0% |
+| +0.5% | 50.0% |
+
+
+## Empirical accuracy (live)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | 0.08 pp |
+| Resolved predictions | 0 (first resolution pending) |
+| Empirical MAE | — |
+| Hit rate (ourCall closest) | — |
+
+Empirical MAE + hit-rate auto-populate as predictions resolve. Once
+count >= 5 the CI sigma will switch from the prior to the
+empirical value.
+
 
 ## Sub-model breakdown
 
@@ -31,7 +46,7 @@
 |-----------|-------|----------------|
 | consensus | +0.60% | 0.08 pp |
 | cleveland_fed | — | 0.06 pp |
-| market | +1.00% | 0.12 pp |
+| market | -0.35% | 0.12 pp |
 | trimmed_mean | — | 0.10 pp |
 | trend | +0.30% | 0.15 pp |
 
