@@ -1,38 +1,23 @@
-# Monthly Treasury Budget prediction — target 2026-10-13 (T-1)
+# Monthly Treasury Budget prediction — target 2026-10-16 (T-1)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-10-12T23:38:09.455080+00:00
+**Published:** 2026-10-15T20:21:43.935983+00:00
 
 ## Final pick
 
-**-$344.8B** federal surplus/deficit (Monthly Treasury Statement)
+**-$119.3B** federal surplus/deficit (Monthly Treasury Statement)
 
-- Regime: extreme monthly deficit
-- 68% CI: [-$384.8B, -$304.8B] · sigma source: prior (inverse-MAE)
-- 95% CI: [-$424.8B, -$264.8B]
-- Lean vs consensus: no consensus
-- Sub-models used: anchor
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 40.00 B |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
+- Regime: wide monthly deficit
+- 68% CI: [-$134.7B, -$103.8B] · sigma source: prior (inverse-MAE)
+- 95% CI: [-$150.1B, -$88.4B]
+- Lean vs consensus: wider deficit / smaller surplus than consensus by $84.6B
+- Sub-models used: consensus, anchor
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | — | $15.0B |
+| consensus | -$34.7B | $15.0B |
 | anchor | -$344.8B | $40.0B |
 
 ## Method
@@ -51,4 +36,4 @@ near-term supply. Debt-ceiling episodes make this print market-moving.
 
 ## Change log
 
-- **v1-simple-blend (2026-10-12)** — first ship.
+- **v1-simple-blend (2026-10-15)** — first ship.
