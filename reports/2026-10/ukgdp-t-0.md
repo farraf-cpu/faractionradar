@@ -1,7 +1,7 @@
 # UK Monthly GDP prediction - target 2026-10-15 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-10-15T09:04:04.309812+00:00
+**Published:** 2026-10-15T21:20:02.609558+00:00
 
 ## Final pick
 
@@ -12,6 +12,21 @@
 - 95% CI: [-0.40%, +0.20%]
 - Lean vs consensus: in line with consensus
 - Sub-models used: consensus
+
+
+## Empirical accuracy (live)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | 0.15 pp |
+| Resolved predictions | 0 (first resolution pending) |
+| Empirical MAE | — |
+| Hit rate (ourCall closest) | — |
+
+Empirical MAE + hit-rate auto-populate as predictions resolve. Once
+count >= 5 the CI sigma will switch from the prior to the
+empirical value.
+
 
 ## Sub-model breakdown
 
