@@ -877,3 +877,4 @@
 {"publishedAt":"2026-10-15T06:03:25.218067+00:00","eventSlug":"bok-2026-10-22","daysOut":7,"modelVersion":"v2-outcome-distribution","ourCall":"2.81%","ci68":[2.66,2.96],"grandMedian":null,"reportPath":"reports/2026-10/bok-t-7.md","modalOutcome":"hold"}
 {"publishedAt":"2026-10-15T06:05:02.259905+00:00","eventSlug":"cbrt-2026-10-22","daysOut":7,"modelVersion":"v2.1-wide-buckets","ourCall":"38.75%","ci68":[38.45,39.05],"grandMedian":null,"reportPath":"reports/2026-10/cbrt-t-7.md","modalOutcome":"hold"}
 {"publishedAt":"2026-10-15T09:04:04.309772+00:00","eventSlug":"ukgdp-2026-10-15","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"-0.1%","ci68":[-0.25,0.05],"grandMedian":null,"reportPath":"reports/2026-10/ukgdp-t-0.md"}
+{"publishedAt":"2026-10-15T09:16:52.272950+00:00","eventSlug":"ukcpi-2026-10-15","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"+3.7%","ci68":[3.47,3.87],"grandMedian":null,"reportPath":"reports/2026-10/ukcpi-t-0.md"}
