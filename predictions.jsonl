@@ -913,3 +913,4 @@
 {"publishedAt":"2026-10-17T05:50:59.061496+00:00","eventSlug":"mnb-2026-10-20","daysOut":3,"modelVersion":"v2-outcome-distribution","ourCall":"5.71%","ci68":[5.56,5.86],"grandMedian":null,"reportPath":"reports/2026-10/mnb-t-3.md","modalOutcome":"hold"}
 {"publishedAt":"2026-10-17T05:51:56.524450+00:00","eventSlug":"pboc-2026-10-20","daysOut":3,"modelVersion":"v2-outcome-distribution","ourCall":"2.90%","ci68":[2.6,3.2],"grandMedian":null,"reportPath":"reports/2026-10/pboc-t-3.md","modalOutcome":"hold"}
 {"publishedAt":"2026-10-17T13:50:44.599120+00:00","eventSlug":"housing-2026-10-20","daysOut":3,"modelVersion":"v1.1-simple-blend","ourCall":"1.37M","ci68":[1.32,1.42],"grandMedian":null,"reportPath":"reports/2026-10/housing-t-3.md"}
+{"publishedAt":"2026-10-17T17:32:21.147162+00:00","eventSlug":"housing-2026-10-20","daysOut":3,"modelVersion":"v1.1-simple-blend","ourCall":"1.37M","ci68":[1.32,1.42],"grandMedian":null,"reportPath":"reports/2026-10/housing-t-3.md"}
