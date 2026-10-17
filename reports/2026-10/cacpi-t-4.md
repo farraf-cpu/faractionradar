@@ -1,7 +1,7 @@
 # CA CPI prediction - target 2026-10-21 (T-4)
 
 **Model version:** `v1.1-statcan`
-**Published:** 2026-10-17T00:11:13.931134+00:00
+**Published:** 2026-10-17T20:55:00.862968+00:00
 
 ## Final pick
 
