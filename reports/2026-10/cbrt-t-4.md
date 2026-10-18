@@ -1,7 +1,7 @@
 # CBRT Policy Rate prediction - target 2026-10-22 (T-4)
 
 **Model version:** `v2.1-wide-buckets`
-**Published:** 2026-10-18T06:12:35.523250+00:00
+**Published:** 2026-10-18T20:56:36.419540+00:00
 
 ## Final pick
 
