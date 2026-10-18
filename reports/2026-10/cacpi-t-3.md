@@ -1,7 +1,7 @@
 # CA CPI prediction - target 2026-10-21 (T-3)
 
 **Model version:** `v1.1-statcan`
-**Published:** 2026-10-18T21:00:36.203125+00:00
+**Published:** 2026-10-18T23:56:20.365772+00:00
 
 ## Final pick
 
@@ -12,6 +12,21 @@
 - 95% CI: [+2.23%, +3.03%]
 - Lean vs consensus: no consensus
 - Sub-models used: trend
+
+
+## Empirical accuracy (live)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | 0.20 pp |
+| Resolved predictions | 0 (first resolution pending) |
+| Empirical MAE | — |
+| Hit rate (ourCall closest) | — |
+
+Empirical MAE + hit-rate auto-populate as predictions resolve. Once
+count >= 5 the CI sigma will switch from the prior to the
+empirical value.
+
 
 ## Sub-model breakdown
 
