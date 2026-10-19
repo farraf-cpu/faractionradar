@@ -945,3 +945,4 @@
 {"publishedAt":"2026-10-19T17:04:59.770606+00:00","eventSlug":"housing-2026-10-20","daysOut":1,"modelVersion":"v1.1-simple-blend","ourCall":"1.34M","ci68":[1.31,1.37],"grandMedian":null,"reportPath":"reports/2026-10/housing-t-1.md"}
 {"publishedAt":"2026-10-19T18:01:16.276600+00:00","eventSlug":"existing-2026-10-22","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"3993.33M","ci68":[3993.25,3993.41],"grandMedian":null,"reportPath":"reports/2026-10/existing-t-3.md"}
 {"publishedAt":"2026-10-19T20:10:17.661001+00:00","eventSlug":"housing-2026-10-20","daysOut":1,"modelVersion":"v1.1-simple-blend","ourCall":"1.34M","ci68":[1.31,1.37],"grandMedian":null,"reportPath":"reports/2026-10/housing-t-1.md"}
+{"publishedAt":"2026-10-19T20:34:34.735032+00:00","eventSlug":"existing-2026-10-22","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"3993.33M","ci68":[3993.25,3993.41],"grandMedian":null,"reportPath":"reports/2026-10/existing-t-3.md"}
