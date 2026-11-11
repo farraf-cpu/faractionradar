@@ -948,3 +948,4 @@
 {"publishedAt":"2026-10-19T20:34:34.735032+00:00","eventSlug":"existing-2026-10-22","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"3993.33M","ci68":[3993.25,3993.41],"grandMedian":null,"reportPath":"reports/2026-10/existing-t-3.md"}
 {"publishedAt":"2026-10-19T21:01:58.688198+00:00","eventSlug":"permits-2026-10-20","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"1.40M","ci68":[1.36,1.43],"grandMedian":null,"reportPath":"reports/2026-10/permits-t-1.md"}
 {"publishedAt":"2026-11-11T19:14:39.365647+00:00","eventSlug":"umich-2026-11-13","daysOut":2,"modelVersion":"v1.1-simple-blend","ourCall":"51.5","ci68":[49.5,53.6],"grandMedian":null,"reportPath":"reports/2026-11/umich-t-2.md"}
+{"publishedAt":"2026-11-11T21:16:53.800849+00:00","eventSlug":"ppi-2026-11-13","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.35,0.5],"grandMedian":null,"reportPath":"reports/2026-11/ppi-t-2.md"}
