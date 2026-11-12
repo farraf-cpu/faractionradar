@@ -960,3 +960,4 @@
 {"publishedAt":"2026-11-12T03:38:57.276624+00:00","eventSlug":"jpgdp-2026-11-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.1%","ci68":[-0.16,0.44],"grandMedian":null,"reportPath":"reports/2026-11/jpgdp-t-4.md"}
 {"publishedAt":"2026-11-12T08:37:49.076203+00:00","eventSlug":"sarb-2026-11-19","daysOut":7,"modelVersion":"v2-outcome-distribution","ourCall":"7.05%","ci68":[6.9,7.2],"grandMedian":null,"reportPath":"reports/2026-11/sarb-t-7.md","modalOutcome":"hold"}
 {"publishedAt":"2026-11-12T13:01:12.951536+00:00","eventSlug":"ukcpi-2026-11-19","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+3.7%","ci68":[3.47,3.87],"grandMedian":null,"reportPath":"reports/2026-11/ukcpi-t-7.md"}
+{"publishedAt":"2026-11-12T18:30:18.745702+00:00","eventSlug":"housing-2026-11-19","daysOut":7,"modelVersion":"v1.1-simple-blend","ourCall":"1.35M","ci68":[1.3,1.39],"grandMedian":null,"reportPath":"reports/2026-11/housing-t-7.md"}
