@@ -1,7 +1,7 @@
 # Existing Home Sales prediction — target 2026-11-20 (T-7)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-13T18:59:49.344984+00:00
+**Published:** 2026-11-13T21:24:56.939967+00:00
 
 ## Final pick
 
@@ -12,21 +12,6 @@
 - 95% CI: [3883.17M, 3883.49M]
 - Lean vs consensus: no consensus
 - Sub-models used: trend
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 0.08 M |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
 
 ## Sub-model breakdown
 
