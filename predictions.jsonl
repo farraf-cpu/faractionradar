@@ -974,3 +974,4 @@
 {"publishedAt":"2026-11-12T23:43:43.117707+00:00","eventSlug":"jpgdp-2026-11-16","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.1%","ci68":[-0.16,0.44],"grandMedian":null,"reportPath":"reports/2026-11/jpgdp-t-4.md"}
 {"publishedAt":"2026-11-12T23:46:09.249954+00:00","eventSlug":"sarb-2026-11-19","daysOut":7,"modelVersion":"v2-outcome-distribution","ourCall":"7.05%","ci68":[6.9,7.2],"grandMedian":null,"reportPath":"reports/2026-11/sarb-t-7.md","modalOutcome":"hold"}
 {"publishedAt":"2026-11-13T03:11:16.055514+00:00","eventSlug":"jpgdp-2026-11-16","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.1%","ci68":[-0.16,0.44],"grandMedian":null,"reportPath":"reports/2026-11/jpgdp-t-3.md"}
+{"publishedAt":"2026-11-13T08:24:41.359325+00:00","eventSlug":"mnb-2026-11-17","daysOut":4,"modelVersion":"v2-outcome-distribution","ourCall":"5.71%","ci68":[5.56,5.86],"grandMedian":null,"reportPath":"reports/2026-11/mnb-t-4.md","modalOutcome":"hold"}
