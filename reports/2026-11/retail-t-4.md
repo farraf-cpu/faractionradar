@@ -1,7 +1,7 @@
 # Retail Sales prediction — target 2026-11-17 (T-4)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-13T17:58:33.053513+00:00
+**Published:** 2026-11-13T20:56:28.249851+00:00
 
 ## Final pick
 
@@ -11,21 +11,6 @@
 - 95% CI: [-0.27%, +1.33%]
 - Lean vs consensus: no consensus
 - Sub-models used: trend
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 0.40 pp |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
 
 ## Sub-model breakdown
 
