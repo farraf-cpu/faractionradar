@@ -977,3 +977,4 @@
 {"publishedAt":"2026-11-13T08:24:41.359325+00:00","eventSlug":"mnb-2026-11-17","daysOut":4,"modelVersion":"v2-outcome-distribution","ourCall":"5.71%","ci68":[5.56,5.86],"grandMedian":null,"reportPath":"reports/2026-11/mnb-t-4.md","modalOutcome":"hold"}
 {"publishedAt":"2026-11-13T08:26:56.388833+00:00","eventSlug":"pboc-2026-11-20","daysOut":7,"modelVersion":"v2-outcome-distribution","ourCall":"2.90%","ci68":[2.6,3.2],"grandMedian":null,"reportPath":"reports/2026-11/pboc-t-7.md","modalOutcome":"hold"}
 {"publishedAt":"2026-11-13T17:55:55.656981+00:00","eventSlug":"coreretail-2026-11-17","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+0.6%","ci68":[0.49,0.79],"grandMedian":null,"reportPath":"reports/2026-11/coreretail-t-4.md"}
+{"publishedAt":"2026-11-13T17:57:42.459423+00:00","eventSlug":"ppi-2026-11-13","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.32,0.46],"grandMedian":null,"reportPath":"reports/2026-11/ppi-t-0.md"}
