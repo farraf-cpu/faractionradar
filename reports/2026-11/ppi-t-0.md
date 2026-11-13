@@ -1,7 +1,7 @@
 # PPI prediction — target 2026-11-13 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-13T17:57:42.459468+00:00
+**Published:** 2026-11-13T20:51:48.995554+00:00
 
 ## Final pick
 
@@ -11,6 +11,21 @@
 - 95% CI: [+0.24%, +0.54%]
 - Lean vs consensus: in line with consensus
 - Sub-models used: consensus, trend, core_anchor
+
+
+## Empirical accuracy (live)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | 0.10 pp |
+| Resolved predictions | 0 (first resolution pending) |
+| Empirical MAE | — |
+| Hit rate (ourCall closest) | — |
+
+Empirical MAE + hit-rate auto-populate as predictions resolve. Once
+count >= 5 the CI sigma will switch from the prior to the
+empirical value.
+
 
 ## Sub-model breakdown
 
