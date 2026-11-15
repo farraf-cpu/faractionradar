@@ -1,7 +1,7 @@
 # JP Preliminary GDP prediction - target 2026-11-16 (T-1)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-15T02:26:08.396555+00:00
+**Published:** 2026-11-15T22:59:28.383812+00:00
 
 ## Final pick
 

@@ -1039,3 +1039,4 @@
 {"publishedAt":"2026-11-15T21:59:02.218025+00:00","eventSlug":"coreretail-2026-11-17","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.5%","ci68":[0.41,0.56],"grandMedian":null,"reportPath":"reports/2026-11/coreretail-t-2.md"}
 {"publishedAt":"2026-11-15T22:00:12.114861+00:00","eventSlug":"exprices-2026-11-17","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+1.0%","ci68":[0.84,1.14],"grandMedian":null,"reportPath":"reports/2026-11/exprices-t-2.md"}
 {"publishedAt":"2026-11-15T22:44:22.877021+00:00","eventSlug":"ukcpi-2026-11-19","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+3.7%","ci68":[3.47,3.87],"grandMedian":null,"reportPath":"reports/2026-11/ukcpi-t-4.md"}
+{"publishedAt":"2026-11-15T22:59:28.383771+00:00","eventSlug":"jpgdp-2026-11-16","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+0.1%","ci68":[-0.16,0.44],"grandMedian":null,"reportPath":"reports/2026-11/jpgdp-t-1.md"}
