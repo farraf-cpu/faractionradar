@@ -1,0 +1,11 @@
+# code lives elsewhere; only the schedule and the published record are kept here
+*.py
+__pycache__/
+src/
+scripts/
+tests/
+backtest/
+learnings/
+docs/
+requirements.txt
+.models/

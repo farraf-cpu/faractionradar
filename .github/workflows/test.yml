@@ -1,0 +1,56 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "emit*.py"
+      - "mae_utils.py"
+      - "scripts/**"
+      - "tests/**"
+      - "backtest/**"
+      - "docs/**-model-card.md"
+      - ".python-version"
+      - ".github/workflows/**"
+  pull_request:
+    paths:
+      - "emit*.py"
+      - "mae_utils.py"
+      - "scripts/**"
+      - "tests/**"
+      - "backtest/**"
+      - "docs/**-model-card.md"
+      - ".python-version"
+      - ".github/workflows/**"
+  workflow_dispatch: {}
+
+concurrency:
+  # Coalesce rapid-fire pushes on main — no point running 5 in parallel.
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load code
+        env:
+          MODELS_DEPLOY_KEY: ${{ secrets.MODELS_DEPLOY_KEY }}
+        run: |
+          umask 077; printf '%s\n' "$MODELS_DEPLOY_KEY" | tr -d '\r' > "$RUNNER_TEMP/mk"
+          GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/mk -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" git clone -q --depth 1 git@github.com:farraf-cpu/faractionradar-models.git .models
+          rm -f "$RUNNER_TEMP/mk" && rm -rf .models/.git .models/.github && cp -rn .models/. . && rm -rf .models
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+      - name: Ladder + MAE math tests
+        run: python tests/test_ladder_distribution.py
+      - name: Fleet MAE wiring sanity
+        run: python tests/test_all_emitters_have_mae.py
+      - name: Fleet consistency (cards + workflows + gates)
+        run: python tests/test_fleet_consistency.py
+      - name: All emitters render (smoke build_report_md)
+        run: python tests/test_all_emitters_render.py
+      - name: Backtest harness self-tests
+        run: python backtest/test_harness.py

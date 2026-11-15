@@ -1,0 +1,35 @@
+name: Fetch Kalshi
+
+on:
+  # 6h cron matches fetch-calendar cadence. Kalshi contracts don't move
+  # fast enough to warrant more frequent polling; more importantly Kalshi
+  # rate-limits per-IP so tighter cadence risks getting the runner IP
+  # pool onto their block list.
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: fetch-kalshi
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load code
+        env:
+          MODELS_DEPLOY_KEY: ${{ secrets.MODELS_DEPLOY_KEY }}
+        run: |
+          umask 077; printf '%s\n' "$MODELS_DEPLOY_KEY" | tr -d '\r' > "$RUNNER_TEMP/mk"
+          GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/mk -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" git clone -q --depth 1 git@github.com:farraf-cpu/faractionradar-models.git .models
+          rm -f "$RUNNER_TEMP/mk" && rm -rf .models/.git .models/.github && cp -rn .models/. . && rm -rf .models
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+      - name: Fetch Kalshi + POST to worker
+        env:
+          UPLOAD_AUTH_KEY: ${{ secrets.UPLOAD_AUTH_KEY }}
+          CALENDAR_WORKER_URL: https://faractionradar-calendar.faractionradar.workers.dev
+        run: python scripts/fetch_kalshi.py

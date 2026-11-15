@@ -1,0 +1,42 @@
+name: Smoke
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  install-and-import:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load code
+        env:
+          MODELS_DEPLOY_KEY: ${{ secrets.MODELS_DEPLOY_KEY }}
+        run: |
+          umask 077; printf '%s\n' "$MODELS_DEPLOY_KEY" | tr -d '\r' > "$RUNNER_TEMP/mk"
+          GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/mk -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" git clone -q --depth 1 git@github.com:farraf-cpu/faractionradar-models.git .models
+          rm -f "$RUNNER_TEMP/mk" && rm -rf .models/.git .models/.github && cp -rn .models/. . && rm -rf .models
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+          cache: 'pip'
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Import check
+        run: |
+          python -c "
+          import importlib
+          mods = [
+              'src.alfred_fetch', 'src.bridge_backtest', 'src.bridge_model',
+              'src.build_features', 'src.cpi_history', 'src.final_report',
+              'src.first_print_model', 'src.fred_fetch', 'src.models',
+              'src.predict', 'src.sector_model', 'src.sensitivity',
+              'src.stacking', 'src.vintage_features',
+          ]
+          for m in mods:
+              importlib.import_module(m)
+              print('ok', m)
+          "
+      - name: Gate script dry-run
+        run: python scripts/should_run.py || echo "gate returned skip (expected on non-predict days)"

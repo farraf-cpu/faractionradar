@@ -1,0 +1,35 @@
+name: Fetch Calendar
+
+# GitHub Actions runners have residential-ish IPs — Fastly (which fronts
+# nfs.faireconomy.media) rate-limits Cloudflare edge IPs but not these.
+# We fetch here and POST to the worker's /upload-events endpoint.
+
+on:
+  schedule:
+    - cron: '10 */6 * * *'   # 10 min past every 6h — 5 min after the worker's own cron so we don't double-fire in the same minute
+  workflow_dispatch:
+
+concurrency:
+  group: fetch-calendar
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load code
+        env:
+          MODELS_DEPLOY_KEY: ${{ secrets.MODELS_DEPLOY_KEY }}
+        run: |
+          umask 077; printf '%s\n' "$MODELS_DEPLOY_KEY" | tr -d '\r' > "$RUNNER_TEMP/mk"
+          GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/mk -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" git clone -q --depth 1 git@github.com:farraf-cpu/faractionradar-models.git .models
+          rm -f "$RUNNER_TEMP/mk" && rm -rf .models/.git .models/.github && cp -rn .models/. . && rm -rf .models
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+      - name: Fetch + POST
+        env:
+          UPLOAD_AUTH_KEY: ${{ secrets.UPLOAD_AUTH_KEY }}
+          CALENDAR_WORKER_URL: https://faractionradar-calendar.faractionradar.workers.dev
+        run: python scripts/fetch_calendar.py

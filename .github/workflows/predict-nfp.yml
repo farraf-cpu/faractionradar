@@ -1,0 +1,227 @@
+name: Predict NFP
+
+on:
+  # Two daily fires (gate script exits early on non-predict days):
+  #   - 14:00 UTC — main cadence T-7/T-4/T-3/T-2/T-1 lock cycle
+  #   - 10:15 UTC — T-0 pre-release refresh (~2h15m before 12:30 UTC NFP);
+  #     captures overnight Kalshi + last-hour FF consensus revisions.
+  #     Only fires when today is release day (gate handles).
+  schedule:
+    - cron: '0 14 * * *'
+    - cron: '15 10 * * *'
+  # Manual override for backfills or ad-hoc runs
+  workflow_dispatch:
+    inputs:
+      force_release_date:
+        description: 'Override NFP release date (YYYY-MM-DD). Leave blank for auto.'
+        required: false
+      force_days_out:
+        description: 'Override days_out (1|2|3|4|7). Leave blank for auto.'
+        required: false
+
+concurrency:
+  group: predict-nfp
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+      nfp_release_date: ${{ steps.check.outputs.nfp_release_date }}
+      nfp_days_out: ${{ steps.check.outputs.nfp_days_out }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load code
+        env:
+          MODELS_DEPLOY_KEY: ${{ secrets.MODELS_DEPLOY_KEY }}
+        run: |
+          umask 077; printf '%s\n' "$MODELS_DEPLOY_KEY" | tr -d '\r' > "$RUNNER_TEMP/mk"
+          GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/mk -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" git clone -q --depth 1 git@github.com:farraf-cpu/faractionradar-models.git .models
+          rm -f "$RUNNER_TEMP/mk" && rm -rf .models/.git .models/.github && cp -rn .models/. . && rm -rf .models
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+      - name: Decide if today is a predict day
+        id: check
+        run: |
+          if [ -n "${{ github.event.inputs.force_release_date }}" ]; then
+            echo "Manual override in effect"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "nfp_release_date=${{ github.event.inputs.force_release_date }}" >> "$GITHUB_OUTPUT"
+            echo "nfp_days_out=${{ github.event.inputs.force_days_out }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if python scripts/should_run.py; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  predict:
+    needs: gate
+    if: needs.gate.outputs.should_run == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch full history so commits push cleanly
+          fetch-depth: 0
+
+      - name: Load code
+        env:
+          MODELS_DEPLOY_KEY: ${{ secrets.MODELS_DEPLOY_KEY }}
+        run: |
+          umask 077; printf '%s\n' "$MODELS_DEPLOY_KEY" | tr -d '\r' > "$RUNNER_TEMP/mk"
+          GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/mk -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" git clone -q --depth 1 git@github.com:farraf-cpu/faractionradar-models.git .models
+          rm -f "$RUNNER_TEMP/mk" && rm -rf .models/.git .models/.github && cp -rn .models/. . && rm -rf .models
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch live prediction-market implied value from calendar-worker
+        id: market
+        run: |
+          # Use curl — urllib returned empty body twice in a row from this
+          # endpoint despite direct curl working fine. Suspect content-
+          # negotiation weirdness; not worth debugging urllib specifically.
+          # Hit the workers.dev URL directly. calendar.faractionradar.com
+          # returns a CF 302 on GHA IPs (probably some edge-routing quirk);
+          # the workers.dev origin is what the custom domain points at
+          # anyway, so this is one hop shorter + always resolves 200.
+          curl -sSL -A "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0" \
+               "https://faractionradar-calendar.faractionradar.workers.dev/public/kalshi-implied" \
+               > /tmp/kalshi-implied.json || echo "curl failed"
+          echo "response size: $(wc -c < /tmp/kalshi-implied.json) bytes"
+          echo "response preview:"
+          head -c 300 /tmp/kalshi-implied.json; echo
+          python - <<'PY'
+          import json, os
+          try:
+              with open("/tmp/kalshi-implied.json") as f:
+                  data = json.load(f)
+              # Surface staleness reason so operators can distinguish
+              # 'kalshi feed dead' from 'no matching series yet'.
+              if data.get("stale"):
+                  print(f"::warning::kalshi snapshot is stale (fetchedAt={data.get('snapshotFetchedAt')}) — fetch-kalshi.yml may be failing")
+              nfp = (data.get("implied") or {}).get("nfp")
+              # Worker now normalizes: value_k is already in K units for NFP
+              # (unit="jobs" with kUnitsPerRaw=1/1000 applied worker-side).
+              # value_raw is the raw threshold count if we need it.
+              if nfp and isinstance(nfp.get("value_k"), (int, float)):
+                  as_k = float(nfp["value_k"])
+                  print(f"kalshi implied NFP: {nfp.get('display')} ({as_k}K, ticker={nfp.get('ticker')}, method={nfp.get('method')}, rungs={nfp.get('rungs_used')})")
+                  with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                      f.write(f"pm_value_k={as_k}\n")
+                      f.write("pm_available=true\n")
+                  ladder = nfp.get("ladder")
+                  if isinstance(ladder, list) and len(ladder) >= 2:
+                      ladder_json = json.dumps([
+                          {"threshold": float(r["threshold"]), "probability": float(r["probability"])}
+                          for r in ladder if "threshold" in r and "probability" in r
+                      ], separators=(",", ":"))
+                      print(f"kalshi ladder: {len(ladder)} rungs")
+                      with open(os.environ["GITHUB_ENV"], "a") as f:
+                          f.write(f"NFP_MARKET_LADDER={ladder_json}\n")
+                  else:
+                      print("kalshi ladder missing/short — outcome distribution will be omitted")
+              else:
+                  print("kalshi implied NFP not available — falling back to hardcode")
+                  with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                      f.write("pm_available=false\n")
+          except Exception as e:
+              print(f"parse failed: {e} — falling back to hardcode")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("pm_available=false\n")
+          PY
+
+      - name: Fetch live consensus from calendar-worker
+        id: consensus
+        env:
+          CALENDAR_AUTH_KEY: ${{ secrets.CALENDAR_AUTH_KEY }}
+          NFP_RELEASE_DATE: ${{ needs.gate.outputs.nfp_release_date }}
+        run: |
+          python - <<'PY'
+          import json, os, re, sys, urllib.parse, urllib.request
+
+          key = os.environ["CALENDAR_AUTH_KEY"]
+          rel = os.environ["NFP_RELEASE_DATE"]
+          url = ("https://faractionradar-calendar.faractionradar.workers.dev/"
+                 f"?key={urllib.parse.quote(key)}&read")
+          req = urllib.request.Request(url, headers={
+              "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
+          })
+          data = json.loads(urllib.request.urlopen(req, timeout=30).read())
+          events = data.get("events", [])
+          matches = [
+              e for e in events
+              if e.get("country") == "USD"
+              and re.match(r"^non-?farm employment change$", (e.get("title") or "").strip(), re.I)
+              and (e.get("date") or "").startswith(rel)
+          ]
+
+          def skip(reason: str) -> None:
+              """Soft-skip the predict step. Not an error — ForexFactory frequently
+              publishes the forecast late in the T-7..T-1 window. Cron retries daily."""
+              print(f"::notice::skipping predict for {rel}: {reason}")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("skip=true\n")
+              sys.exit(0)
+
+          if not matches:
+              skip(f"no NFP event in worker /?read (worker may not have fetched next-week's calendar yet)")
+          forecast = matches[0].get("forecast")
+          if not forecast:
+              skip(f"NFP event exists but forecast is null (FF publishes closer to release)")
+          m = re.match(r"^([-+]?\d+(?:\.\d+)?)\s*[Kk]?$", forecast.strip())
+          if not m:
+              # Unparseable forecast is a real problem, not a wait-and-retry:
+              # every FF forecast we've observed matches the "NNK" pattern.
+              print(f"::error::unparseable forecast value: {forecast!r}")
+              sys.exit(1)
+          consensus_k = float(m.group(1))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"consensus_k={consensus_k}\n")
+              f.write("skip=false\n")
+          print(f"consensus for NFP {rel}: {consensus_k}K (from ForexFactory forecast {forecast!r})")
+          PY
+
+      - name: Run predictor + POST to calendar-worker
+        if: steps.consensus.outputs.skip != 'true'
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          UPLOAD_AUTH_KEY: ${{ secrets.UPLOAD_AUTH_KEY }}
+          CALENDAR_WORKER_URL: https://faractionradar-calendar.faractionradar.workers.dev
+          NFP_RELEASE_DATE: ${{ needs.gate.outputs.nfp_release_date }}
+          NFP_DAYS_OUT: ${{ needs.gate.outputs.nfp_days_out }}
+          NFP_CONSENSUS_K: ${{ steps.consensus.outputs.consensus_k }}
+          NFP_PREDICTION_MARKET_K: ${{ steps.market.outputs.pm_value_k }}
+          MODEL_VERSION: v1.1-bayesian-blend-ladder-dist
+        run: python emit.py > /tmp/run.log 2>&1 || { tail -n 15 /tmp/run.log; exit 1; }
+      - name: Commit report + ledger row
+        if: steps.consensus.outputs.skip != 'true'
+        run: |
+          git config user.name  "faractionradar-bot"
+          git config user.email "bot@faractionradar.com"
+          git add reports/ predictions.jsonl data/raw/ data/processed/ || true
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "NFP prediction T-${{ needs.gate.outputs.nfp_days_out }} for ${{ needs.gate.outputs.nfp_release_date }}
+
+          Auto-generated by predict-nfp workflow. See reports/${{ needs.gate.outputs.nfp_release_date }}/... for full model output."
+          for i in 1 2 3 4 5; do
+            if git push 2>&1; then exit 0; fi
+            echo "push attempt $i failed, rebasing + retrying..."
+            git pull --rebase --autostash 2>&1 || true
+            sleep 3
+          done
+          echo "push failed after 5 attempts" >&2
+          exit 1
