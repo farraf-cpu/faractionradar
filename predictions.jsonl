@@ -1031,3 +1031,4 @@
 {"publishedAt":"2026-11-15T19:57:13.390591+00:00","eventSlug":"housing-2026-11-19","daysOut":4,"modelVersion":"v1.1-simple-blend","ourCall":"1.35M","ci68":[1.3,1.39],"grandMedian":null,"reportPath":"reports/2026-11/housing-t-4.md"}
 {"publishedAt":"2026-11-15T20:32:52.911998+00:00","eventSlug":"indpro-2026-11-17","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.2%","ci68":[-0.05,0.44],"grandMedian":null,"reportPath":"reports/2026-11/indpro-t-2.md"}
 {"publishedAt":"2026-11-15T20:33:44.576154+00:00","eventSlug":"empire-2026-11-16","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+17.7","ci68":[14.6,20.9],"grandMedian":null,"reportPath":"reports/2026-11/empire-t-1.md"}
+{"publishedAt":"2026-11-15T20:36:32.736678+00:00","eventSlug":"philly-2026-11-19","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"+19.9","ci68":[16.5,23.3],"grandMedian":null,"reportPath":"reports/2026-11/philly-t-4.md"}
