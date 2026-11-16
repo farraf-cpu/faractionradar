@@ -1,22 +1,22 @@
 # Retail Sales prediction — target 2026-11-17 (T-1)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-16T20:38:55.694886+00:00
+**Published:** 2026-11-16T23:26:56.147256+00:00
 
 ## Final pick
 
 **+0.3% m/m** (Advance Retail Sales, headline)
 
-- 68% CI: [+0.10%, +0.58%] · sigma source: prior (inverse-MAE)
-- 95% CI: [-0.14%, +0.83%]
-- Lean vs consensus: above consensus by 0.14pp
+- 68% CI: [+0.04%, +0.53%] · sigma source: prior (inverse-MAE)
+- 95% CI: [-0.20%, +0.77%]
+- Lean vs consensus: above consensus by 0.18pp
 - Sub-models used: consensus, trend
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | +0.20% | 0.30 pp |
+| consensus | +0.10% | 0.30 pp |
 | trend | +0.53% | 0.40 pp |
 
 ## Method
