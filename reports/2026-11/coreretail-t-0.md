@@ -1,16 +1,16 @@
 # Core Retail Sales prediction — target 2026-11-17 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-17T00:56:51.611542+00:00
+**Published:** 2026-11-17T19:15:49.530441+00:00
 
 ## Final pick
 
 **+0.5%** m/m Core Retail Sales (ex food + energy)
 
 - Regime: strong consumer spending
-- 68% CI: [+0.41%, +0.56%] · sigma source: prior (inverse-MAE)
-- 95% CI: [+0.34%, +0.63%]
-- Lean vs consensus: above consensus by 0.08pp
+- 68% CI: [+0.42%, +0.56%] · sigma source: prior (inverse-MAE)
+- 95% CI: [+0.34%, +0.64%]
+- Lean vs consensus: above consensus by 0.09pp
 - Sub-models used: consensus, trend
 
 ## Sub-model breakdown
@@ -18,7 +18,7 @@
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | +0.40% | 0.08pp |
-| trend | +0.64% | 0.15pp |
+| trend | +0.66% | 0.15pp |
 
 ## Method
 
