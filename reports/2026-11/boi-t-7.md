@@ -1,7 +1,7 @@
 # BOI Policy Rate prediction - target 2026-11-24 (T-7)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-11-17T01:58:06.371571+00:00
+**Published:** 2026-11-17T09:37:24.492686+00:00
 
 ## Final pick
 
@@ -23,21 +23,6 @@
 | -25bp cut | 19.6% |
 | -50bp cut | 0.6% |
 | -75bp or deeper | 0.0% |
-
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 0.15 pp |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
 
 
 ## Sub-model breakdown
