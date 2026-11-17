@@ -1,7 +1,7 @@
 # SARB Policy Rate prediction - target 2026-11-19 (T-2)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-11-17T01:57:13.137906+00:00
+**Published:** 2026-11-17T09:30:02.744836+00:00
 
 ## Final pick
 
