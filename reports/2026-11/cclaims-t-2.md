@@ -1,7 +1,7 @@
 # Continuing Claims prediction — target 2026-11-19 (T-2)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-17T19:17:19.342131+00:00
+**Published:** 2026-11-17T23:02:44.248411+00:00
 
 ## Final pick
 
