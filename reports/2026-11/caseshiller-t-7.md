@@ -1,7 +1,7 @@
 # S&P/Case-Shiller 20-City HPI prediction — target 2026-11-24 (T-7)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-17T00:25:37.335741+00:00
+**Published:** 2026-11-17T23:38:08.342511+00:00
 
 ## Final pick
 

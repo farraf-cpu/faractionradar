@@ -1102,3 +1102,4 @@
 {"publishedAt":"2026-11-17T23:29:30.611749+00:00","eventSlug":"permits-2026-11-19","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"1.41M","ci68":[1.35,1.47],"grandMedian":null,"reportPath":"reports/2026-11/permits-t-2.md"}
 {"publishedAt":"2026-11-17T23:29:41.803313+00:00","eventSlug":"spending-2026-11-24","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.5%","ci68":[0.34,0.74],"grandMedian":null,"reportPath":"reports/2026-11/spending-t-7.md"}
 {"publishedAt":"2026-11-17T23:34:24.087976+00:00","eventSlug":"income-2026-11-24","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.08,0.48],"grandMedian":null,"reportPath":"reports/2026-11/income-t-7.md"}
+{"publishedAt":"2026-11-17T23:38:08.342465+00:00","eventSlug":"caseshiller-2026-11-24","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+2.4%","ci68":[2.17,2.67],"grandMedian":null,"reportPath":"reports/2026-11/caseshiller-t-7.md"}
