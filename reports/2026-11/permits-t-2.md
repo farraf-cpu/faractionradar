@@ -1,7 +1,7 @@
 # Building Permits prediction — target 2026-11-19 (T-2)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-17T00:12:01.580526+00:00
+**Published:** 2026-11-17T23:29:30.611795+00:00
 
 ## Final pick
 

@@ -1099,3 +1099,4 @@
 {"publishedAt":"2026-11-17T22:52:22.498536+00:00","eventSlug":"existing-2026-11-20","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"3883.33M","ci68":[3883.25,3883.41],"grandMedian":null,"reportPath":"reports/2026-11/existing-t-3.md"}
 {"publishedAt":"2026-11-17T23:02:44.248369+00:00","eventSlug":"cclaims-2026-11-19","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"1707.75M","ci68":[1707.72,1707.78],"grandMedian":null,"reportPath":"reports/2026-11/cclaims-t-2.md"}
 {"publishedAt":"2026-11-17T23:11:19.285772+00:00","eventSlug":"philly-2026-11-19","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+19.9","ci68":[16.5,23.3],"grandMedian":null,"reportPath":"reports/2026-11/philly-t-2.md"}
+{"publishedAt":"2026-11-17T23:29:30.611749+00:00","eventSlug":"permits-2026-11-19","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"1.41M","ci68":[1.35,1.47],"grandMedian":null,"reportPath":"reports/2026-11/permits-t-2.md"}
