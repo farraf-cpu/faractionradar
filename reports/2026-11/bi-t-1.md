@@ -1,7 +1,7 @@
 # BI Policy Rate prediction - target 2026-11-18 (T-1)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-11-17T01:56:49.529164+00:00
+**Published:** 2026-11-17T09:24:54.843781+00:00
 
 ## Final pick
 
