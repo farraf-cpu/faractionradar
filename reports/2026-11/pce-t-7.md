@@ -1,7 +1,7 @@
 # PCE prediction — target 2026-11-24 (T-7)
 
 **Model version:** `v1.1-simple-blend`
-**Published:** 2026-11-17T19:15:57.529066+00:00
+**Published:** 2026-11-17T22:26:43.973732+00:00
 
 ## Final pick
 
@@ -11,6 +11,21 @@
 - 95% CI: [+0.09%, +0.25%]
 - Lean vs consensus: no consensus
 - Sub-models used: cleveland_fed, trend
+
+
+## Empirical accuracy (live)
+
+| Metric | Value |
+|--------|-------|
+| Prior MAE claim | 0.04 pp |
+| Resolved predictions | 0 (first resolution pending) |
+| Empirical MAE | — |
+| Hit rate (ourCall closest) | — |
+
+Empirical MAE + hit-rate auto-populate as predictions resolve. Once
+count >= 5 the CI sigma will switch from the prior to the
+empirical value.
+
 
 ## Sub-model breakdown
 
