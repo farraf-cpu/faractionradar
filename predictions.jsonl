@@ -1106,3 +1106,4 @@
 {"publishedAt":"2026-11-17T23:55:39.364705+00:00","eventSlug":"coreretail-2026-11-17","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"+0.5%","ci68":[0.42,0.56],"grandMedian":null,"reportPath":"reports/2026-11/coreretail-t-0.md"}
 {"publishedAt":"2026-11-18T00:54:42.691414+00:00","eventSlug":"ukcpi-2026-11-19","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+3.7%","ci68":[3.47,3.87],"grandMedian":null,"reportPath":"reports/2026-11/ukcpi-t-1.md"}
 {"publishedAt":"2026-11-18T01:05:16.980845+00:00","eventSlug":"bi-2026-11-18","daysOut":0,"modelVersion":"v2-outcome-distribution","ourCall":"5.17%","ci68":[5.02,5.32],"grandMedian":null,"reportPath":"reports/2026-11/bi-t-0.md","modalOutcome":"hold"}
+{"publishedAt":"2026-11-18T01:08:05.366749+00:00","eventSlug":"sarb-2026-11-19","daysOut":1,"modelVersion":"v2-outcome-distribution","ourCall":"7.25%","ci68":[7.1,7.4],"grandMedian":null,"reportPath":"reports/2026-11/sarb-t-1.md","modalOutcome":"hold"}
