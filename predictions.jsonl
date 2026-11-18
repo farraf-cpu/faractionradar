@@ -1116,3 +1116,4 @@
 {"publishedAt":"2026-11-18T13:16:59.810810+00:00","eventSlug":"ukcpi-2026-11-19","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+3.7%","ci68":[3.47,3.87],"grandMedian":null,"reportPath":"reports/2026-11/ukcpi-t-1.md"}
 {"publishedAt":"2026-11-18T18:57:26.409524+00:00","eventSlug":"housing-2026-11-19","daysOut":1,"modelVersion":"v1.1-simple-blend","ourCall":"1.31M","ci68":[1.26,1.35],"grandMedian":null,"reportPath":"reports/2026-11/housing-t-1.md"}
 {"publishedAt":"2026-11-18T18:58:34.774844+00:00","eventSlug":"cclaims-2026-11-19","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"1707.75M","ci68":[1707.72,1707.78],"grandMedian":null,"reportPath":"reports/2026-11/cclaims-t-1.md"}
+{"publishedAt":"2026-11-18T18:58:55.759279+00:00","eventSlug":"claims-2026-11-19","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"197K","ci68":[189,205],"grandMedian":null,"reportPath":"reports/2026-11/claims-t-1.md"}
