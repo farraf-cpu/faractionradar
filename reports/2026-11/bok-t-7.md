@@ -1,7 +1,7 @@
 # BOK Policy Rate prediction - target 2026-11-26 (T-7)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-11-19T00:36:16.435454+00:00
+**Published:** 2026-11-19T08:58:57.709692+00:00
 
 ## Final pick
 
