@@ -1128,3 +1128,4 @@
 {"publishedAt":"2026-11-18T22:39:43.150269+00:00","eventSlug":"cclaims-2026-11-19","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"1707.75M","ci68":[1707.72,1707.78],"grandMedian":null,"reportPath":"reports/2026-11/cclaims-t-1.md"}
 {"publishedAt":"2026-11-18T22:43:19.096060+00:00","eventSlug":"philly-2026-11-19","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+20.7","ci68":[17.3,24.1],"grandMedian":null,"reportPath":"reports/2026-11/philly-t-1.md"}
 {"publishedAt":"2026-11-18T22:56:46.282545+00:00","eventSlug":"permits-2026-11-19","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"1.37M","ci68":[1.31,1.43],"grandMedian":null,"reportPath":"reports/2026-11/permits-t-1.md"}
+{"publishedAt":"2026-11-19T00:14:57.314000+00:00","eventSlug":"ukcpi-2026-11-19","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"+3.7%","ci68":[3.47,3.87],"grandMedian":null,"reportPath":"reports/2026-11/ukcpi-t-0.md"}
