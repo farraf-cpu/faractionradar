@@ -1,7 +1,7 @@
 # AU GDP prediction - target 2026-11-27 (T-7)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-20T00:53:50.131990+00:00
+**Published:** 2026-11-20T03:41:55.729694+00:00
 
 ## Final pick
 
