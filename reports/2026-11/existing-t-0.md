@@ -1,7 +1,7 @@
 # Existing Home Sales prediction — target 2026-11-20 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-20T19:28:09.354287+00:00
+**Published:** 2026-11-20T22:14:34.746792+00:00
 
 ## Final pick
 
