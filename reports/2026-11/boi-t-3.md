@@ -1,7 +1,7 @@
 # BOI Policy Rate prediction - target 2026-11-24 (T-3)
 
 **Model version:** `v2-outcome-distribution`
-**Published:** 2026-11-21T08:38:57.557252+00:00
+**Published:** 2026-11-21T23:32:34.948446+00:00
 
 ## Final pick
 
