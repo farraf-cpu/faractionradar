@@ -1169,3 +1169,4 @@
 {"publishedAt":"2026-11-21T20:42:53.856999+00:00","eventSlug":"durable-2026-11-25","daysOut":4,"modelVersion":"v1.1-simple-blend","ourCall":"+1.0%","ci68":[0.47,1.44],"grandMedian":null,"reportPath":"reports/2026-11/durable-t-4.md"}
 {"publishedAt":"2026-11-21T20:55:54.935332+00:00","eventSlug":"newhome-2026-11-25","daysOut":4,"modelVersion":"v1-simple-blend","ourCall":"668K","ci68":[613,723],"grandMedian":null,"reportPath":"reports/2026-11/newhome-t-4.md"}
 {"publishedAt":"2026-11-21T21:38:06.119921+00:00","eventSlug":"spending-2026-11-24","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.5%","ci68":[0.34,0.74],"grandMedian":null,"reportPath":"reports/2026-11/spending-t-3.md"}
+{"publishedAt":"2026-11-21T21:43:17.994144+00:00","eventSlug":"income-2026-11-24","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.3%","ci68":[0.08,0.48],"grandMedian":null,"reportPath":"reports/2026-11/income-t-3.md"}
