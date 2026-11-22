@@ -1,7 +1,7 @@
 # Durable Goods Orders prediction — target 2026-11-25 (T-3)
 
 **Model version:** `v1.1-simple-blend`
-**Published:** 2026-11-22T18:00:37.023103+00:00
+**Published:** 2026-11-22T20:53:22.317857+00:00
 
 ## Final pick
 
