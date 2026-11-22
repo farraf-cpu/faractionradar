@@ -1,0 +1,31 @@
+# PCE prediction — target 2026-11-24 (T-2)
+
+**Model version:** `v1.1-simple-blend`
+**Published:** 2026-11-22T17:57:17.737122+00:00
+
+## Final pick
+
+**+0.2% m/m** (PCE Price Index)
+
+- 68% CI: [+0.13%, +0.21%] · sigma source: prior (inverse-MAE)
+- 95% CI: [+0.09%, +0.25%]
+- Lean vs consensus: no consensus
+- Sub-models used: cleveland_fed, trend
+
+## Sub-model breakdown
+
+| Sub-model | Value | Historical MAE |
+|-----------|-------|----------------|
+| consensus | — | 0.05 pp |
+| cleveland_fed | +0.13% | 0.04 pp |
+| trend | +0.27% | 0.10 pp |
+
+## Method
+
+`v1.1-simple-blend`: inverse-MAE-weighted mean of consensus (0.05pp) +
+Cleveland Fed daily nowcast (0.04pp; when PCE cycle active) + FRED
+PCEPI 6-mo m/m trend (0.10pp). Consensus MAE on PCE is tighter than
+CPI/PPI because it's the Fed's target — analysts scrutinize it more.
+
+Phase 2 target adds Core PCE decomposition and splits headline vs
+core into separate slugs (pce-<date> vs pce-core-<date>).
