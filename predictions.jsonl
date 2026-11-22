@@ -1173,3 +1173,4 @@
 {"publishedAt":"2026-11-21T21:50:25.411500+00:00","eventSlug":"caseshiller-2026-11-24","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+2.4%","ci68":[2.17,2.67],"grandMedian":null,"reportPath":"reports/2026-11/caseshiller-t-3.md"}
 {"publishedAt":"2026-11-21T23:32:34.948401+00:00","eventSlug":"boi-2026-11-24","daysOut":3,"modelVersion":"v2-outcome-distribution","ourCall":"3.25%","ci68":[3.1,3.4],"grandMedian":null,"reportPath":"reports/2026-11/boi-t-3.md","modalOutcome":"hold"}
 {"publishedAt":"2026-11-21T23:35:58.404325+00:00","eventSlug":"nogdp-2026-11-24","daysOut":3,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.1,0.7],"grandMedian":null,"reportPath":"reports/2026-11/nogdp-t-3.md"}
+{"publishedAt":"2026-11-22T02:30:21.075853+00:00","eventSlug":"nogdp-2026-11-24","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.4%","ci68":[0.1,0.7],"grandMedian":null,"reportPath":"reports/2026-11/nogdp-t-2.md"}
