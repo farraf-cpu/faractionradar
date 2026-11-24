@@ -1,39 +1,24 @@
-# Initial Jobless Claims prediction — target 2026-11-19 (T-2)
+# Initial Jobless Claims prediction — target 2026-11-26 (T-2)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-17T22:34:05.284226+00:00
+**Published:** 2026-11-24T01:48:18.901672+00:00
 
 ## Final pick
 
-**197K** claims (initial, seasonally adjusted)
+**198K** claims (initial, seasonally adjusted)
 
 - Regime: very tight labor market
-- 68% CI: [189K, 206K] · sigma source: prior (inverse-MAE)
-- 95% CI: [181K, 214K]
-- Lean vs consensus: in line with consensus
-- Sub-models used: consensus, trend
-
-
-## Empirical accuracy (live)
-
-| Metric | Value |
-|--------|-------|
-| Prior MAE claim | 10.0 K |
-| Resolved predictions | 0 (first resolution pending) |
-| Empirical MAE | — |
-| Hit rate (ourCall closest) | — |
-
-Empirical MAE + hit-rate auto-populate as predictions resolve. Once
-count >= 5 the CI sigma will switch from the prior to the
-empirical value.
-
+- 68% CI: [184K, 212K] · sigma source: prior (inverse-MAE)
+- 95% CI: [170K, 226K]
+- Lean vs consensus: no consensus
+- Sub-models used: trend
 
 ## Sub-model breakdown
 
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
-| consensus | 199K | 10K |
-| trend | 195K | 14K |
+| consensus | — | 10K |
+| trend | 198K | 14K |
 
 ## Method
 
