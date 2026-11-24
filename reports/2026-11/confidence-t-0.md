@@ -1,7 +1,7 @@
 # Consumer Confidence prediction — target 2026-11-24 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-24T02:01:20.561204+00:00
+**Published:** 2026-11-24T22:17:13.881415+00:00
 
 ## Final pick
 
