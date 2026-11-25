@@ -1235,3 +1235,4 @@
 {"publishedAt":"2026-11-25T01:07:00.059351+00:00","eventSlug":"adtrade-2026-11-27","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"-$132.1B","ci68":[-137.1,-127.1],"grandMedian":null,"reportPath":"reports/2026-11/adtrade-t-2.md"}
 {"publishedAt":"2026-11-25T02:40:46.190939+00:00","eventSlug":"bok-2026-11-26","daysOut":1,"modelVersion":"v2-outcome-distribution","ourCall":"3.03%","ci68":[2.88,3.18],"grandMedian":null,"reportPath":"reports/2026-11/bok-t-1.md","modalOutcome":"hold"}
 {"publishedAt":"2026-11-25T02:46:20.941256+00:00","eventSlug":"chgdp-2026-11-27","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.36,0.96],"grandMedian":null,"reportPath":"reports/2026-11/chgdp-t-2.md"}
+{"publishedAt":"2026-11-25T02:47:43.966967+00:00","eventSlug":"segdp-2026-11-27","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.4,1.0],"grandMedian":null,"reportPath":"reports/2026-11/segdp-t-2.md"}
