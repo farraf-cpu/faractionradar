@@ -1240,3 +1240,4 @@
 {"publishedAt":"2026-11-25T05:00:39.480035+00:00","eventSlug":"chgdp-2026-11-27","daysOut":2,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.36,0.96],"grandMedian":null,"reportPath":"reports/2026-11/chgdp-t-2.md"}
 {"publishedAt":"2026-11-25T10:00:37.215104+00:00","eventSlug":"bok-2026-11-26","daysOut":1,"modelVersion":"v2-outcome-distribution","ourCall":"3.03%","ci68":[2.88,3.18],"grandMedian":null,"reportPath":"reports/2026-11/bok-t-1.md","modalOutcome":"hold"}
 {"publishedAt":"2026-11-25T20:03:06.715226+00:00","eventSlug":"cclaims-2026-11-26","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"1724.75M","ci68":[1724.72,1724.78],"grandMedian":null,"reportPath":"reports/2026-11/cclaims-t-1.md"}
+{"publishedAt":"2026-11-25T20:03:17.751467+00:00","eventSlug":"claims-2026-11-26","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"196K","ci68":[182,210],"grandMedian":null,"reportPath":"reports/2026-11/claims-t-1.md"}
