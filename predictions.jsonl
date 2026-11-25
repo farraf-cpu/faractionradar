@@ -1241,3 +1241,4 @@
 {"publishedAt":"2026-11-25T10:00:37.215104+00:00","eventSlug":"bok-2026-11-26","daysOut":1,"modelVersion":"v2-outcome-distribution","ourCall":"3.03%","ci68":[2.88,3.18],"grandMedian":null,"reportPath":"reports/2026-11/bok-t-1.md","modalOutcome":"hold"}
 {"publishedAt":"2026-11-25T20:03:06.715226+00:00","eventSlug":"cclaims-2026-11-26","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"1724.75M","ci68":[1724.72,1724.78],"grandMedian":null,"reportPath":"reports/2026-11/cclaims-t-1.md"}
 {"publishedAt":"2026-11-25T20:03:17.751467+00:00","eventSlug":"claims-2026-11-26","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"196K","ci68":[182,210],"grandMedian":null,"reportPath":"reports/2026-11/claims-t-1.md"}
+{"publishedAt":"2026-11-25T20:05:12.429697+00:00","eventSlug":"durable-2026-11-25","daysOut":0,"modelVersion":"v1.1-simple-blend","ourCall":"+0.9%","ci68":[0.53,1.24],"grandMedian":null,"reportPath":"reports/2026-11/durable-t-0.md"}
