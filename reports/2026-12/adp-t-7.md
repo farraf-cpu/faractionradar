@@ -1,14 +1,14 @@
 # ADP Non-Farm Employment prediction — target 2026-12-02 (T-7)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-25T23:23:37.228029+00:00
+**Published:** 2026-11-26T15:15:21.963771+00:00
 
 ## Final pick
 
-**+132885000K** private payroll change (SA)
+**+69K** private payroll change (SA)
 
-- 68% CI: [+132884960K, +132885040K] · sigma source: prior (inverse-MAE)
-- 95% CI: [+132884920K, +132885080K]
+- 68% CI: [+29K, +109K] · sigma source: prior (inverse-MAE)
+- 95% CI: [-11K, +149K]
 - Lean vs consensus: no consensus
 - Sub-models used: trend
 
@@ -17,7 +17,7 @@
 | Sub-model | Value | Historical MAE |
 |-----------|-------|----------------|
 | consensus | — | 30K |
-| trend | +132885000K | 40K |
+| trend | +69K | 40K |
 
 ## Method
 
