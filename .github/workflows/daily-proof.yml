@@ -35,8 +35,7 @@ jobs:
         env:
           MODELS_DEPLOY_KEY: ${{ secrets.MODELS_DEPLOY_KEY }}
         run: |
-          umask 077; printf '%s
-' "$MODELS_DEPLOY_KEY" | tr -d '' > "$RUNNER_TEMP/mk"
+          umask 077; printf '%s\n' "$MODELS_DEPLOY_KEY" | tr -d '\r' > "$RUNNER_TEMP/mk"
           GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/mk -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" git clone -q --depth 1 git@github.com:farraf-cpu/faractionradar-models.git .models
           rm -f "$RUNNER_TEMP/mk" && rm -rf .models/.git .models/.github && cp -rn .models/. . && rm -rf .models
       - uses: actions/setup-python@v5
