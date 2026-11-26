@@ -1,0 +1,36 @@
+name: Fetch External Actuals
+
+# Grades calendar calls that FRED doesn't carry (Richmond Fed composite) by
+# reading the publisher's own data file and posting to the calendar worker.
+# Only past-due calls without an actual are touched, so frequent runs are safe.
+
+on:
+  schedule:
+    - cron: '41 16 * * *'
+    - cron: '41 21 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: fetch-external-actuals
+  cancel-in-progress: false
+
+jobs:
+  actuals:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load code
+        env:
+          MODELS_DEPLOY_KEY: ${{ secrets.MODELS_DEPLOY_KEY }}
+        run: |
+          umask 077; printf '%s\n' "$MODELS_DEPLOY_KEY" | tr -d '\r' > "$RUNNER_TEMP/mk"
+          GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/mk -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" git clone -q --depth 1 git@github.com:farraf-cpu/faractionradar-models.git .models
+          rm -f "$RUNNER_TEMP/mk" && rm -rf .models/.git .models/.github && cp -rn .models/. . && rm -rf .models
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install openpyxl
+      - name: Post actuals
+        env:
+          UPLOAD_AUTH_KEY: ${{ secrets.UPLOAD_AUTH_KEY }}
+        run: python scripts/fetch_external_actuals.py
