@@ -6,7 +6,11 @@ name: Fetch Calendar
 
 on:
   schedule:
-    - cron: '10 */6 * * *'   # 10 min past every 6h — 5 min after the worker's own cron so we don't double-fire in the same minute
+    - cron: '10 */6 * * *'   # 10 min past every 6h, 5 min after the worker's own cron
+    # GitHub drops or delays many scheduled runs (2026-11: ~2 of 4 daily runs
+    # landed, hours late, leaving the feed 7h+ stale). Extra off-the-hour slots
+    # every 2h keep it fresh; the concurrency group prevents overlap.
+    - cron: '37 1-23/2 * * *'
   workflow_dispatch:
 
 concurrency:
