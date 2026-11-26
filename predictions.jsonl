@@ -1257,3 +1257,4 @@
 {"publishedAt":"2026-11-26T01:57:33.506237+00:00","eventSlug":"segdp-2026-11-27","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.4,1.0],"grandMedian":null,"reportPath":"reports/2026-11/segdp-t-1.md"}
 {"publishedAt":"2026-11-26T04:14:32.250306+00:00","eventSlug":"segdp-2026-11-27","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.4,1.0],"grandMedian":null,"reportPath":"reports/2026-11/segdp-t-1.md"}
 {"publishedAt":"2026-11-26T04:15:00.658439+00:00","eventSlug":"augdp-2026-12-03","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+0.5%","ci68":[0.23,0.83],"grandMedian":null,"reportPath":"reports/2026-12/augdp-t-7.md"}
+{"publishedAt":"2026-11-26T04:19:24.696983+00:00","eventSlug":"chgdp-2026-11-27","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"+0.7%","ci68":[0.36,0.96],"grandMedian":null,"reportPath":"reports/2026-11/chgdp-t-1.md"}
