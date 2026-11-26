@@ -1250,3 +1250,4 @@
 {"publishedAt":"2026-11-25T23:40:02.281294+00:00","eventSlug":"newhome-2026-11-25","daysOut":0,"modelVersion":"v1-simple-blend","ourCall":"656K","ci68":[624,689],"grandMedian":null,"reportPath":"reports/2026-11/newhome-t-0.md"}
 {"publishedAt":"2026-11-25T23:43:18.423362+00:00","eventSlug":"cclaims-2026-11-26","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"1724.75M","ci68":[1724.72,1724.78],"grandMedian":null,"reportPath":"reports/2026-11/cclaims-t-1.md"}
 {"publishedAt":"2026-11-26T00:38:23.879247+00:00","eventSlug":"factory-2026-12-03","daysOut":7,"modelVersion":"v1-simple-blend","ourCall":"+1.0%","ci68":[0.48,1.48],"grandMedian":null,"reportPath":"reports/2026-12/factory-t-7.md"}
+{"publishedAt":"2026-11-26T00:42:24.450388+00:00","eventSlug":"adtrade-2026-11-27","daysOut":1,"modelVersion":"v1-simple-blend","ourCall":"-$132.1B","ci68":[-137.1,-127.1],"grandMedian":null,"reportPath":"reports/2026-11/adtrade-t-1.md"}
