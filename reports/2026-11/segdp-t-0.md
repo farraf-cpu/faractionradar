@@ -1,7 +1,7 @@
 # SE GDP prediction - target 2026-11-27 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-27T01:57:04.852754+00:00
+**Published:** 2026-11-27T04:22:03.737580+00:00
 
 ## Final pick
 
