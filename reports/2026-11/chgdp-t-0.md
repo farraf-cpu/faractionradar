@@ -1,7 +1,7 @@
 # CH GDP prediction - target 2026-11-27 (T-0)
 
 **Model version:** `v1-simple-blend`
-**Published:** 2026-11-27T01:54:57.590476+00:00
+**Published:** 2026-11-27T04:28:40.896212+00:00
 
 ## Final pick
 
